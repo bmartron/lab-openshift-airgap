@@ -1,0 +1,38 @@
+# Secrets — ne jamais committer
+**/pull-secret.txt
+**/pull-secret.json
+.env
+.env.*
+*.pem
+*.key
+*.p12
+**/auth.json
+**/kubeconfig
+**/kubeconfig.*
+**/.openshift_install.log
+**/openshift_install_state.json
+
+# Artefacts d'installation générés localement
+**/openshift/*.iso
+**/openshift/*.ign
+**/openshift/auth/
+**/openshift/metadata/
+**/openshift/telemetry/
+**/mirror/oc-mirror-workspace-*/
+**/mirror/*.tar
+**/mirror/*.tar.gz
+
+# Certificats générés (garder les .example)
+registry/certs/*.crt
+registry/certs/*.key
+!registry/certs/.gitkeep
+
+# OS / éditeur
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
+
+# Fichiers hors scope du lab
+template.pptx

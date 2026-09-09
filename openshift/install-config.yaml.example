@@ -1,0 +1,27 @@
+apiVersion: v1
+baseDomain: lab.local
+metadata:
+  name: ocp
+compute:
+- name: worker
+  replicas: 0
+controlPlane:
+  name: master
+  replicas: 1
+# Coller ici le contenu du certificat CA du registry (registry/certs/ca.crt)
+additionalTrustBundle: |
+  -----BEGIN CERTIFICATE-----
+  REMPLACER_PAR_CA_REGISTRY
+  -----END CERTIFICATE-----
+imageContentSources:
+- mirrors:
+  - registry.lab.local:5000/ocp4
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  - registry.lab.local:5000/ocp4
+  source: quay.io/openshift-release-dev/ocp-v4.0-payload
+platform:
+  none: {}
+# Utiliser pull-secret.txt (non versionné) — ne pas committer le secret réel
+pullSecret: '{"auths":{"registry.lab.local:5000":{"auth":"..."}}}'
+sshKey: 'ssh-ed25519 AAAA... remplacer_par_votre_cle'

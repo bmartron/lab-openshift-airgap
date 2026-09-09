@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: AgentConfig
+metadata:
+  name: ocp
+hosts:
+- hostname: ocp-sno
+  role: master
+  interfaces:
+  - name: enp6s18
+    macAddress: "BC:24:11:XX:XX:XX"  # MAC Proxmox de la VM ocp-sno
+  networkConfig:
+    interfaces:
+    - name: enp6s18
+      type: ethernet
+      state: up
+      ipv4:
+        enabled: true
+        dhcp: false
+        address:
+        - ip: 172.16.10.100
+          prefix-length: 24
+    dns-resolver:
+      config:
+        server:
+        - 172.16.10.11
+    routes:
+      config:
+      - destination: 0.0.0.0/0
+        next-hop-address: 172.16.10.1
+        next-hop-interface: enp6s18
+  rootDeviceHints:
+    deviceName: /dev/vda

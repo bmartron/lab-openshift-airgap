@@ -1,0 +1,15 @@
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  platform:
+    architectures:
+      - amd64
+    channels:
+      - name: stable-4.16
+        minVersion: 4.16.0
+        maxVersion: 4.16.0
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.16
+      packages:
+        - name: openshift-gitops-operator
+        # Ajouter les operators nécessaires au lab

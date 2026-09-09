@@ -1,0 +1,27 @@
+# /etc/dnsmasq.conf — VM dns (172.16.10.11)
+# Interface lab uniquement
+interface=eth0
+bind-interfaces
+no-resolv
+no-poll
+
+# Upstream désactivé en air-gap — résolution locale seulement
+# server=8.8.8.8
+
+# Domaine lab
+domain=lab.local
+local=/lab.local/
+
+# Enregistrements statiques
+address=/dns.lab.local/172.16.10.11
+address=/bastion.lab.local/172.16.10.10
+address=/registry.lab.local/172.16.10.20
+address=/ocp-sno.lab.local/172.16.10.100
+
+# OpenShift SNO
+address=/api.ocp.lab.local/172.16.10.100
+address=/api-int.ocp.lab.local/172.16.10.100
+address=/.apps.ocp.lab.local/172.16.10.100
+
+# DHCP optionnel pour le lab (désactivé si IPs statiques partout)
+# dhcp-range=172.16.10.50,172.16.10.99,255.255.255.0,12h
