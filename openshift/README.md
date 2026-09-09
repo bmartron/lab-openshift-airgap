@@ -1,46 +1,23 @@
 # Installation OpenShift — Agent-based (air-gap)
 
-## Prérequis
+Deux pistes de déploiement :
 
-- [ ] DNS opérationnel sur `172.16.10.11`
+| Piste | Version | Répertoire |
+|-------|---------|------------|
+| **GA** | OpenShift **4.22.12** | [4.22-ga/](4.22-ga/) |
+| **RC 5** | OpenShift **5.0.0-ec.6** | [5-rc/](5-rc/) |
+
+## Prérequis communs
+
+- [ ] DNS opérationnel sur `172.16.10.11` — voir [dns/README.md](../dns/README.md)
 - [ ] Registry miroir sur `registry.lab.local:5000`
 - [ ] Images miroir poussées — voir [mirror/README.md](../mirror/README.md)
-- [ ] `oc` et `openshift-install` installés sur la bastion (même version OCP)
+- [ ] Bastion RHEL 10 avec `oc` / `openshift-install` alignés sur la piste — voir [bastion/README.md](../bastion/README.md)
 
-## Fichiers
+## Versions et variables
 
-| Fichier | Description |
-|---------|-------------|
-| `install-config.yaml.example` | Config cluster (base de domaine, mirrors, trust bundle) |
-| `agent-config.yaml.example` | Config agent (hosts, réseau statique, MAC) |
+Voir [docs/versions.md](../docs/versions.md) et `versions.env.example`.
 
-## Utilisation
+## Fichiers legacy
 
-```bash
-# Copier et adapter les exemples
-cp install-config.yaml.example install-config.yaml
-cp agent-config.yaml.example agent-config.yaml
-
-# Ajouter le pull secret (fichier local, non versionné)
-# Éditer install-config.yaml avec votre sshKey et additionalTrustBundle
-
-# Générer l'ISO agent
-openshift-install agent create image --dir .
-
-# Monter l'ISO sur la VM ocp-sno (Proxmox UI ou CLI)
-# Puis attendre la fin de l'installation
-openshift-install agent wait-for install-complete --dir . --log-level debug
-```
-
-## Après installation
-
-```bash
-export KUBECONFIG=$(pwd)/auth/kubeconfig
-oc get nodes
-oc get co
-```
-
-## Notes
-
-- Adapter le nom d'interface (`enp6s18`) et la MAC dans `agent-config.yaml` selon Proxmox.
-- Le `rootDeviceHints` doit correspondre au disque de la VM (`/dev/vda` en VirtIO).
+Les anciens `install-config.yaml.example` et `agent-config.yaml.example` à la racine de ce dossier sont conservés pour référence — utiliser les répertoires versionnés `4.22-ga/` et `5-rc/`.

@@ -39,12 +39,16 @@ Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.
 
 ```
 .
-├── docs/                  # Architecture, réseau, procédures
+├── docs/                  # Architecture, réseau, versions, procédures
 ├── proxmox/               # Notes et scripts Proxmox
-├── openshift/             # install-config, agent-config (exemples)
+├── bastion/               # VM bastion RHEL 10
+├── openshift/
+│   ├── 4.22-ga/           # Config install GA (4.22.12)
+│   └── 5-rc/              # Config install RC (5.0.0-ec.6)
 ├── dns/                   # Configuration DNS
 ├── registry/              # Mirror registry + TLS
-└── mirror/                # Procédures oc mirror
+├── mirror/                # Procédures oc mirror (GA + Beta)
+└── versions.env.example   # Variables de version (copier → versions.env)
 ```
 
 ## Démarrage rapide
@@ -59,8 +63,12 @@ Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.
 
 | Composant | Version | Statut |
 |-----------|---------|--------|
-| OpenShift | _à définir_ | ⬜ |
-| Proxmox | _à définir_ | ⬜ |
+| VMs infra (dns, registry, bastion) | **RHEL 10.2** | ⬜ |
+| OpenShift GA | **4.22.12** (Kubernetes 1.35) | ⬜ |
+| OpenShift RC | **5.0.0-ec.6** (Kubernetes 1.36) | ⬜ |
+| Proxmox | _à documenter_ | ⬜ |
+
+Détail : [docs/versions.md](docs/versions.md)
 
 ## Notes
 

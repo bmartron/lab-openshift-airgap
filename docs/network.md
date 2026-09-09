@@ -21,15 +21,24 @@
 | `bastion.lab.local` | `172.16.10.10` | Bastion — interface lab |
 | `dns.lab.local` | `172.16.10.11` | Serveur DNS |
 | `registry.lab.local` | `172.16.10.20` | Mirror registry |
-| `ocp-sno.lab.local` | `172.16.10.100` | Nœud SNO |
+| `ocp-sno-422.lab.local` | `172.16.10.100` | SNO OpenShift 4.22 GA |
+| `ocp-sno-5.lab.local` | `172.16.10.110` | SNO OpenShift 5 RC |
 
-### Enregistrements DNS OpenShift (SNO)
+### Enregistrements DNS OpenShift 4.22 GA
 
 | FQDN | IP | Notes |
 |------|-----|-------|
-| `api.ocp.lab.local` | `172.16.10.100` | API Kubernetes |
-| `api-int.ocp.lab.local` | `172.16.10.100` | API interne |
-| `*.apps.ocp.lab.local` | `172.16.10.100` | Wildcard ingress |
+| `api.ocp422.lab.local` | `172.16.10.100` | API Kubernetes |
+| `api-int.ocp422.lab.local` | `172.16.10.100` | API interne |
+| `*.apps.ocp422.lab.local` | `172.16.10.100` | Wildcard ingress |
+
+### Enregistrements DNS OpenShift 5 RC
+
+| FQDN | IP | Notes |
+|------|-----|-------|
+| `api.ocp5.lab.local` | `172.16.10.110` | API Kubernetes |
+| `api-int.ocp5.lab.local` | `172.16.10.110` | API interne |
+| `*.apps.ocp5.lab.local` | `172.16.10.110` | Wildcard ingress |
 
 ### Cluster 3 nœuds (futur)
 

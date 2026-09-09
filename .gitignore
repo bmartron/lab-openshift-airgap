@@ -1,3 +1,6 @@
+# Variables locales (versions, endpoints)
+versions.env
+
 # Secrets — ne jamais committer
 **/pull-secret.txt
 **/pull-secret.json

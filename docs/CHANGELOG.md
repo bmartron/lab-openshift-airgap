@@ -7,3 +7,9 @@
 - Documentation architecture et réseau
 - Exemples de configuration (install-config, agent-config, dnsmasq, registry)
 - Procédure miroir des images
+- Guide création bridge `vmbr1` (contrainte nommage Proxmox)
+- Guide déploiement VM DNS (`dns/README.md`)
+- RHEL 10 pour toutes les VMs infra
+- Double piste OpenShift : GA 4.22.12 + RC 5.0.0-ec.6
+- Configs versionnées : `openshift/4.22-ga/`, `openshift/5-rc/`
+- `versions.env.example`, `docs/versions.md`, `bastion/README.md`

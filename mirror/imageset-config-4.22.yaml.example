@@ -5,11 +5,11 @@ mirror:
     architectures:
       - amd64
     channels:
-      - name: stable-4.16
-        minVersion: 4.16.0
-        maxVersion: 4.16.0
+      - name: stable-4.22
+        minVersion: 4.22.12
+        maxVersion: 4.22.12
   operators:
-    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.16
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.22
       packages:
         - name: openshift-gitops-operator
         # Ajouter les operators nécessaires au lab

@@ -4,7 +4,7 @@ Registry local pour l'installation air-gap d'OpenShift.
 
 ## Prérequis VM
 
-- OS : RHEL 9 ou Rocky/Alma 9
+- OS : **RHEL 10**
 - IP : `172.16.10.20` sur `vmbr1`
 - Disque : 120–200 Go (NFS via Proxmox)
 - Hostname : `registry.lab.local`

@@ -1,6 +1,6 @@
 # /etc/dnsmasq.conf — VM dns (172.16.10.11)
-# Interface lab uniquement
-interface=eth0
+# Interface lab uniquement — adapter au nom réel (souvent ens18 sur RHEL 10 / Proxmox)
+interface=ens18
 bind-interfaces
 no-resolv
 no-poll
@@ -16,12 +16,17 @@ local=/lab.local/
 address=/dns.lab.local/172.16.10.11
 address=/bastion.lab.local/172.16.10.10
 address=/registry.lab.local/172.16.10.20
-address=/ocp-sno.lab.local/172.16.10.100
+# OpenShift 4.22 GA (SNO)
+address=/ocp-sno-422.lab.local/172.16.10.100
+address=/api.ocp422.lab.local/172.16.10.100
+address=/api-int.ocp422.lab.local/172.16.10.100
+address=/.apps.ocp422.lab.local/172.16.10.100
 
-# OpenShift SNO
-address=/api.ocp.lab.local/172.16.10.100
-address=/api-int.ocp.lab.local/172.16.10.100
-address=/.apps.ocp.lab.local/172.16.10.100
+# OpenShift 5 RC (SNO)
+address=/ocp-sno-5.lab.local/172.16.10.110
+address=/api.ocp5.lab.local/172.16.10.110
+address=/api-int.ocp5.lab.local/172.16.10.110
+address=/.apps.ocp5.lab.local/172.16.10.110
 
 # DHCP optionnel pour le lab (désactivé si IPs statiques partout)
 # dhcp-range=172.16.10.50,172.16.10.99,255.255.255.0,12h
