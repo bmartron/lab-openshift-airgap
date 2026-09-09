@@ -22,7 +22,7 @@ Lab personnel pour se former à l'installation **agent-based** d'OpenShift en mo
 | Bridge Proxmox | Rôle | Internet |
 |----------------|------|----------|
 | `vmbr0` | Admin / LAN maison | Oui |
-| `vmbr-lab` | Lab OpenShift isolé | **Non** |
+| `vmbr1` | Lab OpenShift isolé | **Non** |
 
 Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.md).
 
@@ -30,10 +30,10 @@ Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.
 
 | VM | Rôle | Réseau |
 |----|------|--------|
-| `bastion` | `oc`, `openshift-install`, orchestration | `vmbr0` + `vmbr-lab` |
-| `dns` | Résolution interne (`dnsmasq`) | `vmbr-lab` uniquement |
-| `registry` | Mirror registry (images OCP) | `vmbr-lab` uniquement |
-| `ocp-sno` | Nœud OpenShift | `vmbr-lab` uniquement |
+| `bastion` | `oc`, `openshift-install`, orchestration | `vmbr0` + `vmbr1` |
+| `dns` | Résolution interne (`dnsmasq`) | `vmbr1` uniquement |
+| `registry` | Mirror registry (images OCP) | `vmbr1` uniquement |
+| `ocp-sno` | Nœud OpenShift | `vmbr1` uniquement |
 
 ## Structure du dépôt
 
@@ -50,7 +50,7 @@ Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.
 ## Démarrage rapide
 
 1. Lire [docs/architecture.md](docs/architecture.md)
-2. Configurer le bridge `vmbr-lab` sur Proxmox — [proxmox/network.md](proxmox/network.md)
+2. Configurer le bridge `vmbr1` sur Proxmox — [proxmox/network.md](proxmox/network.md)
 3. Déployer DNS, registry, bastion
 4. Miroir des images — [mirror/README.md](mirror/README.md)
 5. Générer l'ISO agent et installer — [openshift/README.md](openshift/README.md)

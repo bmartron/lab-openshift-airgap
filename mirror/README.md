@@ -38,7 +38,7 @@ oc adm release mirror \
 
 ## Phase 2 — Vérification air-gap
 
-Depuis la bastion sur `vmbr-lab` uniquement :
+Depuis la bastion sur `vmbr1` uniquement :
 
 ```bash
 oc adm release info registry.lab.local:5000/ocp4/release:${OCP_RELEASE} \

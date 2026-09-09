@@ -10,7 +10,7 @@ flowchart TB
         BASTION0["bastion eth0"]
     end
 
-    subgraph Airgap["Réseau lab isolé — vmbr-lab"]
+    subgraph Airgap["Réseau lab isolé — vmbr1"]
         BASTION1["bastion eth1"]
         DNS["dns.lab.local"]
         REG["registry.lab.local"]
@@ -38,7 +38,7 @@ flowchart TB
 
 ### Phase B — Installation air-gap
 
-1. Démarrer DNS et registry sur `vmbr-lab`.
+1. Démarrer DNS et registry sur `vmbr1`.
 2. Vérifier résolution DNS et accès HTTPS au registry depuis la bastion.
 3. Générer l'ISO : `openshift-install agent create image`.
 4. Booter la VM OpenShift sur l'ISO.

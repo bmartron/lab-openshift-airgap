@@ -1,12 +1,30 @@
 # Configuration réseau Proxmox
 
-## Bridge lab isolé
+## Noms de bridges
 
-Ajouter dans `/etc/network/interfaces` (ou via l'UI Proxmox → System → Network) :
+Proxmox **n'accepte pas le tiret** (`-`) dans les noms d'interfaces. Utiliser :
+
+| Bridge | Rôle |
+|--------|------|
+| `vmbr0` | Admin / LAN maison (existant) |
+| `vmbr1` | Lab OpenShift air-gap (isolé) |
+
+## Bridge lab isolé (`vmbr1`)
+
+Via l'UI Proxmox → **System → Network → Create → Linux Bridge** :
+
+| Champ | Valeur |
+|-------|--------|
+| Name | `vmbr1` |
+| IPv4/CIDR | `172.16.10.1/24` |
+| Gateway | *(vide)* |
+| Bridge ports | *(vide — aucune interface physique)* |
+
+Ou ajouter dans `/etc/network/interfaces` :
 
 ```text
-auto vmbr-lab
-iface vmbr-lab inet static
+auto vmbr1
+iface vmbr1 inet static
     address 172.16.10.1/24
     bridge-ports none
     bridge-stp off
@@ -21,10 +39,10 @@ ifreload -a
 
 ## Règles
 
-- **Ne pas** ajouter de `gateway` sur `vmbr-lab`.
+- **Ne pas** ajouter de `gateway` sur `vmbr1`.
 - **Ne pas** configurer NAT depuis `172.16.10.0/24` vers Internet.
-- VMs OpenShift, DNS, registry : **une seule NIC** sur `vmbr-lab`.
-- Bastion : `eth0` → `vmbr0`, `eth1` → `vmbr-lab`.
+- VMs OpenShift, DNS, registry : **une seule NIC** sur `vmbr1`.
+- Bastion : `eth0` → `vmbr0`, `eth1` → `vmbr1`.
 
 ## Stockage NFS
 

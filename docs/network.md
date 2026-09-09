@@ -7,7 +7,7 @@
 - Connecté au réseau physique du NUC.
 - Proxmox, accès NAS NFS, bastion `eth0` (phase préparation).
 
-### vmbr-lab — Lab air-gap
+### vmbr1 — Lab air-gap
 
 - Bridge **virtuel** sans interface physique.
 - **Aucune passerelle** vers Internet.
@@ -41,7 +41,7 @@
 
 ## Matrice de connectivité
 
-| VM | vmbr0 (Internet) | vmbr-lab | Parle à |
+| VM | vmbr0 (Internet) | vmbr1 | Parle à |
 |----|------------------|----------|---------|
 | bastion | Oui (`eth0`) | Oui (`eth1`) | tout le lab |
 | dns | Non | Oui | résolution pour tout le lab |
