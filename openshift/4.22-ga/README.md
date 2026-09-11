@@ -29,7 +29,7 @@ api-int.ocp422.lab.local    → 172.16.10.100
 | NIC | `vmbr1`, VirtIO, MAC notée pour `agent-config.yaml` |
 | Boot | ISO agent `agent.x86_64.iso` |
 
-Avant chaque nouvelle tentative : **effacer le disque** (wipe / recréer) après un échec d'install.
+Avant chaque nouvelle tentative : **effacer le disque** — voir [proxmox/sno-vm.md](../../proxmox/sno-vm.md).
 
 ## Prérequis bastion
 
@@ -126,13 +126,86 @@ sudo journalctl -u assisted-service -f
 sudo journalctl -u bootkube -f
 ```
 
-## Après install
+## Fin d'install et `wait-for`
+
+Durée observée en lab : **~30 min** (mirror déjà en place).
+
+`openshift-install agent wait-for install-complete` peut **échouer en timeout** avec une erreur TLS (`kube-apiserver-lb-signer`) alors que le cluster est **opérationnel**. Vérifier :
 
 ```bash
-export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig
+curl -k https://api.ocp422.lab.local:6443/healthz   # → ok
+```
+
+Critère de succès : `oc login` + nœud **Ready** + tous les ClusterOperators **Available** (voir ci-dessous).
+
+## Après install
+
+### DNS bastion (OAuth / console)
+
+Le DNS maison (`192.168.1.1`) ne résout pas `*.apps.ocp422.lab.local`. Ajouter sur la **bastion** :
+
+```bash
+sudo tee -a /etc/hosts << 'EOF'
+
+172.16.10.100  oauth-openshift.apps.ocp422.lab.local
+172.16.10.100  console-openshift-console.apps.ocp422.lab.local
+EOF
+```
+
+### Connexion `oc`
+
+Le fichier `auth/kubeconfig` peut être obsolète (certs bootstrap). Utiliser `oc login` :
+
+```bash
+cd ~/lab/4.22-ga
+
+oc login https://api.ocp422.lab.local:6443 \
+  -u kubeadmin \
+  -p "$(cat auth/kubeadmin-password)" \
+  --insecure-skip-tls-verify=true
+
 oc get nodes
+oc get clusteroperators
+
+cp ~/.kube/config ~/lab/4.22-ga/auth/kubeconfig
+export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig
+```
+
+### Miroirs cluster (air-gap)
+
+```bash
 oc apply -f workspace/working-dir/cluster-resources/idms-oc-mirror.yaml
 oc apply -f workspace/working-dir/cluster-resources/itms-oc-mirror.yaml
 ```
 
-Voir aussi [mirror/README.md](../../mirror/README.md) pour le miroir des images et les opérateurs air-gap (Virt, ODF).
+### Console web
+
+| | |
+|---|---|
+| URL (depuis bastion / VM sur `vmbr1`) | `https://console-openshift-console.apps.ocp422.lab.local` |
+| User | `kubeadmin` |
+| Password | `cat ~/lab/4.22-ga/auth/kubeadmin-password` |
+
+Depuis le **Mac** (lab isolé) : tunnel SSH ou VM graphique sur `vmbr1` — voir [proxmox/access.md](../../proxmox/access.md).
+
+SSH SNO : utilisateur **`core`**, clé = `sshKey` de `install-config.yaml` (souvent clé Mac, pas bastion).
+
+Voir aussi [mirror/README.md](../../mirror/README.md) pour les opérateurs air-gap (Virt, ODF).
+
+## Réinstall de contrôle
+
+Sans refaire le mirror registry :
+
+```bash
+cd ~/lab/4.22-ga
+cp config-backup/install-config.yaml config-backup/agent-config.yaml .
+
+rm -f .openshift_install_state.json agent.x86_64.iso
+openshift-install agent create cluster-manifests --dir .
+openshift-install agent create image --dir .
+
+# Proxmox : wipe disque ou remplacer scsi0 — proxmox/sno-vm.md
+openshift-install agent wait-for install-complete --dir . --log-level debug
+```
+
+Valider avec `oc login` + `oc get nodes` même si `wait-for` timeout.

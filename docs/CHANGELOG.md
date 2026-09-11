@@ -58,3 +58,9 @@
 - `rootDeviceHints` : Proxmox SCSI → `/dev/sda` (pas `/dev/vda`) ; chemins `by-id` non acceptés par l'installer
 - Génération ISO : reset `.openshift_install_state.json` si état partiel ; prérequis `xorriso`
 - Backup `config-backup/` avant `create image` (configs supprimées automatiquement)
+
+### Ajouté (install SNO validée + réinstall)
+- Install GA 4.22.12 SNO air-gap validée en lab (~30 min avec mirror existant)
+- [proxmox/sno-vm.md](../proxmox/sno-vm.md) — detach disque, **Unused Disk**, réinstall sans recréer la VM
+- [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) — post-install (`oc login`, OAuth `/etc/hosts`), faux timeout `wait-for`, réinstall
+- Bastion `/etc/hosts` : `oauth-openshift` et `console-openshift-console`

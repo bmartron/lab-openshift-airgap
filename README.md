@@ -13,7 +13,7 @@ Lab personnel pour se former à l'installation **agent-based** d'OpenShift en mo
 
 ## Objectifs
 
-- [ ] Installation **SNO** (Single Node OpenShift) en air-gap
+- [x] Installation **SNO** (Single Node OpenShift) en air-gap — GA 4.22.12 validée
 - [ ] Installation **3 nœuds** (cluster compact) en air-gap
 - [ ] OpenShift Virtualization (nested virt) — phase ultérieure
 
@@ -60,7 +60,8 @@ Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.
 4. Repo RHEL via DVD (sans souscription) — [rhel/dvd-repo.md](rhel/dvd-repo.md)
 5. Déployer DNS — [dns/README.md](dns/README.md) → registry → bastion
 6. Miroir des images — [mirror/README.md](mirror/README.md)
-7. Générer l'ISO agent et installer — [openshift/README.md](openshift/README.md)
+7. Générer l'ISO agent et installer — [openshift/4.22-ga/README.md](openshift/4.22-ga/README.md)
+8. VM SNO Proxmox (disque, réinstall) — [proxmox/sno-vm.md](proxmox/sno-vm.md)
 
 ## Progression lab
 
@@ -73,15 +74,16 @@ Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.
 - [x] VM bastion — réseau, `oc` / `openshift-install` / `oc-mirror` v2, DNS lab, CA registry
 - [x] NTP lab (chrony sur DNS) + fuseau Europe/Paris
 - [x] Mirror OCP 4.22.12 (`oc mirror` v2 → ~22 Go)
-- [ ] Install SNO GA 4.22.12 (en cours)
+- [x] Install SNO GA 4.22.12 (+ réinstall de contrôle ~30 min)
 - [ ] Mirror OCP 5 RC + install SNO RC
+- [ ] VM workstation graphique (console web, optionnel)
 
 ## Versions cibles
 
 | Composant | Version | Statut |
 |-----------|---------|--------|
 | VMs infra (dns, registry, bastion) | **RHEL 10.2** | ✅ |
-| OpenShift GA | **4.22.12** (Kubernetes 1.35) | 🔄 install en cours |
+| OpenShift GA | **4.22.12** (Kubernetes 1.35) | ✅ SNO air-gap |
 | OpenShift RC | **5.0.0-ec.6** (Kubernetes 1.36) | ⬜ |
 | Proxmox | _à documenter_ | ⬜ |
 

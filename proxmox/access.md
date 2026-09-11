@@ -155,6 +155,21 @@ Alternative : utiliser les **IP directes** (`172.16.10.20`) — pas besoin de `/
 | **Shutdown** | Arrêt propre (ACPI) — **à utiliser** |
 | **Stop** | Arrêt forcé — urgence seulement |
 
-## Futur : bastion double NIC
+## Console OpenShift depuis le Mac
 
-La VM `bastion` (`172.16.10.10`) aura `vmbr0` + `vmbr1` → SSH direct depuis le Mac vers la bastion.
+Le cluster (`172.16.10.100`) n’est pas routé depuis le LAN. Options :
+
+| Méthode | Détail |
+|---------|--------|
+| **Tunnel SSH** | `sudo ssh -L 443:172.16.10.100:443 -N bernard@<IP-bastion-LAN>` + `/etc/hosts` sur le Mac vers `127.0.0.1` (port 443 nécessite `sudo` sur macOS) |
+| **Port 8443** | `ssh -L 8443:172.16.10.100:443 -N bernard@<IP-bastion-LAN>` → URL avec `:8443` (OAuth peut exiger SOCKS) |
+| **SOCKS + Firefox** | `ssh -D 1080 -N bernard@<IP-bastion-LAN>` + hosts `172.16.10.100` pour les FQDN apps |
+| **VM graphique lab** | Navigateur sur `vmbr1` — DNS lab natif |
+
+Sur la **bastion** : `oc login` et console sans tunnel — voir [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md).
+
+VM SNO (disque, réinstall) : [sno-vm.md](sno-vm.md).
+
+## Bastion double NIC
+
+La VM `bastion` (`172.16.10.10`) a `vmbr0` + `vmbr1` → SSH direct depuis le Mac vers la bastion, puis accès au lab.

@@ -72,6 +72,8 @@ sudo tee -a /etc/hosts << 'EOF'
 172.16.10.20  registry.lab.local registry
 172.16.10.10  bastion.lab.local bastion
 172.16.10.100 api.ocp422.lab.local
+172.16.10.100 oauth-openshift.apps.ocp422.lab.local
+172.16.10.100 console-openshift-console.apps.ocp422.lab.local
 EOF
 
 dig mirror.openshift.com +short          # Internet OK
@@ -86,6 +88,7 @@ curl --cacert ~/lab/ca.crt https://registry.lab.local:5000/v2/_catalog
 | `resolvectl` : *not activatable* | `systemd-resolved` inactif sur RHEL | Utiliser `/etc/hosts` + NetworkManager |
 | `Could not resolve host: mirror.openshift.com` | DNS lab seul (sans Internet) | `ipv4.ignore-auto-dns no` sur `ens18` |
 | `curl registry.lab.local` échoue | DNS maison ne connaît pas `lab.local` | Entrées `/etc/hosts` (ci-dessus) |
+| `oc login` : *no such host* `oauth-openshift.apps...` | Apps non résolus par DNS maison | Lignes OAuth/console dans `/etc/hosts` |
 
 ## 3. Repo DVD + paquets (phase install)
 
@@ -208,6 +211,6 @@ dig @172.16.10.11 registry.lab.local
 - [x] Pull secret (`~/lab/pull-secret.txt`)
 - [x] `oc mirror` v2 → `registry.lab.local:5000/ocp4-422` (~22 Go)
 - [x] `nmstate`, `xorriso` installés
-- [ ] Install SNO GA terminée
+- [x] Install SNO GA 4.22.12 (validée + réinstall ~30 min)
 
-→ En cours : [openshift/4.22-ga](../openshift/4.22-ga/README.md)
+→ Suite : opérateurs air-gap — [mirror](../mirror/README.md) ; VM SNO — [proxmox/sno-vm.md](../proxmox/sno-vm.md)
