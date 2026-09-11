@@ -30,13 +30,41 @@ echo '/dev/sr0 /mnt/rhel iso9660 ro,defaults 0 0' | sudo tee -a /etc/fstab
 
 ## 3. Déclarer les repos locaux
 
-Copier [rhel-dvd.repo.example](rhel-dvd.repo.example) :
+> Le fichier `rhel-dvd.repo` **n'existe pas** sur la VM par défaut.  
+> Utiliser `tee` directement sur la VM, ou `scp` depuis le Mac — voir [proxmox/access.md](../proxmox/access.md).
+
+**Méthode recommandée** — créer sur la VM :
 
 ```bash
-sudo cp rhel-dvd.repo /etc/yum.repos.d/rhel-dvd.repo
+sudo tee /etc/yum.repos.d/rhel-dvd.repo << 'EOF'
+[rhel10-baseos]
+name=RHEL 10 BaseOS (DVD)
+baseurl=file:///mnt/rhel/BaseOS
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+
+[rhel10-appstream]
+name=RHEL 10 AppStream (DVD)
+baseurl=file:///mnt/rhel/AppStream
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+EOF
 ```
 
-Ou en une commande — voir le fichier exemple dans ce répertoire.
+**Alternative** — copier depuis le Mac :
+
+```bash
+scp -o ProxyJump=root@192.168.1.147 \
+  "/Users/bmartron/Documents/Cursor/Projet 1/rhel/rhel-dvd.repo.example" \
+  bernard@172.16.10.20:/tmp/rhel-dvd.repo
+
+# Sur la VM
+sudo cp /tmp/rhel-dvd.repo /etc/yum.repos.d/rhel-dvd.repo
+```
+
+Référence : [rhel-dvd.repo.example](rhel-dvd.repo.example)
 
 ## 4. Désactiver subscription-manager pour DNF
 

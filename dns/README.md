@@ -65,13 +65,26 @@ sudo dnf install -y dnsmasq bind-utils
 sudo systemctl disable --now systemd-resolved 2>/dev/null; true
 ```
 
-Déployer [dnsmasq.conf.example](dnsmasq.conf.example) → `/etc/dnsmasq.conf` :
+Déployer [dnsmasq.conf.example](dnsmasq.conf.example) → `/etc/dnsmasq.conf`.
+
+**Depuis le Mac** (pas depuis la VM) :
 
 ```bash
+scp -o ProxyJump=root@192.168.1.147 \
+  "/Users/bmartron/Documents/Cursor/Projet 1/dns/dnsmasq.conf.example" \
+  bernard@172.16.10.11:/tmp/dnsmasq.conf
+```
+
+Sur la VM DNS :
+
+```bash
+sudo cp /tmp/dnsmasq.conf /etc/dnsmasq.conf
 sudo sed -i 's/^interface=.*/interface=ens18/' /etc/dnsmasq.conf
 sudo dnsmasq --test
 sudo systemctl enable --now dnsmasq
 ```
+
+Ou créer le fichier directement sur la VM avec `sudo tee` — voir le contenu dans [dnsmasq.conf.example](dnsmasq.conf.example).
 
 ## 5. Vérifications
 
@@ -117,7 +130,7 @@ dig @172.16.10.11 registry.lab.local +short   # → 172.16.10.20
 - [x] VM DNS créée (RHEL 10)
 - [x] Réseau statique `172.16.10.11`
 - [x] Repo DVD local (sans souscription)
-- [ ] dnsmasq installé et vérifié
-- [ ] `dig` OK depuis Proxmox
+- [x] dnsmasq installé et vérifié
+- [x] `dig` OK depuis Proxmox
 
 → Prochaine étape : [registry](../registry/README.md)

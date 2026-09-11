@@ -67,8 +67,8 @@ Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.
 - [x] Proxmox + NFS + bridge `vmbr1`
 - [x] VM DNS RHEL 10 — réseau `172.16.10.11`
 - [x] Repo DVD local (sans subscription-manager)
-- [ ] dnsmasq opérationnel + tests `dig`
-- [ ] VM registry
+- [x] dnsmasq opérationnel + tests `dig`
+- [ ] VM registry (en cours — image registry:2 transférée)
 - [ ] VM bastion
 - [ ] Mirror OCP 4.22.12 + install SNO GA
 - [ ] Mirror OCP 5 RC + install SNO RC

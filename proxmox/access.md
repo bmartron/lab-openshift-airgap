@@ -2,67 +2,118 @@
 
 Les VMs sur `vmbr1` (`172.16.10.0/24`) ne sont **pas** joignables directement depuis le Mac (réseau isolé).
 
+## Paramètres du lab (référence)
+
+| Paramètre | Valeur |
+|-----------|--------|
+| Proxmox (LAN) | `root@192.168.1.147` |
+| Utilisateur VMs | `bernard` |
+| Jump host | `ProxyJump=root@192.168.1.147` |
+| Gateway lab | `172.16.10.1` (Proxmox sur vmbr1) |
+
+Variables : [versions.env.example](../versions.env.example) → copier en `versions.env`.
+
 ## Schéma
 
 ```
-Mac (192.168.x.x)
-  └── SSH ──► Proxmox (LAN + 172.16.10.1 sur vmbr1)
-                └── SSH ──► VM lab (ex. 172.16.10.11)
+Mac (192.168.1.x)
+  └── SSH/scp ──► Proxmox (192.168.1.147 + 172.16.10.1)
+                    └── SSH/scp ──► VMs lab (172.16.10.x)
 ```
 
-## SSH via Proxmox (méthode actuelle)
+## SSH en 2 sauts (manuel)
 
 ```bash
-# 1. Connexion à Proxmox
-ssh root@<IP-proxmox-LAN>
-
-# 2. Connexion à la VM du lab
-ssh <user>@172.16.10.11
+ssh root@192.168.1.147
+ssh bernard@172.16.10.11    # dns
+ssh bernard@172.16.10.20    # registry
 ```
 
-## Jump host depuis le Mac (optionnel)
+## SSH en 1 commande (ProxyJump depuis le Mac)
 
-Fichier `~/.ssh/config` :
+```bash
+ssh -o ProxyJump=root@192.168.1.147 bernard@172.16.10.11
+ssh -o ProxyJump=root@192.168.1.147 bernard@172.16.10.20
+```
+
+## ~/.ssh/config (recommandé)
 
 ```text
 Host proxmox
-  HostName 192.168.1.50
+  HostName 192.168.1.147
   User root
 
 Host dns-lab
   HostName 172.16.10.11
   User bernard
   ProxyJump proxmox
+
+Host registry-lab
+  HostName 172.16.10.20
+  User bernard
+  ProxyJump proxmox
 ```
 
 ```bash
 ssh dns-lab
+ssh registry-lab
 ```
 
-## Copier des fichiers (scp)
+## Copier des fichiers (scp) — depuis le Mac
+
+> **Important** : lancer ces commandes sur le **Mac** (pas depuis une VM lab).  
+> Les chemins `/Users/bmartron/...` n'existent que sur le Mac.
+
+### Config DNS (dnsmasq)
 
 ```bash
-# Via Proxmox en 2 étapes
-scp dns/dnsmasq.conf.example root@<IP-proxmox>:/tmp/
-ssh root@<IP-proxmox> "scp /tmp/dnsmasq.conf.example bernard@172.16.10.11:/tmp/"
+scp -o ProxyJump=root@192.168.1.147 \
+  "/Users/bmartron/Documents/Cursor/Projet 1/dns/dnsmasq.conf.example" \
+  bernard@172.16.10.11:/tmp/dnsmasq.conf
 ```
 
-Ou avec ProxyJump (une commande) :
+### Image registry:2 (tar)
+
+Préparer sur le Mac (Podman Desktop + Podman Machine) :
 
 ```bash
-scp -o ProxyJump=root@<IP-proxmox> \
-  dns/dnsmasq.conf.example bernard@172.16.10.11:/tmp/
+podman pull docker.io/library/registry:2
+podman save -o ~/Downloads/registry2.tar docker.io/library/registry:2
+```
+
+Transférer vers la VM registry :
+
+```bash
+scp -o ProxyJump=root@192.168.1.147 \
+  "/Users/bmartron/Downloads/registry2.tar" \
+  bernard@172.16.10.20:/tmp/registry2.tar
+```
+
+Sur la VM registry :
+
+```bash
+podman load -i /tmp/registry2.tar
+podman images | grep registry
+```
+
+### Variante en 2 étapes (si ProxyJump pose problème)
+
+```bash
+# Mac → Proxmox
+scp "/Users/bmartron/Downloads/registry2.tar" root@192.168.1.147:/tmp/
+
+# Proxmox → VM registry
+ssh root@192.168.1.147
+scp /tmp/registry2.tar bernard@172.16.10.20:/tmp/
 ```
 
 ## Console noVNC vs terminal
 
 | Outil | Usage |
 |-------|--------|
-| **Terminal Mac / Cursor** | Travail quotidien, SSH, copier-coller |
-| **Shell UI Proxmox** | Commandes rapides sur l'hôte (`ping`, `qm`) |
-| **noVNC** | Install OS initiale, dépannage sans SSH |
-
-Le copier-coller noVNC est limité sur Mac — préférer SSH dès que possible.
+| **Terminal Mac / Cursor** | SSH, scp, copier-coller — **quotidien** |
+| **Shell UI Proxmox** | `ping`, `dig`, `qm` — commandes rapides |
+| **noVNC** | Install OS initiale uniquement |
 
 ## Arrêt des VMs
 
@@ -71,15 +122,6 @@ Le copier-coller noVNC est limité sur Mac — préférer SSH dès que possible.
 | **Shutdown** | Arrêt propre (ACPI) — **à utiliser** |
 | **Stop** | Arrêt forcé — urgence seulement |
 
-Installer `qemu-guest-agent` sur les VMs pour une meilleure intégration :
-
-```bash
-sudo dnf install -y qemu-guest-agent
-sudo systemctl enable --now qemu-guest-agent
-```
-
-Puis Proxmox → VM → **Options** → QEMU Guest Agent = activé.
-
 ## Futur : bastion double NIC
 
-La VM `bastion` aura `vmbr0` + `vmbr1` → SSH direct depuis le Mac vers la bastion, puis accès au reste du lab.
+La VM `bastion` (`172.16.10.10`) aura `vmbr0` + `vmbr1` → SSH direct depuis le Mac vers la bastion.

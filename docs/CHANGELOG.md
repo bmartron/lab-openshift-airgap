@@ -19,3 +19,9 @@
 - [proxmox/access.md](../proxmox/access.md) — SSH via Proxmox, noVNC, shutdown
 - [dns/README.md](../dns/README.md) — procédure complète VM DNS mise à jour
 - Progression lab dans README principal
+
+### Ajouté (accès lab / registry)
+- Paramètres concrets : Proxmox `192.168.1.147`, user `bernard`, ProxyJump
+- Procédure `scp` registry2.tar Mac → VM registry
+- Repo DVD via `sudo tee` (correction `cp rhel-dvd.repo`)
+- Podman Desktop + Podman Machine sur Mac documenté
