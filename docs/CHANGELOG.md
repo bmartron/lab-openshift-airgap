@@ -41,3 +41,20 @@
 - Trust CA registry (`/etc/containers/certs.d/` + `update-ca-trust`)
 - [mirror/README.md](../mirror/README.md) — procédure `oc mirror` complète + dépannage TLS/DNS
 - Progression bastion mise à jour (prochaine étape : `oc mirror`)
+
+### Corrigé (registry TLS + bastion DNS)
+- Certificat registry : ajout SAN (`subjectAltName`) requis par oc-mirror v2 / Go
+- Bastion double NIC : `/etc/hosts` lab + DNS maison (Internet + lab coexistants)
+
+### Ajouté (mirror + install agent GA 4.22.12)
+- [mirror/README.md](../mirror/README.md) — procédure `oc mirror` v2 complète, vérification post-mirror, dépannage SAN/x509
+- [bastion/README.md](../bastion/README.md) — `nmstate`, `xorriso`, `oc-mirror` v2, progression mise à jour
+- [dns/README.md](../dns/README.md) — serveur NTP chrony lab + fuseau Europe/Paris
+- [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) — workflow install complet, dépannage ISO, surveillance logs
+
+### Corrigé (configs install GA 4.22.12)
+- `install-config.yaml` : `baseDomain: lab.local` (pas `ocp422.lab.local`), bloc `networking` avec `machineNetwork: 172.16.10.0/24`
+- `agent-config.yaml` : `apiVersion: v1beta1`, `additionalNTPSources`, `rendezvousIP`, `mac-address` dans networkConfig
+- `rootDeviceHints` : Proxmox SCSI → `/dev/sda` (pas `/dev/vda`) ; chemins `by-id` non acceptés par l'installer
+- Génération ISO : reset `.openshift_install_state.json` si état partiel ; prérequis `xorriso`
+- Backup `config-backup/` avant `create image` (configs supprimées automatiquement)

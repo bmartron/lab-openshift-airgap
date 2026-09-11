@@ -1,18 +1,26 @@
-apiVersion: v1
+apiVersion: v1beta1
 kind: AgentConfig
 metadata:
   name: ocp422
+rendezvousIP: 172.16.10.100
+additionalNTPSources:
+- 172.16.10.11
 hosts:
 - hostname: ocp-sno-422
-  role: master
   interfaces:
   - name: ens18
     macAddress: "BC:24:11:XX:XX:XX"
+  # Proxmox SCSI (drive-scsi0) → /dev/sda ; VirtIO Block → /dev/vda
+  # Vérifier sur le SNO : lsblk -o NAME,SIZE,TYPE,TRAN
+  # Valeurs acceptées : /dev/sda ou /dev/disk/by-path/... (pas /dev/disk/by-id/)
+  rootDeviceHints:
+    deviceName: /dev/sda
   networkConfig:
     interfaces:
     - name: ens18
       type: ethernet
       state: up
+      mac-address: BC:24:11:XX:XX:XX
       ipv4:
         enabled: true
         dhcp: false
@@ -28,5 +36,4 @@ hosts:
       - destination: 0.0.0.0/0
         next-hop-address: 172.16.10.1
         next-hop-interface: ens18
-  rootDeviceHints:
-    deviceName: /dev/vda
+        table-id: 254

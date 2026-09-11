@@ -57,28 +57,35 @@ curl -I https://mirror.openshift.com
 
 ### Résolution DNS lab (double NIC)
 
-Avec deux interfaces, NetworkManager injecte le DNS maison (`192.168.1.1`) **avant** le DNS lab.
-`dig @172.16.10.11 registry.lab.local` fonctionne, mais `curl https://registry.lab.local` échoue.
+La bastion a besoin des **deux** résolveurs : DNS maison (Internet) + noms lab.
 
-**Fix validé** — désactiver le DNS auto sur `ens18`, garder le DNS lab sur `ens19` :
+**Fix validé** — `/etc/hosts` pour le lab + DNS maison sur `ens18` :
 
 ```bash
-sudo nmcli con mod ens18 ipv4.ignore-auto-dns yes
-sudo nmcli con mod ens19 ipv4.dns 172.16.10.11
-sudo nmcli con mod ens19 ipv4.dns-search lab.local
+sudo nmcli con mod ens18 ipv4.ignore-auto-dns no
 sudo nmcli con up ens18
 sudo nmcli con up ens19
 
-cat /etc/resolv.conf
-dig registry.lab.local +short
+sudo tee -a /etc/hosts << 'EOF'
+
+172.16.10.11  dns.lab.local dns
+172.16.10.20  registry.lab.local registry
+172.16.10.10  bastion.lab.local bastion
+172.16.10.100 api.ocp422.lab.local
+EOF
+
+dig mirror.openshift.com +short          # Internet OK
 curl --cacert ~/lab/ca.crt https://registry.lab.local:5000/v2/_catalog
 ```
+
+> `/etc/hosts` est consulté avant le DNS — les noms `*.lab.local` fonctionnent sans casser `mirror.openshift.com`.
 
 | Symptôme | Cause | Action |
 |----------|-------|--------|
 | `Insufficient privileges` sur `nmcli` | Pas de `sudo` | Préfixer avec `sudo` |
-| `resolvectl` : *not activatable* | `systemd-resolved` inactif sur RHEL | Utiliser NetworkManager (ci-dessus) |
-| `dig @172.16.10.11` OK mais pas `dig registry.lab.local` | DNS maison en premier dans `resolv.conf` | `ipv4.ignore-auto-dns` sur `ens18` |
+| `resolvectl` : *not activatable* | `systemd-resolved` inactif sur RHEL | Utiliser `/etc/hosts` + NetworkManager |
+| `Could not resolve host: mirror.openshift.com` | DNS lab seul (sans Internet) | `ipv4.ignore-auto-dns no` sur `ens18` |
+| `curl registry.lab.local` échoue | DNS maison ne connaît pas `lab.local` | Entrées `/etc/hosts` (ci-dessus) |
 
 ## 3. Repo DVD + paquets (phase install)
 
@@ -87,8 +94,13 @@ Sur `vmbr1` seul, utiliser le DVD — [rhel/dvd-repo.md](../rhel/dvd-repo.md).
 Avec Internet via `vmbr0`, enregistrement Red Hat ou DVD au choix.
 
 ```bash
-sudo dnf install -y podman skopeo jq git bind-utils tar
+sudo dnf install -y podman skopeo jq git bind-utils tar nmstate xorriso genisoimage
 ```
+
+| Paquet | Usage |
+|--------|-------|
+| `nmstate` | Validation `agent-config.yaml` (`nmstatectl` requis par openshift-install) |
+| `xorriso` / `genisoimage` | Génération ISO agent (`openshift-install agent create image`) |
 
 ## 4. Installer oc / openshift-install (GA 4.22.12)
 
@@ -151,12 +163,25 @@ tar xzf openshift-install-linux-*.tar.gz
 export PATH=~/ocp-5-rc/bin:$PATH
 ```
 
-## 8. Prochaine action : mirror OCP
+## 8. oc-mirror v2 (GA 4.22.12)
 
-Voir [mirror/README.md](../mirror/README.md) — pousser les images vers :
+Installer le plugin (une fois) :
 
-- GA : `registry.lab.local:5000/ocp4-422`
-- RC : `registry.lab.local:5000/ocp5-rc`
+```bash
+export OCP_VERSION=4.22.12
+cd /tmp
+curl -LO https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/${OCP_VERSION}/oc-mirror.tar.gz
+tar xzf oc-mirror.tar.gz
+sudo mv oc-mirror /usr/local/bin/
+sudo chmod +x /usr/local/bin/oc-mirror
+oc mirror --v2 --help
+```
+
+Procédure complète : [mirror/README.md](../mirror/README.md).
+
+## 9. Génération ISO agent
+
+Voir [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) — workflow complet avec `config-backup/`.
 
 ## Accès SSH depuis le Mac
 
@@ -177,10 +202,12 @@ dig @172.16.10.11 registry.lab.local
 
 - [x] VM créée (2 NICs)
 - [x] Réseau lab `172.16.10.10` + admin Internet
-- [x] DNS lab (`*.lab.local` via NetworkManager)
-- [x] `oc` + `openshift-install` 4.22.12
+- [x] DNS lab (`/etc/hosts` + DNS maison sur `ens18`)
+- [x] `oc` + `openshift-install` + `oc-mirror` v2 — 4.22.12
 - [x] CA registry (`~/lab/ca.crt` + trust système)
-- [ ] Pull secret (`~/lab/pull-secret.txt`)
-- [ ] `oc mirror` vers registry lab
+- [x] Pull secret (`~/lab/pull-secret.txt`)
+- [x] `oc mirror` v2 → `registry.lab.local:5000/ocp4-422` (~22 Go)
+- [x] `nmstate`, `xorriso` installés
+- [ ] Install SNO GA terminée
 
-→ Prochaine étape : [mirror](../mirror/README.md)
+→ En cours : [openshift/4.22-ga](../openshift/4.22-ga/README.md)

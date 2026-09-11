@@ -106,7 +106,49 @@ Depuis **Proxmox** et **bastion** :
 dig @172.16.10.11 registry.lab.local +short   # → 172.16.10.20
 ```
 
-## 6. Firewall (obligatoire sur RHEL)
+## 6. NTP (serveur lab) + fuseau horaire
+
+Le cluster agent exige une horloge synchronisée. La VM DNS fait office de **serveur NTP** pour le lab air-gap.
+
+```bash
+sudo dnf install -y chrony
+sudo tee /etc/chrony.d/lab.conf << 'EOF'
+allow 172.16.10.0/24
+cmdallow 172.16.10.0/24
+local stratum 10
+rtcsync
+makestep 1.0 3
+EOF
+
+# Pas d'Internet sur dns — désactiver les pools externes
+sudo sed -i 's/^pool /#pool /' /etc/chrony.conf
+sudo sed -i 's/^server /#server /' /etc/chrony.conf
+sudo systemctl enable --now chronyd
+sudo systemctl restart chronyd
+
+sudo firewall-cmd --permanent --add-service=ntp
+sudo firewall-cmd --reload
+
+chronyc tracking
+```
+
+Fuseau horaire **Europe/Paris** (toutes les VMs lab) :
+
+```bash
+sudo timedatectl set-timezone Europe/Paris
+timedatectl
+```
+
+Dans `agent-config.yaml` du cluster :
+
+```yaml
+additionalNTPSources:
+- 172.16.10.11
+```
+
+> Ne pas mettre `additionalNtpServers` dans `install-config.yaml` (champ invalide).
+
+## 7. Firewall (obligatoire sur RHEL)
 
 Sans cette règle, les autres VMs reçoivent `host unreachable` sur le port 53 (le ping fonctionne quand même).
 
@@ -147,5 +189,7 @@ sudo firewall-cmd --reload
 - [x] Repo DVD local (sans souscription)
 - [x] dnsmasq (`listen-address` + firewall DNS)
 - [x] `dig` OK depuis bastion et Proxmox
+- [x] chrony NTP serveur lab (`172.16.10.11`)
+- [x] Fuseau horaire Europe/Paris
 
-→ Prochaine étape : [bastion](../bastion/README.md) (mirror OCP)
+→ Suite : [openshift/4.22-ga](../openshift/4.22-ga/README.md)

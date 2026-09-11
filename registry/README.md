@@ -77,9 +77,11 @@ cd /opt/registry/certs
 sudo openssl req -newkey rsa:4096 -nodes -sha256 -keyout ca.key -x509 -days 3650 \
   -out ca.crt -subj "/CN=Lab CA"
 sudo openssl req -newkey rsa:4096 -nodes -sha256 -keyout registry.key \
-  -out registry.csr -subj "/CN=registry.lab.local"
+  -out registry.csr -subj "/CN=registry.lab.local" \
+  -addext "subjectAltName=DNS:registry.lab.local,DNS:registry"
 sudo openssl x509 -req -days 3650 -sha256 -in registry.csr \
-  -CA ca.crt -CAkey ca.key -CAcreateserial -out registry.crt
+  -CA ca.crt -CAkey ca.key -CAcreateserial -out registry.crt \
+  -copy_extensions copyall
 
 sudo podman run -d --name ocp-registry --restart=always --pull=never \
   -p 5000:5000 \
@@ -124,6 +126,7 @@ sudo cat /opt/registry/certs/ca.crt
 | `platform arm64 vs amd64` | Re-tirer avec `--platform linux/amd64` sur Mac |
 | Podman pull Docker Hub | `sudo podman load` + `--pull=never` |
 | Proxmox ne résout pas les noms | `/etc/hosts` — pas le DNS lab dans resolv.conf |
+| `oc-mirror` : *legacy Common Name, use SANs* | Cert sans SAN | Régénérer `registry.crt` avec `subjectAltName` (voir §4) |
 
 ## Progression
 
