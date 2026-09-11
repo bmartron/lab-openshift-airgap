@@ -13,3 +13,9 @@
 - Double piste OpenShift : GA 4.22.12 + RC 5.0.0-ec.6
 - Configs versionnées : `openshift/4.22-ga/`, `openshift/5-rc/`
 - `versions.env.example`, `docs/versions.md`, `bastion/README.md`
+
+### Ajouté (session DNS / accès lab)
+- [rhel/dvd-repo.md](../rhel/dvd-repo.md) — repo local DVD sans souscription
+- [proxmox/access.md](../proxmox/access.md) — SSH via Proxmox, noVNC, shutdown
+- [dns/README.md](../dns/README.md) — procédure complète VM DNS mise à jour
+- Progression lab dans README principal

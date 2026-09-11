@@ -40,7 +40,8 @@ Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.
 ```
 .
 ├── docs/                  # Architecture, réseau, versions, procédures
-├── proxmox/               # Notes et scripts Proxmox
+├── proxmox/               # Réseau, accès SSH, console
+├── rhel/                  # Repo DVD local (sans souscription)
 ├── bastion/               # VM bastion RHEL 10
 ├── openshift/
 │   ├── 4.22-ga/           # Config install GA (4.22.12)
@@ -54,16 +55,29 @@ Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.
 ## Démarrage rapide
 
 1. Lire [docs/architecture.md](docs/architecture.md)
-2. Configurer le bridge `vmbr1` sur Proxmox — [proxmox/network.md](proxmox/network.md)
-3. Déployer DNS, registry, bastion
-4. Miroir des images — [mirror/README.md](mirror/README.md)
-5. Générer l'ISO agent et installer — [openshift/README.md](openshift/README.md)
+2. Configurer le bridge `vmbr1` — [proxmox/network.md](proxmox/network.md)
+3. Accès SSH aux VMs isolées — [proxmox/access.md](proxmox/access.md)
+4. Repo RHEL via DVD (sans souscription) — [rhel/dvd-repo.md](rhel/dvd-repo.md)
+5. Déployer DNS — [dns/README.md](dns/README.md) → registry → bastion
+6. Miroir des images — [mirror/README.md](mirror/README.md)
+7. Générer l'ISO agent et installer — [openshift/README.md](openshift/README.md)
+
+## Progression lab
+
+- [x] Proxmox + NFS + bridge `vmbr1`
+- [x] VM DNS RHEL 10 — réseau `172.16.10.11`
+- [x] Repo DVD local (sans subscription-manager)
+- [ ] dnsmasq opérationnel + tests `dig`
+- [ ] VM registry
+- [ ] VM bastion
+- [ ] Mirror OCP 4.22.12 + install SNO GA
+- [ ] Mirror OCP 5 RC + install SNO RC
 
 ## Versions cibles
 
 | Composant | Version | Statut |
 |-----------|---------|--------|
-| VMs infra (dns, registry, bastion) | **RHEL 10.2** | ⬜ |
+| VMs infra (dns, registry, bastion) | **RHEL 10.2** | 🔄 DNS en cours |
 | OpenShift GA | **4.22.12** (Kubernetes 1.35) | ⬜ |
 | OpenShift RC | **5.0.0-ec.6** (Kubernetes 1.36) | ⬜ |
 | Proxmox | _à documenter_ | ⬜ |

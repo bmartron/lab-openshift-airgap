@@ -18,6 +18,8 @@ Poste d'orchestration du lab : outils OpenShift, mirror, génération ISO agent.
 
 ## Paquets de base
 
+Repo DVD local (VM isolée) — voir [rhel/dvd-repo.md](../rhel/dvd-repo.md).
+
 ```bash
 sudo dnf install -y podman skopeo jq git bind-utils
 ```

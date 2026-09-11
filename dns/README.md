@@ -13,43 +13,30 @@ Serveur DNS interne du lab air-gap. Résolution locale uniquement (pas d'upstrea
 | Disque | 10 Go (NFS) |
 | NIC | 1 × `vmbr1` |
 | IP | `172.16.10.11/24` |
-| Gateway | `172.16.10.1` |
+| Netmask | `255.255.255.0` (`/24`) |
+| Gateway | `172.16.10.1` (Proxmox) |
 | Hostname | `dns.lab.local` |
 
 ## 1. Créer la VM dans Proxmox
 
 1. **Create VM** → VM ID libre (ex. `110`)
-2. **OS** : ISO RHEL/Rocky/Alma (depuis datastore NFS)
-3. **System** : défaut (BIOS ou UEFI selon ISO)
-4. **Disks** : 10 Go, storage NFS, cache `none`
-5. **CPU** : 1 core
-6. **Memory** : 1024 Mo
-7. **Network** :
-   - Bridge : **`vmbr1`**
-   - Model : VirtIO
-   - **Pas de firewall** Proxmox sur cette NIC (pour l'instant)
-8. Installer l'OS — installation minimale suffit
+2. **OS** : ISO RHEL 10 (depuis datastore NFS)
+3. **Disks** : 10 Go, storage NFS, cache `none`
+4. **CPU** : 1 core — **Memory** : 1024 Mo
+5. **Network** : Bridge **`vmbr1`**, VirtIO
+6. Installation **minimale** — configurer l'utilisateur admin (ex. `bernard`)
 
-## 2. Réseau statique (RHEL 10 — nmcli)
+> Accès SSH : les VMs sur `vmbr1` ne sont pas joignables depuis le Mac. Passer par **Proxmox** — voir [proxmox/access.md](../proxmox/access.md).
 
-Sur la VM, identifier l'interface (souvent `ens18` ou `enp6s18`) :
+## 2. Réseau statique (minimum de commandes)
 
 ```bash
-nmcli device status
-```
-
-```bash
-NM_DEV=ens18   # adapter
-
-nmcli con mod "$NM_DEV" ipv4.addresses 172.16.10.11/24
-nmcli con mod "$NM_DEV" ipv4.gateway 172.16.10.1
-nmcli con mod "$NM_DEV" ipv4.dns 127.0.0.1
-nmcli con mod "$NM_DEV" ipv4.method manual
-nmcli con mod "$NM_DEV" ipv6.method ignore
-nmcli con up "$NM_DEV"
-
+nmcli con mod ens18 ipv4.addresses 172.16.10.11/24 ipv4.gateway 172.16.10.1 ipv4.dns 127.0.0.1 ipv4.method manual ipv6.method disabled
+nmcli con up ens18
 hostnamectl set-hostname dns.lab.local
 ```
+
+Adapter `ens18` si besoin (`nmcli device status`).
 
 Vérifier depuis **Proxmox** :
 
@@ -57,34 +44,33 @@ Vérifier depuis **Proxmox** :
 ping -c 2 172.16.10.11
 ```
 
-## 3. Installer dnsmasq
+## 3. Repo DVD RHEL (sans souscription)
+
+Sur `vmbr1` isolé, pas d'Internet → utiliser le **DVD RHEL 10 complet** comme repo local.
+
+Voir [rhel/dvd-repo.md](../rhel/dvd-repo.md) pour la procédure complète.
+
+Résumé :
 
 ```bash
-sudo dnf install -y dnsmasq
-sudo systemctl stop systemd-resolved 2>/dev/null || true
-sudo systemctl disable systemd-resolved 2>/dev/null || true
+sudo mount /dev/sr0 /mnt/rhel
+sudo cp rhel-dvd.repo /etc/yum.repos.d/rhel-dvd.repo   # depuis le repo git ou copier le .example
+# Désactiver plugin subscription-manager (voir rhel/dvd-repo.md)
+sudo dnf install -y dnsmasq bind-utils
 ```
 
-> Si `systemd-resolved` écoute sur le port 53, le désactiver avant de démarrer dnsmasq.
-
-## 4. Déployer la configuration
-
-Copier `dnsmasq.conf.example` vers la VM :
+## 4. Configurer dnsmasq
 
 ```bash
-# Depuis votre poste (ou bastion future)
-scp dns/dnsmasq.conf.example root@172.16.10.11:/etc/dnsmasq.conf
+sudo systemctl disable --now systemd-resolved 2>/dev/null; true
 ```
 
-Ou coller manuellement le contenu de [dnsmasq.conf.example](dnsmasq.conf.example).
-
-**Adapter** la ligne `interface=` au nom réel de l'interface (`ens18`, pas `eth0`).
+Déployer [dnsmasq.conf.example](dnsmasq.conf.example) → `/etc/dnsmasq.conf` :
 
 ```bash
 sudo sed -i 's/^interface=.*/interface=ens18/' /etc/dnsmasq.conf
 sudo dnsmasq --test
 sudo systemctl enable --now dnsmasq
-sudo systemctl status dnsmasq
 ```
 
 ## 5. Vérifications
@@ -92,34 +78,16 @@ sudo systemctl status dnsmasq
 Sur la VM DNS :
 
 ```bash
-dig @127.0.0.1 dns.lab.local +short
-dig @127.0.0.1 api.ocp.lab.local +short
-dig @127.0.0.1 test.apps.ocp.lab.local +short
+dig @127.0.0.1 api.ocp422.lab.local +short    # → 172.16.10.100
+dig @127.0.0.1 api.ocp5.lab.local +short      # → 172.16.10.110
+dig @127.0.0.1 test.apps.ocp422.lab.local +short
 ```
 
-Résultats attendus :
-
-```text
-172.16.10.11
-172.16.10.100
-172.16.10.100
-```
-
-Depuis **Proxmox** (hôte `172.16.10.1`) :
+Depuis **Proxmox** :
 
 ```bash
-dig @172.16.10.11 registry.lab.local +short
-# → 172.16.10.20
+dig @172.16.10.11 registry.lab.local +short   # → 172.16.10.20
 ```
-
-## 6. Firewall (optionnel sur la VM)
-
-```bash
-sudo firewall-cmd --permanent --add-service=dns
-sudo firewall-cmd --reload
-```
-
-Ou, en lab minimal sans firewalld actif, laisser ouvert sur `vmbr1` isolé.
 
 ## Enregistrements DNS
 
@@ -137,13 +105,19 @@ Ou, en lab minimal sans firewalld actif, laisser ouvert sur `vmbr1` isolé.
 
 | Symptôme | Cause probable | Action |
 |----------|----------------|--------|
-| `dig` timeout depuis Proxmox | VM éteinte / mauvaise IP / firewall | `ping 172.16.10.11` |
-| `dnsmasq` ne démarre pas | Port 53 pris par resolved | Désactiver `systemd-resolved` |
+| `dnf`: no enabled repositories | Pas de souscription / pas de repo DVD | [rhel/dvd-repo.md](../rhel/dvd-repo.md) |
+| SSH depuis Mac timeout | Réseau isolé | SSH via Proxmox — [proxmox/access.md](../proxmox/access.md) |
+| `dig` timeout | VM down / firewall | `ping 172.16.10.11` |
+| `dnsmasq` ne démarre pas | Port 53 pris | Désactiver `systemd-resolved` |
 | Mauvaise réponse DNS | `interface=` incorrect | Aligner sur `nmcli device` |
-| `eth0` vs `ens18` | Nom interface RHEL 10 | Mettre à jour `dnsmasq.conf` |
 
-## Suite
+## Progression
 
-- [ ] VM DNS opérationnelle
-- [ ] Enregistrements résolus depuis Proxmox
-- → Prochaine étape : [registry](../registry/README.md)
+- [x] Bridge `vmbr1` sur Proxmox
+- [x] VM DNS créée (RHEL 10)
+- [x] Réseau statique `172.16.10.11`
+- [x] Repo DVD local (sans souscription)
+- [ ] dnsmasq installé et vérifié
+- [ ] `dig` OK depuis Proxmox
+
+→ Prochaine étape : [registry](../registry/README.md)
