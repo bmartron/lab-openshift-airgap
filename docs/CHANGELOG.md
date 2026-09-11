@@ -25,3 +25,8 @@
 - Procédure `scp` registry2.tar Mac → VM registry
 - Repo DVD via `sudo tee` (correction `cp rhel-dvd.repo`)
 - Podman Desktop + Podman Machine sur Mac documenté
+
+### Ajouté (registry terminé + Proxmox hosts)
+- Proxmox `/etc/hosts` pour noms lab — DNS maison inchangé ([proxmox/hosts.lab.example](../proxmox/hosts.lab.example))
+- Registry : amd64, openssl, `--pull=never`, sudo podman load
+- Bastion README complet — prochaine étape

@@ -77,23 +77,24 @@ scp -o ProxyJump=root@192.168.1.147 \
 Préparer sur le Mac (Podman Desktop + Podman Machine) :
 
 ```bash
-podman pull docker.io/library/registry:2
-podman save -o ~/Downloads/registry2.tar docker.io/library/registry:2
+# Mac Apple Silicon → forcer amd64 pour les VMs x86_64 Proxmox
+podman pull --platform linux/amd64 docker.io/library/registry:2
+podman save -o ~/Downloads/registry2-amd64.tar docker.io/library/registry:2
 ```
 
 Transférer vers la VM registry :
 
 ```bash
 scp -o ProxyJump=root@192.168.1.147 \
-  "/Users/bmartron/Downloads/registry2.tar" \
-  bernard@172.16.10.20:/tmp/registry2.tar
+  "/Users/bmartron/Downloads/registry2-amd64.tar" \
+  bernard@172.16.10.20:/tmp/registry2-amd64.tar
 ```
 
 Sur la VM registry :
 
 ```bash
-podman load -i /tmp/registry2.tar
-podman images | grep registry
+sudo podman load -i /tmp/registry2-amd64.tar
+sudo podman images | grep registry
 ```
 
 ### Variante en 2 étapes (si ProxyJump pose problème)
@@ -106,6 +107,38 @@ scp "/Users/bmartron/Downloads/registry2.tar" root@192.168.1.147:/tmp/
 ssh root@192.168.1.147
 scp /tmp/registry2.tar bernard@172.16.10.20:/tmp/
 ```
+
+## Résolution DNS sur Proxmox (hosts uniquement)
+
+Les VMs lab utilisent **dnsmasq** (`172.16.10.11`). Proxmox doit **garder le DNS maison** pour les mises à jour (`apt`, subscriptions).
+
+| Méthode | Recommandation |
+|---------|----------------|
+| DNS maison dans `/etc/resolv.conf` | **Conserver** — updates Proxmox |
+| Remplacer par `172.16.10.11` | **Non** — casse la résolution Internet |
+| `/etc/hosts` pour les noms lab | **Oui** — confort admin |
+
+Ajouter sur **Proxmox** (voir [hosts.lab.example](hosts.lab.example)) :
+
+```bash
+sudo tee -a /etc/hosts << 'EOF'
+
+# Lab OpenShift air-gap
+172.16.10.11  dns.lab.local dns
+172.16.10.20  registry.lab.local registry
+172.16.10.10  bastion.lab.local bastion
+172.16.10.100 api.ocp422.lab.local
+172.16.10.110 api.ocp5.lab.local
+EOF
+```
+
+Vérifier :
+
+```bash
+curl -k https://registry.lab.local:5000/v2/_catalog
+```
+
+Alternative : utiliser les **IP directes** (`172.16.10.20`) — pas besoin de `/etc/hosts`.
 
 ## Console noVNC vs terminal
 
