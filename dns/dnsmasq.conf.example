@@ -2,6 +2,8 @@
 # Interface lab uniquement — adapter au nom réel (souvent ens18 sur RHEL 10 / Proxmox)
 interface=ens18
 bind-interfaces
+listen-address=172.16.10.11
+listen-address=127.0.0.1
 no-resolv
 no-poll
 

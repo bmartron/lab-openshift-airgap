@@ -62,8 +62,12 @@ sudo dnf install -y dnsmasq bind-utils
 ## 4. Configurer dnsmasq
 
 ```bash
+sudo dnf install -y dnsmasq bind-utils
 sudo systemctl disable --now systemd-resolved 2>/dev/null; true
 ```
+
+> **RHEL 10** : sans `listen-address=172.16.10.11`, dnsmasq écoute uniquement sur `127.0.0.1`  
+> (log : `DNS service limited to localhost`). Les autres VMs ne pourront pas joindre le DNS.
 
 Déployer [dnsmasq.conf.example](dnsmasq.conf.example) → `/etc/dnsmasq.conf`.
 
@@ -96,10 +100,19 @@ dig @127.0.0.1 api.ocp5.lab.local +short      # → 172.16.10.110
 dig @127.0.0.1 test.apps.ocp422.lab.local +short
 ```
 
-Depuis **Proxmox** :
+Depuis **Proxmox** et **bastion** :
 
 ```bash
 dig @172.16.10.11 registry.lab.local +short   # → 172.16.10.20
+```
+
+## 6. Firewall (obligatoire sur RHEL)
+
+Sans cette règle, les autres VMs reçoivent `host unreachable` sur le port 53 (le ping fonctionne quand même).
+
+```bash
+sudo firewall-cmd --permanent --add-service=dns
+sudo firewall-cmd --reload
 ```
 
 ## Enregistrements DNS
@@ -120,7 +133,9 @@ dig @172.16.10.11 registry.lab.local +short   # → 172.16.10.20
 |----------|----------------|--------|
 | `dnf`: no enabled repositories | Pas de souscription / pas de repo DVD | [rhel/dvd-repo.md](../rhel/dvd-repo.md) |
 | SSH depuis Mac timeout | Réseau isolé | SSH via Proxmox — [proxmox/access.md](../proxmox/access.md) |
-| `dig` timeout | VM down / firewall | `ping 172.16.10.11` |
+| `dig` timeout / `host unreachable` depuis bastion | Firewall DNS fermé | `firewall-cmd --add-service=dns` |
+| `DNS service limited to localhost` | `listen-address` manquant | Ajouter `listen-address=172.16.10.11` |
+| `dig` timeout | VM down | `ping 172.16.10.11` |
 | `dnsmasq` ne démarre pas | Port 53 pris | Désactiver `systemd-resolved` |
 | Mauvaise réponse DNS | `interface=` incorrect | Aligner sur `nmcli device` |
 
@@ -130,7 +145,7 @@ dig @172.16.10.11 registry.lab.local +short   # → 172.16.10.20
 - [x] VM DNS créée (RHEL 10)
 - [x] Réseau statique `172.16.10.11`
 - [x] Repo DVD local (sans souscription)
-- [x] dnsmasq installé et vérifié
-- [x] `dig` OK depuis Proxmox
+- [x] dnsmasq (`listen-address` + firewall DNS)
+- [x] `dig` OK depuis bastion et Proxmox
 
 → Prochaine étape : [registry](../registry/README.md)

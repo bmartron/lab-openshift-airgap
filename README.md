@@ -70,7 +70,7 @@ Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.
 - [x] dnsmasq opérationnel + tests `dig`
 - [x] VM registry — HTTPS actif (`registry:2` amd64)
 - [x] Proxmox `/etc/hosts` pour noms lab (DNS maison conservé)
-- [ ] VM bastion
+- [ ] VM bastion (en cours — oc installés, CA + DNS OK)
 - [ ] Mirror OCP 4.22.12 + install SNO GA
 - [ ] Mirror OCP 5 RC + install SNO RC
 

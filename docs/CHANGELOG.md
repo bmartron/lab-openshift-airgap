@@ -30,3 +30,7 @@
 - Proxmox `/etc/hosts` pour noms lab — DNS maison inchangé ([proxmox/hosts.lab.example](../proxmox/hosts.lab.example))
 - Registry : amd64, openssl, `--pull=never`, sudo podman load
 - Bastion README complet — prochaine étape
+
+### Corrigé (dnsmasq RHEL 10)
+- `listen-address=172.16.10.11` — dnsmasq n'écoutait que sur localhost
+- `firewall-cmd --add-service=dns` — requis pour requêtes depuis bastion/registry
