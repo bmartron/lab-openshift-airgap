@@ -148,4 +148,4 @@ sudo firewall-cmd --reload
 - [x] dnsmasq (`listen-address` + firewall DNS)
 - [x] `dig` OK depuis bastion et Proxmox
 
-→ Prochaine étape : [registry](../registry/README.md)
+→ Prochaine étape : [bastion](../bastion/README.md) (mirror OCP)

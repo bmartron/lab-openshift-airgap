@@ -70,7 +70,7 @@ Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.
 - [x] dnsmasq opérationnel + tests `dig`
 - [x] VM registry — HTTPS actif (`registry:2` amd64)
 - [x] Proxmox `/etc/hosts` pour noms lab (DNS maison conservé)
-- [ ] VM bastion (en cours — oc installés, CA + DNS OK)
+- [x] VM bastion — réseau, `oc` 4.22.12, DNS lab, CA registry
 - [ ] Mirror OCP 4.22.12 + install SNO GA
 - [ ] Mirror OCP 5 RC + install SNO RC
 
@@ -78,7 +78,7 @@ Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.
 
 | Composant | Version | Statut |
 |-----------|---------|--------|
-| VMs infra (dns, registry, bastion) | **RHEL 10.2** | 🔄 bastion en cours |
+| VMs infra (dns, registry, bastion) | **RHEL 10.2** | ✅ |
 | OpenShift GA | **4.22.12** (Kubernetes 1.35) | ⬜ |
 | OpenShift RC | **5.0.0-ec.6** (Kubernetes 1.36) | ⬜ |
 | Proxmox | _à documenter_ | ⬜ |

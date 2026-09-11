@@ -30,11 +30,13 @@ Poste d'orchestration : `oc`, `openshift-install`, `oc mirror`, génération ISO
 
 ### Interface lab (`vmbr1` — souvent `ens19`)
 
+> Les commandes `nmcli con mod` nécessitent **`sudo`**.
+
 ```bash
-nmcli con mod ens19 ipv4.addresses 172.16.10.10/24 ipv4.gateway 172.16.10.1 \
-  ipv4.dns 172.16.10.11 ipv4.method manual ipv6.method disabled
-nmcli con up ens19
-hostnamectl set-hostname bastion.lab.local
+sudo nmcli con mod ens19 ipv4.addresses 172.16.10.10/24 ipv4.gateway 172.16.10.1 \
+  ipv4.dns 172.16.10.11 ipv4.dns-search lab.local ipv4.method manual ipv6.method disabled
+sudo nmcli con up ens19
+sudo hostnamectl set-hostname bastion.lab.local
 ```
 
 ### Interface admin (`vmbr0` — souvent `ens18`)
@@ -42,8 +44,8 @@ hostnamectl set-hostname bastion.lab.local
 Laisser en **DHCP** (réseau maison) pour Internet et mises à jour :
 
 ```bash
-nmcli con mod ens18 ipv4.method auto
-nmcli con up ens18
+sudo nmcli con mod ens18 ipv4.method auto
+sudo nmcli con up ens18
 ```
 
 Vérifier Internet :
@@ -52,6 +54,31 @@ Vérifier Internet :
 ping -c 2 registry.redhat.io
 curl -I https://mirror.openshift.com
 ```
+
+### Résolution DNS lab (double NIC)
+
+Avec deux interfaces, NetworkManager injecte le DNS maison (`192.168.1.1`) **avant** le DNS lab.
+`dig @172.16.10.11 registry.lab.local` fonctionne, mais `curl https://registry.lab.local` échoue.
+
+**Fix validé** — désactiver le DNS auto sur `ens18`, garder le DNS lab sur `ens19` :
+
+```bash
+sudo nmcli con mod ens18 ipv4.ignore-auto-dns yes
+sudo nmcli con mod ens19 ipv4.dns 172.16.10.11
+sudo nmcli con mod ens19 ipv4.dns-search lab.local
+sudo nmcli con up ens18
+sudo nmcli con up ens19
+
+cat /etc/resolv.conf
+dig registry.lab.local +short
+curl --cacert ~/lab/ca.crt https://registry.lab.local:5000/v2/_catalog
+```
+
+| Symptôme | Cause | Action |
+|----------|-------|--------|
+| `Insufficient privileges` sur `nmcli` | Pas de `sudo` | Préfixer avec `sudo` |
+| `resolvectl` : *not activatable* | `systemd-resolved` inactif sur RHEL | Utiliser NetworkManager (ci-dessus) |
+| `dig @172.16.10.11` OK mais pas `dig registry.lab.local` | DNS maison en premier dans `resolv.conf` | `ipv4.ignore-auto-dns` sur `ens18` |
 
 ## 3. Repo DVD + paquets (phase install)
 
@@ -102,6 +129,18 @@ Ou depuis la bastion (une fois sur vmbr1) :
 scp bernard@172.16.10.20:/opt/registry/certs/ca.crt ~/lab/ca.crt
 ```
 
+Installer la CA pour `oc mirror`, `curl` et Podman :
+
+```bash
+sudo mkdir -p /etc/containers/certs.d/registry.lab.local:5000
+sudo cp ~/lab/ca.crt /etc/containers/certs.d/registry.lab.local:5000/ca.crt
+
+sudo cp ~/lab/ca.crt /etc/pki/ca-trust/source/anchors/registry-lab.crt
+sudo update-ca-trust
+
+curl --cacert ~/lab/ca.crt https://registry.lab.local:5000/v2/_catalog
+```
+
 ## 7. Piste RC 5 (optionnel, répertoire séparé)
 
 ```bash
@@ -136,8 +175,12 @@ dig @172.16.10.11 registry.lab.local
 
 ## Progression
 
-- [ ] VM créée (2 NICs)
-- [ ] Réseau lab `172.16.10.10` + admin Internet
-- [ ] `oc` + `openshift-install` 4.22.12
-- [ ] Pull secret + CA registry
+- [x] VM créée (2 NICs)
+- [x] Réseau lab `172.16.10.10` + admin Internet
+- [x] DNS lab (`*.lab.local` via NetworkManager)
+- [x] `oc` + `openshift-install` 4.22.12
+- [x] CA registry (`~/lab/ca.crt` + trust système)
+- [ ] Pull secret (`~/lab/pull-secret.txt`)
 - [ ] `oc mirror` vers registry lab
+
+→ Prochaine étape : [mirror](../mirror/README.md)

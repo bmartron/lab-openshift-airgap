@@ -7,22 +7,54 @@ Deux pistes séparées — voir [docs/versions.md](../docs/versions.md).
 | **GA** | 4.22.12 | [imageset-config-4.22.yaml.example](imageset-config-4.22.yaml.example) | `ocp4-422` |
 | **RC 5** | 5.0.0-ec.6 | [imageset-config-5-rc.yaml.example](imageset-config-5-rc.yaml.example) | `ocp5-rc` |
 
-## Phase 1 — Avec Internet (bastion eth0)
+## Phase 1 — Avec Internet (bastion `ens18` / vmbr0)
+
+Prérequis sur la bastion : DNS lab OK, CA registry installée — voir [bastion/README.md](../bastion/README.md).
 
 ```bash
 cp versions.env.example versions.env
 source versions.env
 ```
 
+### Trust TLS registry (CA auto-signée)
+
+À faire une fois sur la bastion avant le mirror :
+
+```bash
+sudo mkdir -p /etc/containers/certs.d/registry.lab.local:5000
+sudo cp ~/lab/ca.crt /etc/containers/certs.d/registry.lab.local:5000/ca.crt
+
+sudo cp ~/lab/ca.crt /etc/pki/ca-trust/source/anchors/registry-lab.crt
+sudo update-ca-trust
+
+curl --cacert ~/lab/ca.crt https://registry.lab.local:5000/v2/_catalog
+# → {"repositories":[]}
+```
+
 ### Pull secret
 
-Télécharger depuis [cloud.redhat.com/openshift/install/pull-secret](https://cloud.redhat.com/openshift/install/pull-secret) → `pull-secret.txt` (**non versionné**).
+Télécharger depuis [cloud.redhat.com/openshift/install/pull-secret](https://cloud.redhat.com/openshift/install/pull-secret).
+
+Depuis le **Mac** :
+
+```bash
+scp ~/Downloads/pull-secret.txt bernard@<IP-bastion-LAN>:~/lab/pull-secret.txt
+```
 
 ### Piste GA — oc mirror (recommandé)
 
 ```bash
-oc mirror --config=imageset-config-4.22.yaml docker://registry.lab.local:5000/ocp4-422
+mkdir -p ~/lab/4.22-ga
+cd ~/lab/4.22-ga
+cp mirror/imageset-config-4.22.yaml.example imageset-config.yaml
+# ou copier depuis le dépôt cloné sur la bastion
+
+oc mirror --config=imageset-config.yaml \
+  docker://registry.lab.local:5000/ocp4-422 \
+  --src-pull-secret ~/lab/pull-secret.txt
 ```
+
+Durée estimée : **1 à 3 h** selon la bande passante.
 
 ### Piste GA — release mirror (alternative)
 
@@ -59,3 +91,11 @@ oc adm release info registry.lab.local:5000/ocp5-rc/release:5.0.0-ec.6-x86_64
 ## Espace disque
 
 Prévoir **≥ 120 Go par piste** sur le volume registry (GA + RC = ~240 Go si les deux sont miroirées en même temps).
+
+## Dépannage
+
+| Symptôme | Cause probable | Action |
+|----------|----------------|--------|
+| `x509: certificate signed by unknown authority` | CA non trustée | Section trust TLS ci-dessus |
+| `Could not resolve host: registry.lab.local` | DNS maison prioritaire | [bastion/README.md](../bastion/README.md) § Résolution DNS lab |
+| `unauthorized` sur `registry.redhat.io` | Pull secret manquant / invalide | Vérifier `~/lab/pull-secret.txt` |

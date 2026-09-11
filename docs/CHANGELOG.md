@@ -34,3 +34,10 @@
 ### Corrigé (dnsmasq RHEL 10)
 - `listen-address=172.16.10.11` — dnsmasq n'écoutait que sur localhost
 - `firewall-cmd --add-service=dns` — requis pour requêtes depuis bastion/registry
+
+### Ajouté (bastion DNS + mirror)
+- [bastion/README.md](../bastion/README.md) — résolution DNS double NIC (`ipv4.ignore-auto-dns` sur `ens18`)
+- `sudo` requis pour `nmcli con mod` ; `resolvectl` non applicable sur RHEL
+- Trust CA registry (`/etc/containers/certs.d/` + `update-ca-trust`)
+- [mirror/README.md](../mirror/README.md) — procédure `oc mirror` complète + dépannage TLS/DNS
+- Progression bastion mise à jour (prochaine étape : `oc mirror`)
