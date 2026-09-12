@@ -68,7 +68,7 @@ ssh registry-lab
 
 ```bash
 scp -o ProxyJump=root@192.168.1.147 \
-  "/Users/bmartron/Documents/Cursor/Projet 1/dns/dnsmasq.conf.example" \
+  "/Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/dns/dnsmasq.conf.example" \
   bernard@172.16.10.11:/tmp/dnsmasq.conf
 ```
 

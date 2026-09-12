@@ -57,7 +57,7 @@ EOF
 
 ```bash
 scp -o ProxyJump=root@192.168.1.147 \
-  "/Users/bmartron/Documents/Cursor/Projet 1/rhel/rhel-dvd.repo.example" \
+  "/Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/rhel/rhel-dvd.repo.example" \
   bernard@172.16.10.20:/tmp/rhel-dvd.repo
 
 # Sur la VM
