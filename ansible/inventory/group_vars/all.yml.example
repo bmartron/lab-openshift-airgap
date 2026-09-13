@@ -26,3 +26,8 @@ registry_recreate_container: false
 
 bastion_lab_dir: /home/bernard/lab
 bastion_install_startup_check: true
+
+# Install SNO agent — ansible-playbook playbooks/bastion-ocp-install.yml
+ocp_sno_mac: "BC:24:11:XX:XX:XX"   # Proxmox VM SNO → Hardware → Network
+ocp_imageset_profile: virtualization   # platform-only | gitops | virtualization
+ocp_agent_generate_iso: false          # true = lancer openshift-install sur la bastion

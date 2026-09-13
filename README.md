@@ -59,14 +59,15 @@ Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.
 1. Lire [docs/architecture.md](docs/architecture.md)
 2. Configurer le bridge `vmbr1` — [proxmox/network.md](proxmox/network.md)
 3. Accès SSH aux VMs isolées — [proxmox/access.md](proxmox/access.md)
-4. Repo RHEL via DVD (sans souscription) — [rhel/dvd-repo.md](rhel/dvd-repo.md)
-5. Déployer DNS — [dns/README.md](dns/README.md) → registry → bastion
-6. Miroir des images — [mirror/README.md](mirror/README.md)
-7. Générer l'ISO agent et installer — [openshift/4.22-ga/README.md](openshift/4.22-ga/README.md)
-8. VM SNO Proxmox (disque, réinstall) — [proxmox/sno-vm.md](proxmox/sno-vm.md)
-9. **Arrêt / démarrage quotidien** — [docs/lab-power-cycle.md](docs/lab-power-cycle.md) + script `bastion/scripts/lab-startup-check.sh`
-10. **Terraform + Ansible** (optionnel) — [docs/iac.md](docs/iac.md)
-11. **Alignement versions / audit** — [docs/lab-alignment.md](docs/lab-alignment.md)
+4. Configs install SNO (install-config, agent-config, CA) — [docs/ansible-ocp-install.md](docs/ansible-ocp-install.md)
+5. Repo RHEL via DVD (sans souscription) — [rhel/dvd-repo.md](rhel/dvd-repo.md)
+6. Déployer DNS — [dns/README.md](dns/README.md) → registry → bastion
+7. Miroir des images — [mirror/README.md](mirror/README.md)
+8. Générer l'ISO agent et installer — [openshift/4.22-ga/README.md](openshift/4.22-ga/README.md)
+9. VM SNO Proxmox (disque, réinstall) — [proxmox/sno-vm.md](proxmox/sno-vm.md)
+10. **Arrêt / démarrage quotidien** — [docs/lab-power-cycle.md](docs/lab-power-cycle.md) + script `bastion/scripts/lab-startup-check.sh`
+11. **Terraform + Ansible** (optionnel) — [docs/iac.md](docs/iac.md)
+12. **Alignement versions / audit** — [docs/lab-alignment.md](docs/lab-alignment.md)
 
 ## Progression lab
 

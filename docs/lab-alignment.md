@@ -26,6 +26,7 @@ Référence pour vérifier que dépôt, outils et infra correspondent. Dernière
 | ImageSet | `apiVersion: mirror.openshift.io/v1alpha2` — **GitOps épinglé** (channel + min/max) |
 | Delete GitOps | [mirror/delete-openshift-gitops.yaml.example](../mirror/delete-openshift-gitops.yaml.example) |
 | Imageset Virtualization | [mirror/imageset-config-4.22-virtualization.yaml.example](../mirror/imageset-config-4.22-virtualization.yaml.example) |
+| Configs install bastion (Ansible) | [docs/ansible-ocp-install.md](ansible-ocp-install.md) — `playbooks/bastion-ocp-install.yml` |
 | Delete Virtualization | [mirror/delete-kubevirt-hyperconverged.yaml.example](../mirror/delete-kubevirt-hyperconverged.yaml.example) |
 | Bastion Mac (scp/ssh) | **`192.168.1.144`** — lab NIC **`172.16.10.10`** |
 

@@ -3,9 +3,9 @@
 | Outil | Périmètre |
 |-------|-----------|
 | [Terraform](../terraform/README.md) | VMs Proxmox : dns, registry (+ disque données), bastion (2 NICs) |
-| [Ansible](../ansible/README.md) | OS : NTP, dnsmasq (base), disque `/opt/registry`, bastion preflight |
+| [Ansible](../ansible/README.md) | OS : NTP, dnsmasq (base), disque `/opt/registry`, bastion preflight, **configs install OCP** |
 
-OpenShift (ISO agent, SNO, `oc-mirror`) reste documenté dans `openshift/` et `mirror/`.
+OpenShift : `oc-mirror` dans [mirror/](../mirror/README.md) ; install-config / ISO via [ansible-ocp-install.md](ansible-ocp-install.md) et [openshift/4.22-ga/](../openshift/4.22-ga/README.md).
 
 ## Parcours recommandé
 

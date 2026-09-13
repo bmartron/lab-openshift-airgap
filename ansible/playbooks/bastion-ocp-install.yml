@@ -1,0 +1,39 @@
+---
+# Déploie install-config, agent-config, imageset, CA et pull-secret sur la bastion.
+# Lance depuis le Mac : cd ansible && ansible-playbook playbooks/bastion-ocp-install.yml
+#
+# Prérequis locaux (ansible/files/) :
+#   pull-secret.txt   — console.redhat.com
+#   install_ssh_key.pub — clé publique SSH pour core@SNO (souvent clé Mac)
+#
+# group_vars : ocp_sno_mac (MAC Proxmox VM SNO)
+
+- name: Lire CA TLS registry
+  hosts: registry
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Slurp ca.crt
+      ansible.builtin.slurp:
+        src: "{{ registry_data_mount }}/certs/ca.crt"
+      register: ocp_registry_ca_slurp
+
+    - name: Exposer CA pour le play bastion
+      ansible.builtin.set_fact:
+        ocp_registry_ca_pem: "{{ ocp_registry_ca_slurp.content | b64decode }}"
+
+- name: Bastion — configuration install OCP air-gap
+  hosts: bastion
+  gather_facts: false
+  become: true
+  # Priorité sur inventory/group_vars — éditer souvent ansible/group_vars/all.yml
+  vars_files:
+    - "{{ playbook_dir }}/../group_vars/all.yml"
+  vars:
+    ocp_pull_secret_path: "{{ playbook_dir }}/../files/pull-secret.txt"
+    ocp_ssh_pubkey_path: "{{ playbook_dir }}/../files/install_ssh_key.pub"
+    ocp_registry_ca_pem: "{{ hostvars['registry'].ocp_registry_ca_pem }}"
+    ocp_pull_secret_json: "{{ lookup('ansible.builtin.file', ocp_pull_secret_path) | trim | from_json | to_json }}"
+    ocp_ssh_pubkey: "{{ lookup('ansible.builtin.file', ocp_ssh_pubkey_path) | trim }}"
+  roles:
+    - role: ocp_bastion_install

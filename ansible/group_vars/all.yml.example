@@ -31,3 +31,7 @@ registry_recreate_container: false
 
 bastion_lab_dir: /home/bernard/lab
 bastion_install_startup_check: true
+
+ocp_sno_mac: "BC:24:11:XX:XX:XX"
+ocp_imageset_profile: virtualization
+ocp_agent_generate_iso: false

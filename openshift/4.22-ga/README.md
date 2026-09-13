@@ -85,7 +85,20 @@ rootDeviceHints:
 
 Symptôme si mauvais disque : `failed to set installation disk path </dev/not-found-by-hints>` dans `journalctl -u assisted-service`.
 
-## Workflow
+## Workflow Ansible (recommandé)
+
+Depuis le **Mac** : configs générées sans éditer le YAML à la main — [ansible/README.md](../../ansible/README.md) § *Install OCP sur la bastion*.
+
+Prérequis : `ansible/files/pull-secret.txt`, `ansible/files/install_ssh_key.pub`, `ocp_sno_mac` dans `group_vars/all.yml`.
+
+```bash
+cd ansible
+ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass
+```
+
+Puis ISO sur la bastion (ou `ocp_agent_generate_iso: true`).
+
+## Workflow manuel
 
 ```bash
 mkdir -p ~/lab/4.22-ga/config-backup

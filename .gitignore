@@ -11,6 +11,7 @@ ansible/inventory/hosts.yml
 ansible/group_vars/all.yml
 ansible/inventory/group_vars/all.yml
 ansible/files/registry-certs/
+ansible/files/install_ssh_key.pub
 
 # Secrets — ne jamais committer
 **/pull-secret.txt

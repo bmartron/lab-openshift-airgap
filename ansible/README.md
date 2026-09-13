@@ -73,6 +73,32 @@ ansible-playbook playbooks/registry-data-disk.yml
 | `playbooks/registry.yml` | **Registry** : disque, TLS, image, conteneur |
 | `playbooks/lab-infra.yml` | DNS → registry → bastion (ordre boot lab) |
 | `playbooks/registry-data-disk.yml` | Seulement disque `/opt/registry` |
+| `playbooks/bastion-ocp-install.yml` | **Bastion** : `install-config`, `agent-config`, `imageset`, CA, pull-secret (sans YAML manuel) |
+
+### Install OCP sur la bastion (Ansible)
+
+Guide détaillé : **[docs/ansible-ocp-install.md](../docs/ansible-ocp-install.md)** (quand relancer, fichiers déployés, ISO, dépannage).
+
+Résumé :
+
+1. **Mac** — [files/README.md](files/README.md) : `files/pull-secret.txt`, `files/install_ssh_key.pub` (gitignorés).
+2. **`ocp_sno_mac`** dans `group_vars/all.yml` (racine `ansible/`, chargé en priorité par le playbook) ou `inventory/group_vars/all.yml`.
+3. Inventaire : `bastion` + `registry` (jump Proxmox dans `hosts.yml`).
+
+```bash
+cd ansible
+ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass
+```
+
+**Effet** : templates Jinja → `~/lab/4.22-ga/config-backup/` + copies dans `~/lab/4.22-ga/`, `~/lab/ca.crt`, trust registry pour `oc`, scripts `~/lab/scripts/`.
+
+| Variable | Rôle |
+|----------|------|
+| `ocp_imageset_profile` | `platform-only` \| `gitops` \| `virtualization` |
+| `ocp_agent_generate_iso` | `true` = `openshift-install agent create image` sur la bastion |
+| `ocp_virt_operator_version` | ex. `4.22.9` (canal stable Virt) |
+
+Défauts : [roles/ocp_bastion_install/defaults/main.yml](roles/ocp_bastion_install/defaults/main.yml).
 
 ```bash
 ansible-playbook playbooks/lab-infra.yml --limit registry

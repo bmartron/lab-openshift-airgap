@@ -1,0 +1,36 @@
+apiVersion: v1beta1
+kind: AgentConfig
+metadata:
+  name: {{ ocp_cluster_name }}
+rendezvousIP: {{ ocp_sno_ip }}
+additionalNTPSources:
+- {{ ocp_ntp_ip }}
+hosts:
+- hostname: {{ ocp_sno_hostname }}
+  interfaces:
+  - name: {{ ocp_sno_interface }}
+    macAddress: "{{ ocp_sno_mac }}"
+  rootDeviceHints:
+    deviceName: {{ ocp_sno_root_device }}
+  networkConfig:
+    interfaces:
+    - name: {{ ocp_sno_interface }}
+      type: ethernet
+      state: up
+      mac-address: {{ ocp_sno_mac }}
+      ipv4:
+        enabled: true
+        dhcp: false
+        address:
+        - ip: {{ ocp_sno_ip }}
+          prefix-length: 24
+    dns-resolver:
+      config:
+        server:
+        - {{ ocp_dns_ip }}
+    routes:
+      config:
+      - destination: 0.0.0.0/0
+        next-hop-address: {{ ocp_lab_gateway }}
+        next-hop-interface: {{ ocp_sno_interface }}
+        table-id: 254

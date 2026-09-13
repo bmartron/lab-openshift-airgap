@@ -1,0 +1,186 @@
+---
+- name: Vérifier ocp_sno_mac
+  ansible.builtin.assert:
+    that:
+      - ocp_sno_mac | default('') | length >= 17
+      - ocp_sno_mac is match('(?i)^[0-9a-f]{2}(:[0-9a-f]{2}){5}$')
+    fail_msg: >-
+      Définir ocp_sno_mac dans ansible/inventory/group_vars/all.yml
+      (pas ansible/group_vars/). MAC Proxmox : qm config <VMID> | grep net
+
+- name: Vérifier CA registry
+  ansible.builtin.assert:
+    that:
+      - ocp_registry_ca_pem is defined
+      - ocp_registry_ca_pem | length > 0
+    fail_msg: >-
+      CA absente — le play « registry » doit réussir (slurp ca.crt sur 172.16.10.20).
+
+- name: Vérifier pull-secret et clé SSH (Mac)
+  ansible.builtin.assert:
+    that:
+      - ocp_pull_secret_json is defined
+      - ocp_pull_secret_json | length > 10
+      - ocp_ssh_pubkey is defined
+      - ocp_ssh_pubkey | length > 20
+    fail_msg: >-
+      Copier sur le Mac : ansible/files/pull-secret.txt et ansible/files/install_ssh_key.pub
+      — voir ansible/files/README.md
+
+- name: Répertoires lab OCP
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ lab_user }}"
+    group: "{{ lab_user }}"
+    mode: "0755"
+  loop:
+    - "{{ ocp_install_dir }}"
+    - "{{ ocp_config_backup_dir }}"
+    - "{{ bastion_lab_dir }}/scripts"
+
+- name: install-config.yaml (backup)
+  ansible.builtin.template:
+    src: install-config.yaml.j2
+    dest: "{{ ocp_config_backup_dir }}/install-config.yaml"
+    owner: "{{ lab_user }}"
+    group: "{{ lab_user }}"
+    mode: "0600"
+
+- name: agent-config.yaml (backup)
+  ansible.builtin.template:
+    src: agent-config.yaml.j2
+    dest: "{{ ocp_config_backup_dir }}/agent-config.yaml"
+    owner: "{{ lab_user }}"
+    group: "{{ lab_user }}"
+    mode: "0600"
+
+- name: Copier configs vers répertoire install
+  ansible.builtin.copy:
+    src: "{{ ocp_config_backup_dir }}/{{ item }}"
+    dest: "{{ ocp_install_dir }}/{{ item }}"
+    remote_src: true
+    owner: "{{ lab_user }}"
+    group: "{{ lab_user }}"
+    mode: "0600"
+  loop:
+    - install-config.yaml
+    - agent-config.yaml
+
+- name: imageset-config.yaml
+  ansible.builtin.template:
+    src: imageset-config.yaml.j2
+    dest: "{{ ocp_install_dir }}/imageset-config.yaml"
+    owner: "{{ lab_user }}"
+    group: "{{ lab_user }}"
+    mode: "0644"
+
+- name: pull-secret.txt sur bastion
+  ansible.builtin.copy:
+    content: "{{ lookup('ansible.builtin.file', ocp_pull_secret_path) }}"
+    dest: "{{ bastion_lab_dir }}/pull-secret.txt"
+    owner: "{{ lab_user }}"
+    group: "{{ lab_user }}"
+    mode: "0600"
+  no_log: true
+
+- name: ca.crt sur bastion
+  ansible.builtin.copy:
+    content: "{{ ocp_registry_ca_pem }}\n"
+    dest: "{{ bastion_lab_dir }}/ca.crt"
+    owner: "{{ lab_user }}"
+    group: "{{ lab_user }}"
+    mode: "0644"
+
+- name: Scripts bastion (install / mirror)
+  when: ocp_deploy_lab_scripts | bool
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../../bastion/scripts/{{ item }}"
+    dest: "{{ bastion_lab_dir }}/scripts/{{ item }}"
+    owner: "{{ lab_user }}"
+    group: "{{ lab_user }}"
+    mode: "0755"
+  loop:
+    - lab-startup-check.sh
+    - verify-mirror-before-sno.sh
+    - install-config-embed-ca.sh
+    - install-config-fix-pullsecret.sh
+    - install-config-regenerate.sh
+
+- name: Trust registry pour Podman/oc
+  when: ocp_configure_registry_trust | bool
+  block:
+    - name: certs.d registry
+      ansible.builtin.file:
+        path: "/etc/containers/certs.d/{{ ocp_registry_fqdn }}:{{ ocp_registry_port }}"
+        state: directory
+        mode: "0755"
+    - name: CA dans certs.d
+      ansible.builtin.copy:
+        content: "{{ ocp_registry_ca_pem }}\n"
+        dest: "/etc/containers/certs.d/{{ ocp_registry_fqdn }}:{{ ocp_registry_port }}/ca.crt"
+        mode: "0644"
+    - name: CA system trust
+      ansible.builtin.copy:
+        content: "{{ ocp_registry_ca_pem }}\n"
+        dest: /etc/pki/ca-trust/source/anchors/registry-lab.crt
+        mode: "0644"
+    - name: update-ca-trust
+      ansible.builtin.command: update-ca-trust extract
+      changed_when: true
+
+- name: Rappel ISO agent
+  ansible.builtin.debug:
+    msg: >-
+      Configs déployées dans {{ ocp_config_backup_dir }}.
+      Générer l'ISO sur la bastion :
+      cd {{ ocp_install_dir }} && rm -f .openshift_install_state.json agent.x86_64.iso &&
+      openshift-install agent create cluster-manifests --dir . &&
+      openshift-install agent create image --dir . &&
+      cp config-backup/*.yaml .
+      (ou ocp_agent_generate_iso: true)
+  when: not (ocp_agent_generate_iso | bool)
+
+- name: openshift-install agent create cluster-manifests
+  become: true
+  become_user: "{{ lab_user }}"
+  ansible.builtin.command:
+    cmd: openshift-install agent create cluster-manifests --dir {{ ocp_install_dir }}
+    chdir: "{{ ocp_install_dir }}"
+  when: ocp_agent_generate_iso | bool
+  register: ocp_manifests
+  changed_when: ocp_manifests.rc == 0
+
+- name: Supprimer état ISO précédent
+  ansible.builtin.file:
+    path: "{{ ocp_install_dir }}/{{ item }}"
+    state: absent
+  loop:
+    - .openshift_install_state.json
+    - agent.x86_64.iso
+  when: ocp_agent_generate_iso | bool
+
+- name: openshift-install agent create image
+  become: true
+  become_user: "{{ lab_user }}"
+  ansible.builtin.command:
+    cmd: openshift-install agent create image --dir {{ ocp_install_dir }} --log-level info
+    chdir: "{{ ocp_install_dir }}"
+  when: ocp_agent_generate_iso | bool
+  register: ocp_image
+  changed_when: ocp_image.rc == 0
+  async: 3600
+  poll: 30
+
+- name: Restaurer configs après create image
+  ansible.builtin.copy:
+    src: "{{ ocp_config_backup_dir }}/{{ item }}"
+    dest: "{{ ocp_install_dir }}/{{ item }}"
+    remote_src: true
+    owner: "{{ lab_user }}"
+    group: "{{ lab_user }}"
+    mode: "0600"
+  loop:
+    - install-config.yaml
+    - agent-config.yaml
+  when: ocp_agent_generate_iso | bool
