@@ -1,6 +1,9 @@
 # Plateforme 4.22.12 + OpenShift Virtualization (kubevirt-hyperconverged).
-# Mirror plus lourd que GitOps — nested virt sur les nœuds (voir proxmox/network.md).
-# Bastion 192.168.1.144 : valider channel/version sur console.redhat.com pour OCP 4.22.12.
+# Channel catalogue = stable (défaut du package) — pas stable-4.22.
+# Bastion 192.168.1.144 : si échec version, lister les bundles :
+#   oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.22 \
+#     --package=kubevirt-hyperconverged --v2
+# Mirror lourd — nested virt : proxmox/network.md
 apiVersion: mirror.openshift.io/v1alpha2
 kind: ImageSetConfiguration
 mirror:
@@ -16,6 +19,6 @@ mirror:
       packages:
         - name: kubevirt-hyperconverged
           channels:
-            - name: stable-4.22
+            - name: stable
               minVersion: 4.22.12
               maxVersion: 4.22.12

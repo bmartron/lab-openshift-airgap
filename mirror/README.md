@@ -103,7 +103,23 @@ oc-mirror -c imageset-config.yaml \
 
 Durée observée en lab : **~7 min** (plateforme seule, une version 4.22.12).
 
-**Opérateurs** : toujours **épingler** `channels` + `minVersion` / `maxVersion` identiques. Sans ça : erreur *default channel "latest" was filtered out* (GitOps) ou des centaines d’images. Packages courants : `openshift-gitops-operator`, `kubevirt-hyperconverged` (Virtualization). Versions : console Red Hat / OperatorHub pour **OCP 4.22.12**, depuis la bastion **`192.168.1.144`** (Internet).
+**Opérateurs** : toujours **épingler** `channels` + `minVersion` / `maxVersion` identiques. Utiliser le **nom de channel du catalogue** (défaut du package), pas un nom inventé :
+
+| Package | Channel à utiliser (lab 4.22) |
+|---------|-------------------------------|
+| `openshift-gitops-operator` | `gitops-1.16` (pas `latest`) |
+| `kubevirt-hyperconverged` | **`stable`** (pas `stable-4.22`) |
+
+Erreur *default channel "stable" was filtered out* → mauvais channel dans `imageset-config.yaml` (ex. `stable-4.22` au lieu de `stable`).
+
+Sur la **bastion `192.168.1.144`** (Internet) :
+
+```bash
+oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.22 \
+  --package=kubevirt-hyperconverged --v2
+```
+
+Ajuster `minVersion` / `maxVersion` selon la sortie (souvent `4.22.12` ou un z-stream catalogue).
 
 ### Vérification post-mirror
 
