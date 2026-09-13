@@ -91,6 +91,13 @@ Puis attacher `agent.x86_64.iso` sur Proxmox — [openshift/4.22-ga/README.md](.
 
 Scripts manuels (secours) : [bastion/scripts/](../bastion/scripts/) (`install-config-regenerate.sh`, etc.).
 
+Synchroniser les scripts vers la bastion **sans** `lab-infra` (évite dnf sur bastion air-gap) :
+
+```bash
+cd ansible
+ansible-playbook playbooks/bastion-scripts.yml
+```
+
 ## Voir aussi
 
 - [ansible/README.md](../ansible/README.md) — inventaire, registry, SSH jump

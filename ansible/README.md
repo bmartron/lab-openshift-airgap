@@ -74,6 +74,7 @@ ansible-playbook playbooks/registry-data-disk.yml
 | `playbooks/lab-infra.yml` | DNS → registry → bastion (ordre boot lab) |
 | `playbooks/registry-data-disk.yml` | Seulement disque `/opt/registry` |
 | `playbooks/bastion-ocp-install.yml` | **Bastion** : `install-config`, `agent-config`, `imageset`, CA, pull-secret (sans YAML manuel) |
+| `playbooks/bastion-scripts.yml` | **Bastion** : copie `~/lab/scripts/*.sh` seulement (**pas** de sudo / dnf) |
 
 ### Install OCP sur la bastion (Ansible)
 

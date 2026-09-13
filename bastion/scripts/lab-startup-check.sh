@@ -42,11 +42,14 @@ else
   bad "Bastion : NTP non synchronisé — configurer chrony vers ${DNS_IP} (voir dns/README.md)"
 fi
 
+# Sondage chronyc distant (cmdallow sur la VM DNS) — informatif si la bastion est déjà sync
 if command -v chronyc >/dev/null 2>&1; then
   if chronyc -h "${DNS_IP}" tracking >/dev/null 2>&1; then
     ok "NTP : chrony joignable sur DNS ${DNS_IP}"
+  elif timedatectl show -p NTPSynchronized --value 2>/dev/null | grep -q yes; then
+    info "NTP : chronyc distant vers ${DNS_IP} indisponible (cmdallow/firewall) — bastion déjà synchronisée (OK pour SNO)"
   else
-    bad "NTP : impossible d'interroger chrony sur ${DNS_IP} (chronyd / firewall ntp ?)"
+    bad "NTP : bastion non sync et chrony DNS ${DNS_IP} injoignable — voir dns/README.md §6"
   fi
 else
   info "chronyc absent — skip sonde NTP vers DNS"
@@ -128,7 +131,7 @@ echo
 info "Résumé : ${PASS} OK, ${FAIL} FAIL"
 if [[ "$FAIL" -gt 0 ]]; then
   echo
-  echo "=> Corriger les FAIL avant de démarrer le SNO sur Proxmox (192.168.1.147)."
+  echo "=> Corriger les FAIL avant de démarrer (ou continuer) le SNO sur Proxmox (192.168.1.147)."
   echo "   Ordre : DNS -> registry (podman) -> bastion -> SNO"
   exit 1
 fi
