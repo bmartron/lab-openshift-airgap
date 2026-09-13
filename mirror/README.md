@@ -116,10 +116,11 @@ Sur la **bastion `192.168.1.144`** (Internet) :
 
 ```bash
 oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.22 \
-  --package=kubevirt-hyperconverged --v2
+  --package=kubevirt-hyperconverged \
+  --authfile ~/lab/pull-secret.txt --v2
 ```
 
-Ajuster `minVersion` / `maxVersion` selon la sortie (souvent `4.22.12` ou un z-stream catalogue).
+Pour **kubevirt-hyperconverged**, `minVersion` / `maxVersion` = semver du **HEAD** du canal `stable` dans `list operators` (ex. `4.22.9`), **pas** le z-stream OCP (`4.22.12`).
 
 ### Vérification post-mirror
 
