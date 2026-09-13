@@ -36,6 +36,14 @@ ssh -o ProxyJump=root@192.168.1.147 bernard@172.16.10.11
 ssh -o ProxyJump=root@192.168.1.147 bernard@172.16.10.20
 ```
 
+**Ansible depuis le Mac** : le jump Proxmox doit être **sans mot de passe** (clé SSH), sinon `Permission denied` / port `65535` :
+
+```bash
+ssh-copy-id root@192.168.1.147
+```
+
+Alternative : lancer les playbooks depuis la **bastion** vers `172.16.10.x` — voir `ansible/inventory/hosts.from-bastion.yml.example`.
+
 ## ~/.ssh/config (recommandé)
 
 ```text

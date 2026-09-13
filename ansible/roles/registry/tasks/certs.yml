@@ -1,0 +1,55 @@
+---
+- name: Vérifier présence CA existante
+  ansible.builtin.stat:
+    path: "{{ registry_data_mount }}/certs/ca.crt"
+  register: registry_ca_stat
+
+- name: Générer CA et certificat registry (openssl)
+  when:
+    - registry_tls_mode == 'generate'
+    - not registry_ca_stat.stat.exists or registry_regenerate_certs
+  block:
+    - name: Clé et certificat CA
+      ansible.builtin.command:
+        cmd: >-
+          openssl req -newkey rsa:4096 -nodes -sha256 -keyout ca.key -x509 -days 3650
+          -out ca.crt -subj "/CN=Lab Registry CA"
+        chdir: "{{ registry_data_mount }}/certs"
+      when: registry_regenerate_certs or not registry_ca_stat.stat.exists
+
+    - name: Clé et CSR registry (avec SAN)
+      ansible.builtin.command:
+        cmd: >-
+          openssl req -newkey rsa:4096 -nodes -sha256 -keyout registry.key
+          -out registry.csr -subj "/CN={{ registry_hostname }}"
+          -addext "subjectAltName=DNS:{{ registry_hostname }},DNS:registry"
+        chdir: "{{ registry_data_mount }}/certs"
+
+    - name: Signer certificat registry
+      ansible.builtin.command:
+        cmd: >-
+          openssl x509 -req -days 3650 -sha256 -in registry.csr
+          -CA ca.crt -CAkey ca.key -CAcreateserial -out registry.crt
+          -copy_extensions copyall
+        chdir: "{{ registry_data_mount }}/certs"
+
+    - name: Permissions clés registry
+      ansible.builtin.file:
+        path: "{{ registry_data_mount }}/certs/{{ item }}"
+        mode: "0640"
+      loop:
+        - ca.key
+        - registry.key
+        - registry.crt
+        - ca.crt
+
+- name: Déployer certificats depuis ansible/files/registry-certs/
+  ansible.builtin.copy:
+    src: "registry-certs/{{ item }}"
+    dest: "{{ registry_data_mount }}/certs/{{ item }}"
+    mode: "{{ '0640' if item.endswith('.key') else '0644' }}"
+  loop:
+    - ca.crt
+    - registry.crt
+    - registry.key
+  when: registry_tls_mode == 'copy'

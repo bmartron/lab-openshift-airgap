@@ -1,0 +1,68 @@
+---
+- name: Répertoire montage DVD RHEL
+  ansible.builtin.file:
+    path: "{{ rhel_dvd_mount }}"
+    state: directory
+    mode: "0755"
+
+- name: Monter DVD/ISO RHEL ({{ rhel_dvd_device }})
+  ansible.builtin.mount:
+    path: "{{ rhel_dvd_mount }}"
+    src: "{{ rhel_dvd_device }}"
+    fstype: iso9660
+    opts: ro,defaults
+    state: mounted
+
+- name: Vérifier contenu DVD (BaseOS + AppStream)
+  ansible.builtin.stat:
+    path: "{{ rhel_dvd_mount }}/{{ item }}"
+  register: rhel_dvd_tree
+  loop:
+    - BaseOS
+    - AppStream
+
+- name: ISO RHEL complète requise (air-gap)
+  ansible.builtin.assert:
+    that:
+      - item.stat.exists
+    fail_msg: >-
+      {{ item.item }} absent sous {{ rhel_dvd_mount }} — attacher le DVD RHEL complet
+      dans Proxmox (ide2) puis relancer. Voir rhel/dvd-repo.md
+  loop: "{{ rhel_dvd_tree.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+
+- name: Désactiver plugin subscription-manager pour DNF
+  ansible.builtin.copy:
+    dest: /etc/dnf/plugins/subscription-manager.conf
+    mode: "0644"
+    content: |
+      [main]
+      enabled=0
+
+- name: RHSM ne gère pas les repos DNF
+  ansible.builtin.command: subscription-manager config --rhsm.manage_repos=0
+  register: rhsm_repos
+  changed_when: "'manage_repos: 0' in rhsm_repos.stdout or rhsm_repos.rc == 0"
+  failed_when: false
+
+- name: Repos locaux DVD
+  ansible.builtin.template:
+    src: rhel-dvd.repo.j2
+    dest: /etc/yum.repos.d/rhel-dvd.repo
+    mode: "0644"
+
+- name: Rafraîchir métadonnées DNF
+  ansible.builtin.command: dnf clean all
+  changed_when: true
+
+- name: Vérifier AppStream visible
+  ansible.builtin.command: dnf repolist --enabled
+  register: rhel_repolist
+  changed_when: false
+
+- name: AppStream doit être listé
+  ansible.builtin.assert:
+    that:
+      - rhel_repolist.stdout is search('appstream|AppStream', ignorecase=True)
+    fail_msg: "AppStream introuvable — vérifier ISO et {{ rhel_dvd_mount }}"

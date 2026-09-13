@@ -10,6 +10,20 @@
       - firewalld
     state: present
 
+- name: Répertoire drop-in chrony (absent sur RHEL 10 minimal)
+  ansible.builtin.file:
+    path: /etc/chrony.d
+    state: directory
+    mode: "0755"
+
+- name: Inclure fichiers chrony.d dans chrony.conf
+  ansible.builtin.lineinfile:
+    path: /etc/chrony.conf
+    regexp: '^include /etc/chrony\.d/'
+    line: "include /etc/chrony.d/*.conf"
+    state: present
+  notify: restart chronyd
+
 - name: chronyd actif
   ansible.builtin.service:
     name: chronyd

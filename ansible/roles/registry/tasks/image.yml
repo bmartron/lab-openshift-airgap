@@ -1,0 +1,24 @@
+---
+- name: Vérifier chemin image tar sur le contrôleur
+  ansible.builtin.assert:
+    that:
+      - registry_image_tar | length > 0
+    fail_msg: >-
+      Définir registry_image_tar (chemin absolu du .tar amd64 sur le Mac) —
+      registry/README.md §3
+
+- name: Copier image registry:2 vers la VM
+  ansible.builtin.copy:
+    src: "{{ registry_image_tar }}"
+    dest: /tmp/registry2-amd64.tar
+    mode: "0644"
+
+- name: Charger image dans Podman
+  ansible.builtin.command: podman load -i /tmp/registry2-amd64.tar
+  register: registry_podman_load
+  changed_when: "'Loaded image' in registry_podman_load.stdout or 'Loaded image' in registry_podman_load.stderr"
+  failed_when: registry_podman_load.rc != 0
+
+- name: Vérifier image registry présente
+  ansible.builtin.command: podman image exists {{ registry_image }}
+  changed_when: false

@@ -1,0 +1,17 @@
+---
+registry_hostname: registry.lab.local
+registry_port: 5000
+registry_data_mount: /opt/registry
+registry_data_device: ""
+
+registry_container_name: ocp-registry
+registry_image: docker.io/library/registry:2
+
+# Chemin absolu sur la machine qui lance ansible (ex. Mac) — tar podman save
+registry_image_tar: ""
+
+registry_tls_mode: generate # generate | copy | skip
+registry_regenerate_certs: false
+
+registry_deploy_container: true
+registry_recreate_container: false

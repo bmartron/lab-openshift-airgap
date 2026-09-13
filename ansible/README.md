@@ -6,7 +6,7 @@ Configure **DNS**, **registry** (disque données + Podman), **bastion** (NTP cli
 ## Prérequis
 
 ```bash
-python3 -m pip install --user ansible
+brew install ansible          # Mac (recommandé)
 # ou : dnf install ansible-core  (sur bastion / RHEL)
 ```
 
@@ -15,8 +15,8 @@ python3 -m pip install --user ansible
 ```bash
 cd ansible
 cp inventory/hosts.yml.example inventory/hosts.yml
-cp group_vars/all.yml.example group_vars/all.yml
-# Éditer hosts.yml : IP admin bastion, user SSH
+cp group_vars/all.yml.example group_vars/all.yml   # obligatoire pour registry_data_device, registry_image_tar
+# Éditer hosts.yml : IP LAN bastion, user SSH ; all.yml : disque + chemin .tar
 ```
 
 Connexion typique depuis le **Mac** :
@@ -24,44 +24,114 @@ Connexion typique depuis le **Mac** :
 - `bastion` : SSH direct sur IP LAN (`vmbr0`)
 - `dns`, `registry` : `ansible_host` = IP lab + `ProxyJump` via Proxmox (voir `hosts.yml.example`)
 
+## Registry seule (ton cas actuel)
+
+Après install RHEL + SSH sur **172.16.10.20** :
+
+1. Sur le **Mac**, image amd64 (une fois) :
+
+```bash
+podman pull --platform linux/amd64 docker.io/library/registry:2
+podman save -o ~/Downloads/registry2-amd64.tar docker.io/library/registry:2
+```
+
+2. `group_vars/all.yml` :
+
+- `registry_data_device` : `/dev/sdb1` ou `/dev/sdb` selon `lsblk` sur la VM
+- `registry_image_tar` : chemin absolu du `.tar` sur le Mac
+- `registry_tls_mode: generate`
+
+3. Lancer :
+
+```bash
+cd ansible
+ansible-playbook playbooks/registry.yml --ask-become-pass   # -K : mot de passe sudo de bernard
+```
+
+Sur une install RHEL standard, `bernard` est dans **wheel** mais sudo **demande un mot de passe** — sans `-K` : `Missing sudo password`.
+
+Option lab (sur la VM, une fois) : sudo sans mot de passe pour l’automation — `sudo visudo` → `bernard ALL=(ALL) NOPASSWD: ALL` (à n’utiliser que sur ce lab isolé).
+
+Le playbook : repo **DVD RHEL** (ISO Proxmox sur `sr0`) → NTP → disque `/opt/registry` → `podman`/`openssl` → certs → `podman load` → conteneur `oc-registry`.
+
+Sans ISO attachée : `No package podman available` — voir [rhel/dvd-repo.md](../rhel/dvd-repo.md).
+
+4. Copier la CA sur le bastion pour `oc-mirror` — [registry/README.md](../registry/README.md) §5.
+
+Disque seulement (sans Podman) :
+
+```bash
+ansible-playbook playbooks/registry-data-disk.yml
+```
+
 ## Playbooks
 
 | Playbook | Rôle |
 |----------|------|
+| `playbooks/registry.yml` | **Registry** : disque, TLS, image, conteneur |
 | `playbooks/lab-infra.yml` | DNS → registry → bastion (ordre boot lab) |
-| `playbooks/registry-data-disk.yml` | Seulement disque `/opt/registry` sur registry |
+| `playbooks/registry-data-disk.yml` | Seulement disque `/opt/registry` |
 
 ```bash
-cd ansible
-ansible-playbook playbooks/lab-infra.yml
+ansible-playbook playbooks/lab-infra.yml --limit registry
 ```
 
 Check sans modifier :
 
 ```bash
-ansible-playbook playbooks/lab-infra.yml --check --diff
+ansible-playbook playbooks/registry.yml --check --diff
 ```
 
-## Registry : disque données
+(`--check` peut échouer sur `podman` / `mkfs` — normal.)
 
-Si Terraform a créé **scsi1** (120 Go), le rôle `registry` formate et monte `/opt/registry`.  
-Sur une VM **existante** sans second disque, définir dans `group_vars/all.yml` :
+### SSH / ProxyJump (erreur « port 65535 »)
 
-```yaml
-registry_data_device: ""   # vide = pas de mkfs ; utiliser migration manuelle /home
+1. Tester comme Ansible :
+
+```bash
+ssh -o ProxyJump=root@192.168.1.147 bernard@172.16.10.20
 ```
 
-## Certificats registry
+2. Inventaire : `ansible_ssh_common_args` **en dur** (voir `hosts.yml.example`), pas `{{ proxmox_jump }}`.
+3. `ansible.cfg` : `ControlMaster=no` (déjà configuré).
+4. Ping Ansible :
 
-Les clés TLS ne sont **pas** générées par Ansible (secrets). Après le rôle registry :
+```bash
+ansible registry -m ping
+```
 
-1. Générer les certs — [registry/README.md](../registry/README.md) §4  
-2. Ou placer `ca.crt`, `registry.crt`, `registry.key` dans `files/registry-certs/` (gitignoré) et activer `registry_manage_certs: true` dans `group_vars/all.yml`
+Si **`root@192.168.1.147: Permission denied`** : Ansible **ne demande pas** le mot de passe du jump Proxmox (contrairement à ton `ssh` interactif).
+
+**Correctif recommandé (Mac, une fois)** :
+
+```bash
+ssh-copy-id root@192.168.1.147
+ssh -o ProxyJump=root@192.168.1.147 bernard@172.16.10.20   # plus de password Proxmox
+ansible registry -m ping
+```
+
+**Autres options** : jump **bastion** (`hosts.yml.example` méthode B), `hosts.sshconfig.yml.example`, ou playbook depuis la bastion (`hosts.from-bastion.yml.example`).
+
+Voir [proxmox/access.md](../proxmox/access.md).
+
+## Variables registry (résumé)
+
+| Variable | Description |
+|----------|-------------|
+| `registry_data_device` | Ex. `/dev/sdb1` — vide = pas de formatage |
+| `registry_tls_mode` | `generate` \| `copy` \| `skip` |
+| `registry_image_tar` | Tar `podman save` sur le Mac |
+| `registry_recreate_container` | `true` pour `podman rm` + recréer |
 
 ## Relation Terraform
 
 1. `terraform apply` (nouvelles VMs)  
-2. `ansible-playbook playbooks/lab-infra.yml`  
+2. `ansible-playbook playbooks/registry.yml`  
 3. Mirror / install OCP — docs existantes
 
 Pour le lab **déjà en place** : sauter Terraform, ajuster `inventory/hosts.yml` et lancer Ansible.
+
+## Secrets
+
+- `inventory/hosts.yml`, `group_vars/all.yml` : **gitignorés**
+- `files/registry-certs/` : gitignoré (mode `copy`)

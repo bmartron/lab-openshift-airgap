@@ -1,0 +1,4 @@
+---
+rhel_dvd_repo_enable: true
+rhel_dvd_mount: /mnt/rhel
+rhel_dvd_device: /dev/sr0

@@ -1,18 +1,37 @@
 ---
 # cp hosts.yml.example hosts.yml
+#
+# Jump SSH vers le lab (172.16.10.x) — choisir UNE méthode dans lab_jump_* :
+#   A) Proxmox : clé SSH pour root@192.168.1.147 (sans mot de passe interactif)
+#   B) Bastion : IP LAN vmbr0 — souvent plus simple si tu te connectes déjà en bernard@bastion
+#
 all:
   vars:
     ansible_user: bernard
     lab_user: bernard
-    proxmox_jump: root@192.168.1.147
+
   children:
-    lab_infra:
+    lab_direct:
       hosts:
         bastion:
-          ansible_host: 192.168.1.XXX   # IP LAN bastion (vmbr0) — depuis le Mac
+          ansible_host: 192.168.1.XXX   # IP LAN bastion (vmbr0)
+
+    # Méthode A — jump Proxmox (décommenter et désactiver lab_jump_bastion)
+    lab_jump_proxmox:
+      vars:
+        ansible_ssh_common_args: '-o ProxyJump=root@192.168.1.147'
+      hosts:
         dns:
           ansible_host: 172.16.10.11
-          ansible_ssh_common_args: '-o ProxyJump={{ proxmox_jump }}'
         registry:
           ansible_host: 172.16.10.20
-          ansible_ssh_common_args: '-o ProxyJump={{ proxmox_jump }}'
+
+    # Méthode B — jump bastion (remplacer XXX par l’IP LAN)
+    # lab_jump_bastion:
+    #   vars:
+    #     ansible_ssh_common_args: '-o ProxyJump=bernard@192.168.1.XXX'
+    #   hosts:
+    #     dns:
+    #       ansible_host: 172.16.10.11
+    #     registry:
+    #       ansible_host: 172.16.10.20

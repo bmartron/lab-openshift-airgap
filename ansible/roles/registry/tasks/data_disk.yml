@@ -14,6 +14,7 @@
 - name: Créer XFS sur disque données
   ansible.builtin.command: "mkfs.xfs -f {{ registry_data_device }}"
   when: registry_blkid.rc != 0
+  # Si partition Anaconda : registry_data_device: /dev/sdb1 (pas /dev/sdb)
 
 - name: Monter {{ registry_data_mount }}
   ansible.builtin.mount:

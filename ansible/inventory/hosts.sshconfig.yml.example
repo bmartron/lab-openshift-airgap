@@ -1,0 +1,9 @@
+---
+# Prérequis : ~/.ssh/config comme proxmox/access.md (Host registry-lab + ProxyJump proxmox)
+# ansible.cfg doit inclure : ssh_args = -o ControlMaster=no -F ~/.ssh/config
+all:
+  vars:
+    ansible_user: bernard
+  hosts:
+    registry:
+      ansible_host: registry-lab

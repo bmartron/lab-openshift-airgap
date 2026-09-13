@@ -1,0 +1,69 @@
+---
+- name: Vérifier certificats avant conteneur
+  ansible.builtin.stat:
+    path: "{{ registry_data_mount }}/certs/registry.crt"
+  register: registry_tls_ready
+
+- name: Exiger certificats pour le conteneur TLS
+  ansible.builtin.assert:
+    that:
+      - registry_tls_ready.stat.exists
+    fail_msg: "Certificats manquants — registry_tls_mode generate/copy ou placer les fichiers dans {{ registry_data_mount }}/certs"
+
+- name: État conteneur {{ registry_container_name }}
+  ansible.builtin.command: podman container exists {{ registry_container_name }}
+  register: registry_ct_exists
+  changed_when: false
+  failed_when: false
+
+- name: Supprimer conteneur existant (recreate)
+  ansible.builtin.command: podman rm -f {{ registry_container_name }}
+  when:
+    - registry_recreate_container
+    - registry_ct_exists.rc == 0
+  register: registry_ct_removed
+  changed_when: registry_ct_removed.rc == 0
+
+- name: Re-vérifier conteneur après suppression
+  ansible.builtin.command: podman container exists {{ registry_container_name }}
+  register: registry_ct_exists
+  changed_when: false
+  failed_when: false
+  when: registry_recreate_container
+
+- name: Démarrer conteneur registry TLS
+  ansible.builtin.command:
+    argv:
+      - podman
+      - run
+      - -d
+      - --name
+      - "{{ registry_container_name }}"
+      - --restart=always
+      - --pull=never
+      - -p
+      - "{{ registry_port }}:5000"
+      - -v
+      - "{{ registry_data_mount }}/data:/var/lib/registry:Z"
+      - -v
+      - "{{ registry_data_mount }}/certs:/certs:Z"
+      - -e
+      - REGISTRY_HTTP_TLS_CERTIFICATE=/certs/registry.crt
+      - -e
+      - REGISTRY_HTTP_TLS_KEY=/certs/registry.key
+      - -e
+      - REGISTRY_STORAGE_DELETE_ENABLED=true
+      - "{{ registry_image }}"
+  when: registry_ct_exists.rc != 0
+  register: registry_ct_run
+  changed_when: registry_ct_run.rc == 0
+
+- name: Attendre API registry
+  ansible.builtin.uri:
+    url: "https://localhost:{{ registry_port }}/v2/"
+    validate_certs: false
+    status_code: 200
+  register: registry_api
+  retries: 6
+  delay: 5
+  until: registry_api.status == 200

@@ -1,4 +1,9 @@
 ---
+- name: Repos RHEL DVD (air-gap, podman/openssl)
+  ansible.builtin.include_role:
+    name: rhel_dvd
+  when: rhel_dvd_repo_enable | default(true) | bool
+
 - name: chrony client vers DNS lab
   ansible.builtin.copy:
     dest: /etc/chrony.d/lab.conf
@@ -28,9 +33,14 @@
       - openssl
     state: present
 
-- name: Rappel — image registry:2 et conteneur
-  ansible.builtin.debug:
-    msg: >-
-      Déployer ocp-registry (podman run, TLS, --restart=always) —
-      registry/README.md §4. Ansible ne remplace pas un conteneur déjà en prod lab
-      sans variable registry_recreate.
+- name: Certificats TLS
+  ansible.builtin.include_tasks: certs.yml
+  when: registry_tls_mode != 'skip'
+
+- name: Image registry:2 (air-gap)
+  ansible.builtin.include_tasks: image.yml
+  when: registry_image_tar | default('') | length > 0
+
+- name: Conteneur Podman
+  ansible.builtin.include_tasks: container.yml
+  when: registry_deploy_container | bool
