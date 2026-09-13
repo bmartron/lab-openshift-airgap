@@ -1,0 +1,22 @@
+---
+# cp all.yml.example group_vars/all.yml
+
+lab_timezone: Europe/Paris
+lab_ntp_server: 172.16.10.11
+
+dns_ip: 172.16.10.11
+registry_ip: 172.16.10.20
+bastion_lab_ip: 172.16.10.10
+
+registry_hostname: registry.lab.local
+registry_port: 5000
+registry_data_mount: /opt/registry
+
+# Second disque Terraform (scsi1), ex. /dev/sdb — laisser vide si VM actuelle sans disque dédié
+registry_data_device: /dev/sdb
+
+# Génération TLS via Ansible (fichiers dans files/registry-certs/) — false par défaut
+registry_manage_certs: false
+
+bastion_lab_dir: /home/bernard/lab
+bastion_install_startup_check: true

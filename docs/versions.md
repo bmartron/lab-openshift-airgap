@@ -67,6 +67,6 @@ Ne pas mélanger les images GA et RC dans le même namespace registry.
 
 1. Modifier [versions.env.example](../versions.env.example)
 2. Mettre à jour les `imageset-config` dans `mirror/`
-3. Régénérer les mirrors (`oc mirror`)
+3. Régénérer les mirrors (`oc-mirror`) — voir [lab-alignment.md](lab-alignment.md)
 4. Mettre à jour les DNS (wildcard `*.apps`)
 5. Documenter dans [CHANGELOG.md](CHANGELOG.md)

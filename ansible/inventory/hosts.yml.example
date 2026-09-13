@@ -1,0 +1,18 @@
+---
+# cp hosts.yml.example hosts.yml
+all:
+  vars:
+    ansible_user: bernard
+    lab_user: bernard
+    proxmox_jump: root@192.168.1.147
+  children:
+    lab_infra:
+      hosts:
+        bastion:
+          ansible_host: 192.168.1.XXX   # IP LAN bastion (vmbr0) — depuis le Mac
+        dns:
+          ansible_host: 172.16.10.11
+          ansible_ssh_common_args: '-o ProxyJump={{ proxmox_jump }}'
+        registry:
+          ansible_host: 172.16.10.20
+          ansible_ssh_common_args: '-o ProxyJump={{ proxmox_jump }}'

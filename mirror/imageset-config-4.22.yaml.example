@@ -11,5 +11,11 @@ mirror:
   operators:
     - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.22
       packages:
+        # Sans "channels" : oc-mirror tire TOUTES les versions du package dans l'index
+        # (souvent ~100+ images opérateur pour GitOps seul) → disque registry + durée.
         - name: openshift-gitops-operator
-        # Ajouter les operators nécessaires au lab
+          channels:
+            - name: gitops-1.16
+              minVersion: 1.16.5
+              maxVersion: 1.16.5
+        # Autres opérateurs : un bloc par package, toujours épingler channel + version.

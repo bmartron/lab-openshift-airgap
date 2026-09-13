@@ -2,6 +2,26 @@
 
 ## [Non publié]
 
+### Corrigé (alignement doc)
+- [docs/lab-alignment.md](lab-alignment.md) — tableau de référence stack + commandes obsolètes
+- Harmonisation **`oc-mirror`** dans README / bastion / mirror / registry / 5-rc
+- [mirror/imageset-config-5-rc.yaml.example](../mirror/imageset-config-5-rc.yaml.example) — GitOps épinglé
+
+### Corrigé (IaC / doc alignement lab)
+- Terraform : **telmate/proxmox 3.0.2-rc10** (Proxmox VE 9 — plus de check `VM.Monitor`)
+- `vms.tf` : schéma provider 3.x (`network.id`, `iothread` bool, ISO sur disque `ide2`)
+- [mirror/README.md](../mirror/README.md) : `oc-mirror` + `--authfile` (pas `oc mirror` / `--src-pull-secret`)
+
+### Ajouté (IaC lab)
+- [terraform/](../terraform/) — VMs Proxmox (registry + disque données scsi1)
+- [ansible/](../ansible/) — playbooks DNS / registry / bastion
+- [docs/iac.md](iac.md) — parcours lab existant vs greenfield
+
+### Ajouté (coupure quotidienne lab)
+- [docs/lab-power-cycle.md](lab-power-cycle.md) — arrêt/démarrage ordonné, NTP, dépannage SNO
+- [bastion/scripts/lab-startup-check.sh](../bastion/scripts/lab-startup-check.sh) — prérequis avant boot SNO (DNS, registry, NTP)
+- [dns/README.md](../dns/README.md) — drop-in systemd dnsmasq au reboot
+
 ### Ajouté
 - Structure initiale du dépôt lab OpenShift air-gap
 - Documentation architecture et réseau

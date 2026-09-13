@@ -169,6 +169,28 @@ sudo firewall-cmd --reload
 | `api.ocp5.lab.local` | `172.16.10.110` |
 | `*.apps.ocp5.lab.local` | `172.16.10.110` |
 
+## dnsmasq au reboot (recommandé)
+
+Sur la VM **DNS** `172.16.10.11` :
+
+```bash
+sudo systemctl edit dnsmasq
+```
+
+Contenu :
+
+```ini
+[Unit]
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Restart=on-failure
+RestartSec=5
+```
+
+Puis `sudo systemctl daemon-reload`.
+
 ## Dépannage
 
 | Symptôme | Cause probable | Action |
@@ -178,6 +200,7 @@ sudo firewall-cmd --reload
 | `dig` timeout / `host unreachable` depuis bastion | Firewall DNS fermé | `firewall-cmd --add-service=dns` |
 | `DNS service limited to localhost` | `listen-address` manquant | Ajouter `listen-address=172.16.10.11` |
 | `dig` timeout | VM down | `ping 172.16.10.11` |
+| `dnsmasq` failed au boot (`listening socket`) | Réseau pas prêt | `systemctl start dnsmasq` ; voir drop-in ci-dessous |
 | `dnsmasq` ne démarre pas | Port 53 pris | Désactiver `systemd-resolved` |
 | Mauvaise réponse DNS | `interface=` incorrect | Aligner sur `nmcli device` |
 

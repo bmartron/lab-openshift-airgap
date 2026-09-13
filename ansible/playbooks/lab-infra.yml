@@ -1,0 +1,21 @@
+---
+- name: DNS
+  hosts: dns
+  become: true
+  roles:
+    - role: common
+    - role: dns
+
+- name: Registry
+  hosts: registry
+  become: true
+  roles:
+    - role: common
+    - role: registry
+
+- name: Bastion
+  hosts: bastion
+  become: true
+  roles:
+    - role: common
+    - role: bastion

@@ -30,7 +30,7 @@ oc adm release mirror \
   --to-release-image=registry.lab.local:5000/ocp5-rc/release:${OCP_RC}
 ```
 
-Ou `oc mirror` avec [imageset-config-5-rc.yaml.example](../../mirror/imageset-config-5-rc.yaml.example).
+Ou `oc-mirror` avec [imageset-config-5-rc.yaml.example](../../mirror/imageset-config-5-rc.yaml.example).
 
 ## Binaires installateur
 

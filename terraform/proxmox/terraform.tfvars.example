@@ -1,0 +1,20 @@
+proxmox_api_url          = "https://192.168.1.147:8006/api2/json"
+proxmox_api_token_id     = "root@pam!terraform"
+proxmox_api_token_secret = "REMPLACER"
+proxmox_tls_insecure     = true
+
+proxmox_node = "pve"
+storage      = "nfs-vm"
+
+create_dns      = true
+create_bastion  = true
+create_registry = true
+
+rhel_template        = "rhel-10-template"
+registry_install_iso = ""   # ou ISO pour registry seule : voir terraform.tfvars.registry.example
+
+lab_bridge       = "vmbr1"
+admin_bridge     = "vmbr0"
+bastion_admin_ip = "192.168.1.XXX"
+
+ssh_user = "bernard"

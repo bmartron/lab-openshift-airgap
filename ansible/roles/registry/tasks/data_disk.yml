@@ -1,0 +1,24 @@
+---
+- name: Vérifier disque données registry
+  ansible.builtin.assert:
+    that:
+      - registry_data_device | length > 0
+    fail_msg: "Définir registry_data_device (ex. /dev/sdb) dans group_vars/all.yml"
+
+- name: Détecter filesystem existant
+  ansible.builtin.command: "blkid {{ registry_data_device }}"
+  register: registry_blkid
+  failed_when: false
+  changed_when: false
+
+- name: Créer XFS sur disque données
+  ansible.builtin.command: "mkfs.xfs -f {{ registry_data_device }}"
+  when: registry_blkid.rc != 0
+
+- name: Monter {{ registry_data_mount }}
+  ansible.builtin.mount:
+    path: "{{ registry_data_mount }}"
+    src: "{{ registry_data_device }}"
+    fstype: xfs
+    opts: defaults
+    state: mounted

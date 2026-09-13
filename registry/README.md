@@ -6,7 +6,7 @@ Registry local pour l'installation air-gap d'OpenShift.
 
 | Solution | Lab air-gap | Commentaire |
 |----------|-------------|-------------|
-| **`registry:2`** (upstream) | **Recommandé** | Image Docker Hub — simple, suffisant pour `oc mirror` |
+| **`registry:2`** (upstream) | **Recommandé** | Image Docker Hub — simple, suffisant pour `oc-mirror` |
 | Red Hat **mirror-registry** (produit) | Non utilisé | Pas requis pour ce lab |
 
 Ce lab utilise **`registry:2`** dans **Podman** sur RHEL 10.
@@ -19,11 +19,27 @@ Ce lab utilise **`registry:2`** dans **Podman** sur RHEL 10.
 | OS | RHEL 10 minimal |
 | vCPU | 2 |
 | RAM | 4–8 Go |
-| Disque | 150 Go (NFS) |
+| Disque | **150 Go** sur la VM (données sous `/opt/registry` ou LV dédié) |
 | NIC | `vmbr1` |
 | IP | `172.16.10.20/24` |
 | DNS | `172.16.10.11` |
 | Hostname | `registry.lab.local` |
+
+### Partitionnement à l’installation (important)
+
+L’**autopartition RHEL** répartit souvent le disque en **`/` ~70 Go** + **`/home` ~70 Go**. Pour une VM **uniquement registry**, c’est inadapté : le mirror OCP + opérateurs remplit **`/`** et `oc-mirror` renvoie des **HTTP 500** (disque plein) alors que **`/home` reste vide**.
+
+À l’install (Anaconda / kickstart), viser l’un de ces schémas sur **150 Go** :
+
+| Approche | Layout suggéré |
+|----------|----------------|
+| **Simple** | Une grosse partition **`/`** (~140 Go), **pas** de `/home` séparé (ou `/home` 1–4 Go) |
+| **Propre** | LVM : `rhel-root` **10–20 Go** (OS) + LV **`registry`** ~**130 Go** monté sur **`/opt/registry`** |
+| **Swap** | 2–4 Go suffisent (pas 8 Go si chaque Go compte) |
+
+Exemple kickstart (idée — à adapter) : tout le VG dans `rhel-root` sauf boot/efi/swap.
+
+> VM déjà installée avec `/` plein et `/home` libre : déplacer les données vers `/home/registry` (contournement) ou réinstaller avec le bon layout (propre). Voir § Dépannage ci-dessous.
 
 ## 1. Créer la VM + réseau
 
@@ -127,6 +143,8 @@ sudo cat /opt/registry/certs/ca.crt
 | Podman pull Docker Hub | `sudo podman load` + `--pull=never` |
 | Proxmox ne résout pas les noms | `/etc/hosts` — pas le DNS lab dans resolv.conf |
 | `oc-mirror` : *legacy Common Name, use SANs* | Cert sans SAN | Régénérer `registry.crt` avec `subjectAltName` (voir §4) |
+| Push mirror **HTTP 500** | **`/` plein** (souvent `/opt/registry/data`) | `df -h /` ; agrandir LV ou données sur LV `/home` / réinstaller avec § Partitionnement |
+| Disque 150 Go mais `/` = 70 Go | Layout RHEL par défaut | `lsblk` + `lvs` : étendre `rhel-root` seulement si **PFree** ; sinon déplacer registry ou repartitionner |
 
 ## Progression
 

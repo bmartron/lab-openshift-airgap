@@ -48,7 +48,9 @@ Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.
 │   └── 5-rc/              # Config install RC (5.0.0-ec.6)
 ├── dns/                   # Configuration DNS
 ├── registry/              # Mirror registry + TLS
-├── mirror/                # Procédures oc mirror (GA + Beta)
+├── mirror/                # Procédures oc-mirror (GA + Beta)
+├── terraform/             # Proxmox (VMs lab)
+├── ansible/               # Config DNS, registry, bastion
 └── versions.env.example   # Variables de version (copier → versions.env)
 ```
 
@@ -62,6 +64,9 @@ Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.
 6. Miroir des images — [mirror/README.md](mirror/README.md)
 7. Générer l'ISO agent et installer — [openshift/4.22-ga/README.md](openshift/4.22-ga/README.md)
 8. VM SNO Proxmox (disque, réinstall) — [proxmox/sno-vm.md](proxmox/sno-vm.md)
+9. **Arrêt / démarrage quotidien** — [docs/lab-power-cycle.md](docs/lab-power-cycle.md) + script `bastion/scripts/lab-startup-check.sh`
+10. **Terraform + Ansible** (optionnel) — [docs/iac.md](docs/iac.md)
+11. **Alignement versions / audit** — [docs/lab-alignment.md](docs/lab-alignment.md)
 
 ## Progression lab
 
@@ -73,7 +78,7 @@ Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.
 - [x] Proxmox `/etc/hosts` pour noms lab (DNS maison conservé)
 - [x] VM bastion — réseau, `oc` / `openshift-install` / `oc-mirror` v2, DNS lab, CA registry
 - [x] NTP lab (chrony sur DNS) + fuseau Europe/Paris
-- [x] Mirror OCP 4.22.12 (`oc mirror` v2 → ~22 Go)
+- [x] Mirror OCP 4.22.12 (`oc-mirror` v2 → ~22 Go)
 - [x] Install SNO GA 4.22.12 (+ réinstall de contrôle ~30 min)
 - [ ] Mirror OCP 5 RC + install SNO RC
 - [ ] VM workstation graphique (console web, optionnel)

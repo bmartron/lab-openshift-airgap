@@ -1,6 +1,6 @@
 # VM Bastion — RHEL 10
 
-Poste d'orchestration : `oc`, `openshift-install`, `oc mirror`, génération ISO agent.
+Poste d'orchestration : `oc`, `openshift-install`, `oc-mirror`, génération ISO agent.
 
 **Avantage double NIC** : SSH direct depuis le Mac (`vmbr0`) + accès au lab (`vmbr1`).
 
@@ -144,7 +144,7 @@ Ou depuis la bastion (une fois sur vmbr1) :
 scp bernard@172.16.10.20:/opt/registry/certs/ca.crt ~/lab/ca.crt
 ```
 
-Installer la CA pour `oc mirror`, `curl` et Podman :
+Installer la CA pour `oc-mirror`, `curl` et Podman :
 
 ```bash
 sudo mkdir -p /etc/containers/certs.d/registry.lab.local:5000
@@ -177,7 +177,7 @@ curl -LO https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/${OCP_
 tar xzf oc-mirror.tar.gz
 sudo mv oc-mirror /usr/local/bin/
 sudo chmod +x /usr/local/bin/oc-mirror
-oc mirror --v2 --help
+oc-mirror --v2 --help
 ```
 
 Procédure complète : [mirror/README.md](../mirror/README.md).
@@ -185,6 +185,30 @@ Procédure complète : [mirror/README.md](../mirror/README.md).
 ## 9. Génération ISO agent
 
 Voir [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) — workflow complet avec `config-backup/`.
+
+## Coupure quotidienne (arrêt / démarrage)
+
+Ordre de boot : **DNS → registry → bastion → SNO**. Avant de démarrer le SNO sur Proxmox, lancer sur la bastion :
+
+```bash
+mkdir -p ~/lab/scripts   # une fois si absent
+~/lab/scripts/lab-startup-check.sh   # copier depuis bastion/scripts/ du dépôt
+```
+
+Procédure complète, NTP, dépannage : [docs/lab-power-cycle.md](../docs/lab-power-cycle.md).
+
+**NTP bastion** (client vers le DNS lab) :
+
+```bash
+sudo dnf install -y chrony
+sudo tee /etc/chrony.d/lab.conf << 'EOF'
+server 172.16.10.11 iburst
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+EOF
+sudo systemctl enable --now chronyd
+timedatectl set-timezone Europe/Paris
+```
 
 ## Accès SSH depuis le Mac
 
@@ -209,7 +233,7 @@ dig @172.16.10.11 registry.lab.local
 - [x] `oc` + `openshift-install` + `oc-mirror` v2 — 4.22.12
 - [x] CA registry (`~/lab/ca.crt` + trust système)
 - [x] Pull secret (`~/lab/pull-secret.txt`)
-- [x] `oc mirror` v2 → `registry.lab.local:5000/ocp4-422` (~22 Go)
+- [x] `oc-mirror` v2 → `registry.lab.local:5000/ocp4-422` (~22 Go)
 - [x] `nmstate`, `xorriso` installés
 - [x] Install SNO GA 4.22.12 (validée + réinstall ~30 min)
 

@@ -54,20 +54,22 @@ sudo mv oc-mirror /usr/local/bin/
 sudo chmod +x /usr/local/bin/oc-mirror
 ```
 
-### Piste GA — oc mirror v2 (recommandé)
+### Piste GA — oc-mirror v2 (recommandé)
 
 ```bash
 mkdir -p ~/lab/4.22-ga
 cd ~/lab/4.22-ga
 cp mirror/imageset-config-4.22.yaml.example imageset-config.yaml
 
-oc mirror -c imageset-config.yaml \
+oc-mirror -c imageset-config.yaml \
   --workspace file://$HOME/lab/4.22-ga/workspace \
   docker://registry.lab.local:5000/ocp4-422 \
-  --v2 --src-pull-secret ~/lab/pull-secret.txt
+  --authfile ~/lab/pull-secret.txt --dest-tls-verify=false --v2
 ```
 
-Durée observée en lab : **~7 min** (selon bande passante).
+Durée observée en lab : **~7 min** (plateforme seule, une version 4.22.12).
+
+**Opérateurs** : dans `imageset-config.yaml`, un seul `name: openshift-gitops-operator` **sans** `channels` fait mirroir **toutes** les versions du catalogue compatibles → compteur du type **187 operator images**, beaucoup de Go. Pour le lab, épingler **un** channel + `minVersion` / `maxVersion` identiques (voir l’exemple dans [imageset-config-4.22.yaml.example](imageset-config-4.22.yaml.example)). Choisir la version dans la console Red Hat / OperatorHub pour OCP 4.22.12.
 
 ### Vérification post-mirror
 
@@ -128,9 +130,57 @@ oc adm release info \
 Prévoir **≥ 120 Go par piste** sur le volume registry (GA + RC = ~240 Go si les deux sont miroirées en même temps).  
 Observé en lab GA 4.22.12 : **~22 Go** sur `/opt/registry/data`.
 
-## Opérateurs air-gap (phase ultérieure)
+## Opérateurs air-gap
 
-Pour Virt, ODF, etc. : ajouter des catalogues dans `imageset-config.yaml` puis relancer `oc mirror` vers le même namespace ou un namespace dédié.
+Pour Virt, ODF, etc. : ajouter des catalogues dans `imageset-config.yaml` puis relancer `oc-mirror` vers le même namespace (`ocp4-422`).
+
+### Supprimer puis re-mirror GitOps (version épinglée)
+
+Si un premier mirror a tiré **toutes** les versions GitOps (ex. **187 operator images**), libérer la registry avant de re-mirror :
+
+1. **Espace disque** sur la VM registry (données registry, pas seulement `/` plein).
+2. Sur la **bastion**, workspace du mirror opérateurs (celui utilisé pour le premier run) :
+
+```bash
+cd ~/lab/4.22-ga
+cp delete-openshift-gitops.yaml.example delete-gitops.yaml   # depuis le dépôt, ou recopier le contenu
+
+# Phase delete 1 — génère la liste (relire le YAML généré avant d’exécuter)
+oc-mirror delete -c delete-gitops.yaml \
+  --workspace file://$HOME/lab/4.22-ga/workspace-operators \
+  --generate --delete-id gitops-full \
+  docker://registry.lab.local:5000/ocp4-422 \
+  --authfile ~/lab/pull-secret.txt --dest-tls-verify=false --v2
+
+# Phase delete 2 — exécution (irréversible sur la registry)
+oc-mirror delete \
+  --delete-yaml-file $HOME/lab/4.22-ga/workspace-operators/working-dir/delete/delete-images-gitops-full.yaml \
+  docker://registry.lab.local:5000/ocp4-422 \
+  --authfile ~/lab/pull-secret.txt --dest-tls-verify=false --v2
+```
+
+> Le chemin exact de `delete-images-*.yaml` est affiché en fin de phase `--generate`. Adapter si le nom diffère.
+
+3. **Garbage collection** sur la VM **registry** (sinon les blobs restent sur disque) :
+
+```bash
+sudo podman exec ocp-registry registry garbage-collect /etc/docker/registry/config.yml
+```
+
+4. Mettre à jour `imageset-config.yaml` avec **channels** + **minVersion** / **maxVersion** (voir [imageset-config-4.22.yaml.example](imageset-config-4.22.yaml.example)).
+
+5. Re-mirror :
+
+```bash
+oc-mirror -c imageset-config.yaml \
+  --workspace file://$HOME/lab/4.22-ga/workspace-operators \
+  docker://registry.lab.local:5000/ocp4-422 \
+  --authfile ~/lab/pull-secret.txt --dest-tls-verify=false --v2
+```
+
+6. Si le cluster avait déjà des **IDMS/ITMS** opérateurs appliqués : `oc apply -f workspace-operators/.../cluster-resources/` après le nouveau mirror.
+
+**Ne pas** supprimer la section `platform` dans un delete : les images **4.22.12** du SNO en dépendent. Le catalogue `redhat-operator-index` n’est en général **pas** supprimé tant que seul le package GitOps est listé (comportement voulu).
 
 ## Dépannage
 
@@ -143,3 +193,4 @@ Pour Virt, ODF, etc. : ajouter des catalogues dans `imageset-config.yaml` puis r
 | `Could not resolve host: mirror.openshift.com` | DNS lab seul | `/etc/hosts` lab + DNS maison sur `ens18` |
 | `unauthorized` sur `registry.redhat.io` | Pull secret manquant / invalide | Vérifier `~/lab/pull-secret.txt` |
 | `manifest unknown` sur release locale | Mauvais chemin image | Utiliser chemins `ocp4-422/openshift/release-images` (pas `quay.io/...` dans le tag) |
+| Push mirror **HTTP 500** | Registry disque plein | [registry/README.md](../registry/README.md) — 2e disque `/opt/registry` |

@@ -1,0 +1,52 @@
+---
+- name: Paquets DNS
+  ansible.builtin.dnf:
+    name:
+      - dnsmasq
+      - bind-utils
+    state: present
+
+- name: chrony serveur NTP lab
+  ansible.builtin.copy:
+    dest: /etc/chrony.d/lab.conf
+    mode: "0644"
+    content: |
+      allow 172.16.10.0/24
+      cmdallow 172.16.10.0/24
+      local stratum 10
+      rtcsync
+      makestep 1.0 3
+  notify: restart chronyd
+
+- name: Désactiver pools externes chrony (air-gap)
+  ansible.builtin.replace:
+    path: /etc/chrony.conf
+    regexp: '^(pool|server) '
+    replace: '#\1 '
+  notify: restart chronyd
+
+- name: Firewall DNS + NTP
+  ansible.builtin.command: "firewall-cmd --permanent --add-service={{ item }}"
+  loop:
+    - dns
+    - ntp
+  register: fw_add
+  changed_when: "'ALREADY_ENABLED' not in fw_add.stdout"
+  failed_when: fw_add.rc != 0 and 'ALREADY_ENABLED' not in fw_add.stdout
+
+- name: Firewall reload
+  ansible.builtin.command: firewall-cmd --reload
+  changed_when: true
+
+- name: dnsmasq démarré
+  ansible.builtin.service:
+    name: dnsmasq
+    state: started
+    enabled: true
+
+# dnsmasq.conf : déployer depuis le dépôt ou templater — voir dns/dnsmasq.conf.example
+- name: Rappel configuration dnsmasq
+  ansible.builtin.debug:
+    msg: >-
+      Déployer dnsmasq.conf (listen-address={{ dns_ip }}) depuis
+      dns/dnsmasq.conf.example — pas de template complet dans ce rôle pour éviter la dérive.

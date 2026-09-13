@@ -1,0 +1,17 @@
+---
+- name: Fuseau horaire lab
+  ansible.builtin.timezone:
+    name: "{{ lab_timezone }}"
+
+- name: Paquets de base
+  ansible.builtin.dnf:
+    name:
+      - chrony
+      - firewalld
+    state: present
+
+- name: chronyd actif
+  ansible.builtin.service:
+    name: chronyd
+    state: started
+    enabled: true

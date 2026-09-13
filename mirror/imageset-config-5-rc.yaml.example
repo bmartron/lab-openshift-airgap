@@ -13,3 +13,7 @@ mirror:
     - catalog: registry.redhat.io/redhat/redhat-operator-index:v5.0
       packages:
         - name: openshift-gitops-operator
+          channels:
+            - name: gitops-1.16
+              minVersion: 1.16.5
+              maxVersion: 1.16.5

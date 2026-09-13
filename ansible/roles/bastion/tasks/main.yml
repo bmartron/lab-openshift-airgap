@@ -1,0 +1,32 @@
+---
+- name: chrony client vers DNS lab
+  ansible.builtin.copy:
+    dest: /etc/chrony.d/lab.conf
+    mode: "0644"
+    content: |
+      server {{ lab_ntp_server }} iburst
+      makestep 1.0 3
+  notify: restart chronyd
+
+- name: Répertoire lab scripts
+  ansible.builtin.file:
+    path: "{{ bastion_lab_dir }}/scripts"
+    state: directory
+    owner: "{{ lab_user }}"
+    group: "{{ lab_user }}"
+    mode: "0755"
+
+- name: Script lab-startup-check.sh
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../../bastion/scripts/lab-startup-check.sh"
+    dest: "{{ bastion_lab_dir }}/scripts/lab-startup-check.sh"
+    owner: "{{ lab_user }}"
+    group: "{{ lab_user }}"
+    mode: "0755"
+  when: bastion_install_startup_check | bool
+
+- name: Rappel outils OCP
+  ansible.builtin.debug:
+    msg: >-
+      Installer oc, openshift-install, oc-mirror manuellement ou rôle dédié —
+      voir bastion/README.md

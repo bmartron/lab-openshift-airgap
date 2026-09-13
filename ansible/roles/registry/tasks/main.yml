@@ -1,0 +1,36 @@
+---
+- name: chrony client vers DNS lab
+  ansible.builtin.copy:
+    dest: /etc/chrony.d/lab.conf
+    mode: "0644"
+    content: |
+      server {{ lab_ntp_server }} iburst
+      makestep 1.0 3
+  notify: restart chronyd
+
+- name: Disque données registry (optionnel)
+  ansible.builtin.include_tasks: data_disk.yml
+  when: registry_data_device | default('') | length > 0
+
+- name: Arborescence registry
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - "{{ registry_data_mount }}/data"
+    - "{{ registry_data_mount }}/certs"
+
+- name: Paquets registry
+  ansible.builtin.dnf:
+    name:
+      - podman
+      - openssl
+    state: present
+
+- name: Rappel — image registry:2 et conteneur
+  ansible.builtin.debug:
+    msg: >-
+      Déployer ocp-registry (podman run, TLS, --restart=always) —
+      registry/README.md §4. Ansible ne remplace pas un conteneur déjà en prod lab
+      sans variable registry_recreate.

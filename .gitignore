@@ -1,6 +1,16 @@
 # Variables locales (versions, endpoints)
 versions.env
 
+# Terraform / Ansible secrets & state
+terraform/**/terraform.tfvars
+terraform/**/.terraform/
+terraform/**/*.tfstate
+terraform/**/*.tfstate.*
+# Conserver terraform/proxmox/.terraform.lock.hcl versionné (provider épinglé)
+ansible/inventory/hosts.yml
+ansible/group_vars/all.yml
+ansible/files/registry-certs/
+
 # Secrets — ne jamais committer
 **/pull-secret.txt
 **/pull-secret.json

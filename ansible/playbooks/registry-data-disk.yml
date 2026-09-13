@@ -1,0 +1,7 @@
+---
+- name: Registry — disque données uniquement
+  hosts: registry
+  become: true
+  roles:
+    - role: registry
+      tasks_from: data_disk
