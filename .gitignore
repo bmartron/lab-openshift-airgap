@@ -9,6 +9,7 @@ terraform/**/*.tfstate.*
 # Conserver terraform/proxmox/.terraform.lock.hcl versionné (provider épinglé)
 ansible/inventory/hosts.yml
 ansible/group_vars/all.yml
+ansible/inventory/group_vars/all.yml
 ansible/files/registry-certs/
 
 # Secrets — ne jamais committer

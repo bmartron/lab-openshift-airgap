@@ -1,11 +1,24 @@
 ---
-- name: Vérifier chemin image tar sur le contrôleur
+- name: Chemin registry_image_tar requis
   ansible.builtin.assert:
     that:
-      - registry_image_tar | length > 0
+      - registry_image_tar | default('') | length > 0
     fail_msg: >-
       Définir registry_image_tar (chemin absolu du .tar amd64 sur le Mac) —
       registry/README.md §3
+
+- name: Vérifier fichier image sur le Mac (contrôleur Ansible)
+  ansible.builtin.stat:
+    path: "{{ registry_image_tar }}"
+  delegate_to: localhost
+  become: false
+  register: registry_tar_local
+
+- name: Fichier image introuvable sur le Mac
+  ansible.builtin.assert:
+    that:
+      - registry_tar_local.stat.exists
+    fail_msg: "Fichier absent : {{ registry_image_tar }} — podman save sur le Mac puis corriger all.yml"
 
 - name: Copier image registry:2 vers la VM
   ansible.builtin.copy:
@@ -18,6 +31,18 @@
   register: registry_podman_load
   changed_when: "'Loaded image' in registry_podman_load.stdout or 'Loaded image' in registry_podman_load.stderr"
   failed_when: registry_podman_load.rc != 0
+
+- name: Alias image registry:2 → {{ registry_image }}
+  ansible.builtin.command: podman tag registry:2 {{ registry_image }}
+  register: registry_tag_short
+  failed_when: false
+  changed_when: registry_tag_short.rc == 0
+
+- name: Alias image docker.io/library/registry:2 → {{ registry_image }}
+  ansible.builtin.command: podman tag docker.io/library/registry:2 {{ registry_image }}
+  when: registry_tag_short.rc != 0
+  failed_when: false
+  changed_when: true
 
 - name: Vérifier image registry présente
   ansible.builtin.command: podman image exists {{ registry_image }}

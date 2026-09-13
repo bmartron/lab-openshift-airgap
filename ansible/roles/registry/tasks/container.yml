@@ -12,24 +12,38 @@
 
 - name: État conteneur {{ registry_container_name }}
   ansible.builtin.command: podman container exists {{ registry_container_name }}
-  register: registry_ct_exists
+  register: registry_ct_check
   changed_when: false
   failed_when: false
+
+- name: Conteneur absent ou à recréer
+  ansible.builtin.set_fact:
+    registry_run_container: >-
+      {{ (registry_ct_check.rc | default(1)) != 0 or registry_recreate_container | bool }}
 
 - name: Supprimer conteneur existant (recreate)
   ansible.builtin.command: podman rm -f {{ registry_container_name }}
   when:
     - registry_recreate_container
-    - registry_ct_exists.rc == 0
+    - registry_ct_check.rc == 0
   register: registry_ct_removed
   changed_when: registry_ct_removed.rc == 0
 
-- name: Re-vérifier conteneur après suppression
-  ansible.builtin.command: podman container exists {{ registry_container_name }}
-  register: registry_ct_exists
+- name: Image Podman requise avant run
+  ansible.builtin.command: podman image exists {{ registry_image }}
+  register: registry_image_check
   changed_when: false
   failed_when: false
-  when: registry_recreate_container
+  when: registry_run_container | bool
+
+- name: Charger l’image (registry_image_tar) avant le conteneur
+  ansible.builtin.fail:
+    msg: >-
+      Image {{ registry_image }} absente — vérifier registry_image_tar dans group_vars/all.yml
+      et que la tâche « Charger image dans Podman » a réussi.
+  when:
+    - registry_run_container | bool
+    - registry_image_check.rc | default(1) != 0
 
 - name: Démarrer conteneur registry TLS
   ansible.builtin.command:
@@ -54,7 +68,7 @@
       - -e
       - REGISTRY_STORAGE_DELETE_ENABLED=true
       - "{{ registry_image }}"
-  when: registry_ct_exists.rc != 0
+  when: registry_run_container | bool
   register: registry_ct_run
   changed_when: registry_ct_run.rc == 0
 

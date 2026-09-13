@@ -33,15 +33,21 @@
           -copy_extensions copyall
         chdir: "{{ registry_data_mount }}/certs"
 
-    - name: Permissions clés registry
+    - name: Permissions clés privées
       ansible.builtin.file:
         path: "{{ registry_data_mount }}/certs/{{ item }}"
         mode: "0640"
       loop:
         - ca.key
         - registry.key
-        - registry.crt
+
+    - name: Permissions certificats publics (scp ca.crt sans sudo)
+      ansible.builtin.file:
+        path: "{{ registry_data_mount }}/certs/{{ item }}"
+        mode: "0644"
+      loop:
         - ca.crt
+        - registry.crt
 
 - name: Déployer certificats depuis ansible/files/registry-certs/
   ansible.builtin.copy:

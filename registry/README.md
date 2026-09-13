@@ -132,6 +132,27 @@ curl -k https://registry.lab.local:5000/v2/_catalog
 sudo cat /opt/registry/certs/ca.crt
 ```
 
+Depuis le **Mac** (sans sudo interactif si `ca.crt` est en `0644` après Ansible) :
+
+```bash
+scp -o ProxyJump=root@192.168.1.147 \
+  bernard@172.16.10.20:/opt/registry/certs/ca.crt \
+  ~/Downloads/registry-ca.crt
+```
+
+Sinon, avec mot de passe sudo :
+
+```bash
+ssh -t -o ProxyJump=root@192.168.1.147 bernard@172.16.10.20 \
+  'sudo cat /opt/registry/certs/ca.crt' > ~/Downloads/registry-ca.crt
+```
+
+Sur la registry (une fois) :
+
+```bash
+sudo chmod 644 /opt/registry/certs/ca.crt
+```
+
 → `additionalTrustBundle` dans les `install-config.yaml`. **Ne pas** committer les `.key`.
 
 ## Dépannage

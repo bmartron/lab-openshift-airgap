@@ -39,7 +39,7 @@
 
 - name: Image registry:2 (air-gap)
   ansible.builtin.include_tasks: image.yml
-  when: registry_image_tar | default('') | length > 0
+  when: registry_deploy_container | default(true) | bool
 
 - name: Conteneur Podman
   ansible.builtin.include_tasks: container.yml

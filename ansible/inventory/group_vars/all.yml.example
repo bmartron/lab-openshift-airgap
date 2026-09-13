@@ -1,0 +1,28 @@
+---
+# cp all.yml.example inventory/group_vars/all.yml
+# (ou group_vars/all.yml à la racine ansible — les deux emplacements sont supportés)
+
+lab_timezone: Europe/Paris
+lab_ntp_server: 172.16.10.11
+
+rhel_dvd_repo_enable: true
+rhel_dvd_mount: /mnt/rhel
+rhel_dvd_device: /dev/sr0
+
+dns_ip: 172.16.10.11
+registry_ip: 172.16.10.20
+bastion_lab_ip: 172.16.10.10
+
+registry_hostname: registry.lab.local
+registry_port: 5000
+registry_data_mount: /opt/registry
+registry_data_device: /dev/sdb1
+
+registry_tls_mode: generate
+registry_image_tar: /Users/bmartron/Downloads/registry2-amd64.tar
+
+registry_deploy_container: true
+registry_recreate_container: false
+
+bastion_lab_dir: /home/bernard/lab
+bastion_install_startup_check: true

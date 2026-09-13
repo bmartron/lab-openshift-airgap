@@ -3,6 +3,8 @@
 # Prérequis : inventory/hosts.yml + group_vars/all.yml (registry_data_device, registry_image_tar)
 - name: Registry mirror (lab air-gap)
   hosts: registry
+  vars_files:
+    - "{{ playbook_dir }}/../inventory/group_vars/all.yml"
   become: true
   roles:
     - role: common

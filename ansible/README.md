@@ -15,7 +15,9 @@ brew install ansible          # Mac (recommandé)
 ```bash
 cd ansible
 cp inventory/hosts.yml.example inventory/hosts.yml
-cp group_vars/all.yml.example group_vars/all.yml   # obligatoire pour registry_data_device, registry_image_tar
+cp inventory/group_vars/all.yml.example inventory/group_vars/all.yml
+# (équivalent : cp group_vars/all.yml.example group_vars/all.yml)
+# Obligatoire : registry_data_device, registry_image_tar (chemin .tar sur le Mac)
 # Éditer hosts.yml : IP LAN bastion, user SSH ; all.yml : disque + chemin .tar
 ```
 
