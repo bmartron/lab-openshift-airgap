@@ -184,3 +184,34 @@
     - install-config.yaml
     - agent-config.yaml
   when: ocp_agent_generate_iso | bool
+
+- name: Vérifier présence agent ISO sur bastion
+  ansible.builtin.stat:
+    path: "{{ ocp_install_dir }}/{{ ocp_proxmox_iso_filename }}"
+  register: ocp_agent_iso_stat
+  when: ocp_push_iso_to_proxmox | bool
+
+- name: Copier agent ISO vers NFS Proxmox
+  become: true
+  become_user: "{{ lab_user }}"
+  ansible.builtin.command:
+    argv:
+      - scp
+      - -o
+      - StrictHostKeyChecking=accept-new
+      - "{{ ocp_install_dir }}/{{ ocp_proxmox_iso_filename }}"
+      - "root@{{ ocp_proxmox_host }}:{{ ocp_proxmox_iso_dir }}/"
+  when:
+    - ocp_push_iso_to_proxmox | bool
+    - ocp_agent_iso_stat.stat.exists | default(false)
+  register: ocp_iso_scp
+  changed_when: ocp_iso_scp.rc == 0
+
+- name: ISO absente — skip push Proxmox
+  ansible.builtin.debug:
+    msg: >-
+      ocp_push_iso_to_proxmox=true mais {{ ocp_install_dir }}/{{ ocp_proxmox_iso_filename }}
+      introuvable — générer avec ocp_agent_generate_iso ou openshift-install create image
+  when:
+    - ocp_push_iso_to_proxmox | bool
+    - not (ocp_agent_iso_stat.stat.exists | default(false))

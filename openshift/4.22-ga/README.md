@@ -114,7 +114,9 @@ openshift-install agent create image --dir . --log-level info
 # 3. Restaurer les configs pour regénérer l'ISO ou relancer wait-for
 cp config-backup/install-config.yaml config-backup/agent-config.yaml .
 
-# Copier agent.x86_64.iso vers NFS / Proxmox, boot VM SNO
+# Bastion → NFS ISO Proxmox (lab NUC) :
+# scp ~/lab/4.22-ga/agent.x86_64.iso root@192.168.1.147:/mnt/pve/nfs_iso/template/iso/
+# Puis boot VM SNO (ide2, datastore nfs_iso)
 openshift-install agent wait-for install-complete --dir . --log-level debug
 ```
 

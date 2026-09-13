@@ -36,3 +36,9 @@ ocp_gitops_version: "1.16.5"
 ocp_deploy_lab_scripts: true
 ocp_configure_registry_trust: true
 ocp_agent_generate_iso: false
+
+# Copie bastion → Proxmox NFS (scp en tant que lab_user ; clé SSH root@pve sur la bastion)
+ocp_push_iso_to_proxmox: false
+ocp_proxmox_host: 192.168.1.147
+ocp_proxmox_iso_dir: /mnt/pve/nfs_iso/template/iso
+ocp_proxmox_iso_filename: agent.x86_64.iso

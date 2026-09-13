@@ -96,7 +96,29 @@ openshift-install agent create image --dir .
 cp config-backup/install-config.yaml config-backup/agent-config.yaml .
 ```
 
-Puis attacher `agent.x86_64.iso` sur Proxmox — [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md), [proxmox/sno-vm.md](../proxmox/sno-vm.md).
+### Copier l’ISO vers Proxmox (NFS)
+
+**Ansible** (depuis le Mac, après génération ISO sur la bastion) — dans `group_vars/all.yml` :
+
+```yaml
+ocp_push_iso_to_proxmox: true
+# optionnel : ocp_proxmox_host, ocp_proxmox_iso_dir (défauts = lab NUC)
+```
+
+Prérequis : **`bernard@bastion`** peut `scp` vers **`root@192.168.1.147`** (`ssh-copy-id root@192.168.1.147` depuis la bastion).
+
+Relancer : `ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass`
+
+**Manuel** sur la bastion :
+
+```bash
+scp ~/lab/4.22-ga/agent.x86_64.iso \
+  root@192.168.1.147:/mnt/pve/nfs_iso/template/iso/
+```
+
+Dans l’UI Proxmox : datastore **`nfs_iso`** → ISO **`agent.x86_64.iso`** → attacher en **ide2** sur la VM SNO. Voir [proxmox/sno-vm.md](../proxmox/sno-vm.md).
+
+Puis attacher et booter — [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md).
 
 ## Dépannage
 

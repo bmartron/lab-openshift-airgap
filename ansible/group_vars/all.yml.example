@@ -35,3 +35,4 @@ bastion_install_startup_check: true
 ocp_sno_mac: "BC:24:11:XX:XX:XX"
 ocp_imageset_profile: virtualization
 ocp_agent_generate_iso: false
+ocp_push_iso_to_proxmox: false   # true : scp ISO → root@192.168.1.147:/mnt/pve/nfs_iso/template/iso/
