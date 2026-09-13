@@ -27,13 +27,24 @@
   gather_facts: false
   become: true
   # Priorité sur inventory/group_vars — éditer souvent ansible/group_vars/all.yml
+  # Dernier fichier gagne — préférer inventory/group_vars pour ocp_sno_mac
   vars_files:
     - "{{ playbook_dir }}/../group_vars/all.yml"
+    - "{{ playbook_dir }}/../inventory/group_vars/all.yml"
   vars:
     ocp_pull_secret_path: "{{ playbook_dir }}/../files/pull-secret.txt"
     ocp_ssh_pubkey_path: "{{ playbook_dir }}/../files/install_ssh_key.pub"
     ocp_registry_ca_pem: "{{ hostvars['registry'].ocp_registry_ca_pem }}"
-    ocp_pull_secret_json: "{{ lookup('ansible.builtin.file', ocp_pull_secret_path) | trim | from_json | to_json }}"
     ocp_ssh_pubkey: "{{ lookup('ansible.builtin.file', ocp_ssh_pubkey_path) | trim }}"
+  pre_tasks:
+    - name: Fusionner registry mirror dans pull secret (évite warning install)
+      ansible.builtin.set_fact:
+        ocp_pull_secret_json: "{{ _merged | to_json }}"
+      vars:
+        _ps: "{{ lookup('ansible.builtin.file', ocp_pull_secret_path) | from_json }}"
+        _reg: "{{ registry_hostname }}:{{ registry_port }}"
+        _auths: "{{ _ps.auths | default({}) | combine({_reg: (_ps.auths | default({}))[_reg] | default({'auth': 'Og=='})}) }}"
+        _merged: "{{ _ps | combine({'auths': _auths}, recursive=True) }}"
+      no_log: true
   roles:
     - role: ocp_bastion_install

@@ -66,6 +66,24 @@ Le play **registry** lit `/opt/registry/certs/ca.crt` ; le play **bastion** dép
 | `~/lab/pull-secret.txt` | Pull secret Red Hat |
 | `~/lab/scripts/*.sh` | Preflight mirror, scripts secours |
 
+## Mettre à jour install-config + pullSecret registry + ISO
+
+Quand l’install affiche *Mirror registry not found in pullSecret* ou après changement de CA :
+
+1. **Mac** — pull secret Red Hat à jour dans `ansible/files/pull-secret.txt` (le playbook **ajoute** `registry.lab.local:5000` si absent).
+2. **Mac** :
+
+```bash
+cd ansible
+ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass
+```
+
+3. **ISO** — une des deux options :
+   - `ocp_agent_generate_iso: true` dans `group_vars/all.yml`, puis relancer le même playbook (long, sur la bastion) ;
+   - **ou** manuellement sur la **bastion** (voir ci-dessous).
+
+Pas besoin de `lab-infra` ni de `bastion-scripts` pour les YAML d’install (seulement `bastion-ocp-install.yml`).
+
 ## ISO agent (après playbook)
 
 Si `ocp_agent_generate_iso: false` (défaut), sur la **bastion** :

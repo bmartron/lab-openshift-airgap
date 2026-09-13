@@ -5,8 +5,8 @@
       - ocp_sno_mac | default('') | length >= 17
       - ocp_sno_mac is match('(?i)^[0-9a-f]{2}(:[0-9a-f]{2}){5}$')
     fail_msg: >-
-      Définir ocp_sno_mac dans ansible/inventory/group_vars/all.yml
-      (pas ansible/group_vars/). MAC Proxmox : qm config <VMID> | grep net
+      ocp_sno_mac invalide (pas de XX dans la MAC) — inventory/group_vars/all.yml
+      ou group_vars/all.yml. Proxmox : qm config <VMID> | grep net
 
 - name: Vérifier CA registry
   ansible.builtin.assert:
