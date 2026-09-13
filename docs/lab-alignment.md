@@ -24,7 +24,10 @@ Référence pour vérifier que dépôt, outils et infra correspondent. Dernière
 | Binaires bastion | `oc`, `openshift-install`, **`oc-mirror`** (binaire séparé, pas `oc mirror`) |
 | Mirror pull auth | **`--authfile ~/lab/pull-secret.txt`** + `--dest-tls-verify=false` si CA lab |
 | ImageSet | `apiVersion: mirror.openshift.io/v1alpha2` — **GitOps épinglé** (channel + min/max) |
-| Delete GitOps | `DeleteImageSetConfiguration` — ex. [mirror/delete-openshift-gitops.yaml.example](../mirror/delete-openshift-gitops.yaml.example) |
+| Delete GitOps | [mirror/delete-openshift-gitops.yaml.example](../mirror/delete-openshift-gitops.yaml.example) |
+| Imageset Virtualization | [mirror/imageset-config-4.22-virtualization.yaml.example](../mirror/imageset-config-4.22-virtualization.yaml.example) |
+| Delete Virtualization | [mirror/delete-kubevirt-hyperconverged.yaml.example](../mirror/delete-kubevirt-hyperconverged.yaml.example) |
+| Bastion Mac (scp/ssh) | **`192.168.1.144`** — lab NIC **`172.16.10.10`** |
 
 ## Commandes à ne plus utiliser
 

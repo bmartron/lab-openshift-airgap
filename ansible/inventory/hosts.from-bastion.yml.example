@@ -1,6 +1,6 @@
 ---
 # Lancer Ansible DEPUIS la bastion (pas de ProxyJump) :
-#   ssh bernard@<IP-LAN-bastion>
+#   ssh bernard@192.168.1.144
 #   cd .../ansible && ansible-playbook -i inventory/hosts.from-bastion.yml playbooks/registry.yml
 #
 # registry_image_tar : chemin du .tar SUR la bastion (scp depuis le Mac avant).

@@ -15,7 +15,7 @@ Poste d'orchestration : `oc`, `openshift-install`, `oc-mirror`, génération ISO
 | Disque | 40 Go (NFS) |
 | **NIC 0** | `vmbr0` — admin / Internet |
 | **NIC 1** | `vmbr1` — lab air-gap |
-| IP admin | DHCP ou statique LAN (ex. `192.168.1.x`) |
+| IP admin | **`192.168.1.144`** (`vmbr0`) — SSH/scp depuis le Mac |
 | IP lab | `172.16.10.10/24` |
 | Hostname | `bastion.lab.local` |
 
@@ -215,7 +215,7 @@ timedatectl set-timezone Europe/Paris
 Une fois la bastion créée, SSH **direct** (sans ProxyJump) :
 
 ```bash
-ssh bernard@<IP-bastion-LAN>
+ssh bernard@192.168.1.144
 ```
 
 Puis depuis la bastion :

@@ -7,6 +7,8 @@ Les VMs sur `vmbr1` (`172.16.10.0/24`) ne sont **pas** joignables directement de
 | Paramètre | Valeur |
 |-----------|--------|
 | Proxmox (LAN) | `root@192.168.1.147` |
+| Bastion (LAN `vmbr0`) | `bernard@192.168.1.144` — SSH/scp **depuis le Mac** |
+| Bastion (lab `vmbr1`) | `bernard@172.16.10.10` — depuis Proxmox ou autres VMs lab |
 | Utilisateur VMs | `bernard` |
 | Jump host | `ProxyJump=root@192.168.1.147` |
 | Gateway lab | `172.16.10.1` (Proxmox sur vmbr1) |
@@ -169,9 +171,9 @@ Le cluster (`172.16.10.100`) n’est pas routé depuis le LAN. Options :
 
 | Méthode | Détail |
 |---------|--------|
-| **Tunnel SSH** | `sudo ssh -L 443:172.16.10.100:443 -N bernard@<IP-bastion-LAN>` + `/etc/hosts` sur le Mac vers `127.0.0.1` (port 443 nécessite `sudo` sur macOS) |
-| **Port 8443** | `ssh -L 8443:172.16.10.100:443 -N bernard@<IP-bastion-LAN>` → URL avec `:8443` (OAuth peut exiger SOCKS) |
-| **SOCKS + Firefox** | `ssh -D 1080 -N bernard@<IP-bastion-LAN>` + hosts `172.16.10.100` pour les FQDN apps |
+| **Tunnel SSH** | `sudo ssh -L 443:172.16.10.100:443 -N bernard@192.168.1.144` + `/etc/hosts` sur le Mac vers `127.0.0.1` (port 443 nécessite `sudo` sur macOS) |
+| **Port 8443** | `ssh -L 8443:172.16.10.100:443 -N bernard@192.168.1.144` → URL avec `:8443` (OAuth peut exiger SOCKS) |
+| **SOCKS + Firefox** | `ssh -D 1080 -N bernard@192.168.1.144` + hosts `172.16.10.100` pour les FQDN apps |
 | **VM graphique lab** | Navigateur sur `vmbr1` — DNS lab natif |
 
 Sur la **bastion** : `oc login` et console sans tunnel — voir [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md).

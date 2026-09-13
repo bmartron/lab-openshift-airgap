@@ -4,10 +4,24 @@ Deux pistes séparées — voir [docs/versions.md](../docs/versions.md).
 
 | Piste | Version | Config mirror | Namespace registry |
 |-------|---------|---------------|-------------------|
-| **GA** | 4.22.12 | [imageset-config-4.22.yaml.example](imageset-config-4.22.yaml.example) | `ocp4-422` |
+| **GA** | 4.22.12 | [imageset-config-4.22.yaml.example](imageset-config-4.22.yaml.example) (GitOps) | `ocp4-422` |
+| **GA plateforme seule** | 4.22.12 | [imageset-config-4.22-platform-only.yaml.example](imageset-config-4.22-platform-only.yaml.example) | `ocp4-422` |
+| **GA + Virtualization** | 4.22.12 | [imageset-config-4.22-virtualization.yaml.example](imageset-config-4.22-virtualization.yaml.example) | `ocp4-422` |
 | **RC 5** | 5.0.0-ec.6 | [imageset-config-5-rc.yaml.example](imageset-config-5-rc.yaml.example) | `ocp5-rc` |
 
-## Phase 1 — Avec Internet (bastion `ens18` / vmbr0)
+### Où exécuter quoi (lab NUC)
+
+| Machine | IP | Rôle mirror |
+|---------|-----|-------------|
+| **Mac** | réseau maison | `scp` fichiers → bastion ; édition du dépôt git |
+| **Bastion** | **`192.168.1.144`** (`vmbr0`) | SSH depuis le Mac ; `oc-mirror`, Internet, `~/lab/` |
+| **Bastion** | **`172.16.10.10`** (`vmbr1`) | Accès lab (DNS `172.16.10.11`, registry) — pas pour `scp` depuis le Mac |
+| **Registry** | **`172.16.10.20`** | Cible push `registry.lab.local:5000` ; données sur `/opt/registry` |
+| **Proxmox** | **`192.168.1.147`** | Jump SSH vers `172.16.10.x` si besoin |
+
+## Phase 1 — Avec Internet (bastion **`192.168.1.144`**, NIC `vmbr0`)
+
+Toutes les commandes ci-dessous : **`ssh bernard@192.168.1.144`** sauf `scp` indiqué **Mac → 192.168.1.144**.
 
 Prérequis sur la bastion : DNS lab OK, CA registry installée — voir [bastion/README.md](../bastion/README.md).
 
@@ -40,10 +54,12 @@ Télécharger depuis [cloud.redhat.com/openshift/install/pull-secret](https://cl
 Depuis le **Mac** :
 
 ```bash
-scp ~/Downloads/pull-secret.txt bernard@<IP-bastion-LAN>:~/lab/pull-secret.txt
+scp ~/Downloads/pull-secret.txt bernard@192.168.1.144:~/lab/pull-secret.txt
 ```
 
 ### Installer oc-mirror v2
+
+Sur la **bastion `192.168.1.144`** :
 
 ```bash
 export OCP_VERSION=4.22.12
@@ -54,12 +70,30 @@ sudo mv oc-mirror /usr/local/bin/
 sudo chmod +x /usr/local/bin/oc-mirror
 ```
 
+### Choisir l’imageset GA 4.22
+
+| Besoin | Fichier exemple |
+|--------|-----------------|
+| SNO sans opérateur | `imageset-config-4.22-platform-only.yaml.example` |
+| GitOps (Argo CD) | `imageset-config-4.22.yaml.example` |
+| OpenShift Virtualization | `imageset-config-4.22-virtualization.yaml.example` |
+
+**Mac → bastion `192.168.1.144`** (ex. Virtualization) :
+
+```bash
+scp /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/mirror/imageset-config-4.22-virtualization.yaml.example \
+  bernard@192.168.1.144:/home/bernard/lab/4.22-ga/imageset-config.yaml
+```
+
 ### Piste GA — oc-mirror v2 (recommandé)
+
+Sur la **bastion `192.168.1.144`** :
 
 ```bash
 mkdir -p ~/lab/4.22-ga
 cd ~/lab/4.22-ga
-cp mirror/imageset-config-4.22.yaml.example imageset-config.yaml
+# ou : cp depuis le dépôt cloné sur la bastion
+cp ~/Projet-Airgap-deploy/mirror/imageset-config-4.22.yaml.example imageset-config.yaml
 
 oc-mirror -c imageset-config.yaml \
   --workspace file://$HOME/lab/4.22-ga/workspace \
@@ -69,7 +103,7 @@ oc-mirror -c imageset-config.yaml \
 
 Durée observée en lab : **~7 min** (plateforme seule, une version 4.22.12).
 
-**Opérateurs** : dans `imageset-config.yaml`, un seul `name: openshift-gitops-operator` **sans** `channels` fait mirroir **toutes** les versions du catalogue compatibles → compteur du type **187 operator images**, beaucoup de Go. Pour le lab, épingler **un** channel + `minVersion` / `maxVersion` identiques (voir l’exemple dans [imageset-config-4.22.yaml.example](imageset-config-4.22.yaml.example)). Choisir la version dans la console Red Hat / OperatorHub pour OCP 4.22.12.
+**Opérateurs** : toujours **épingler** `channels` + `minVersion` / `maxVersion` identiques. Sans ça : erreur *default channel "latest" was filtered out* (GitOps) ou des centaines d’images. Packages courants : `openshift-gitops-operator`, `kubevirt-hyperconverged` (Virtualization). Versions : console Red Hat / OperatorHub pour **OCP 4.22.12**, depuis la bastion **`192.168.1.144`** (Internet).
 
 ### Vérification post-mirror
 
@@ -132,7 +166,7 @@ Observé en lab GA 4.22.12 : **~22 Go** sur `/opt/registry/data`.
 
 ## Opérateurs air-gap
 
-Pour Virt, ODF, etc. : ajouter des catalogues dans `imageset-config.yaml` puis relancer `oc-mirror` vers le même namespace (`ocp4-422`).
+GitOps ou Virtualization : un fichier exemple dédié (voir tableau ci-dessus). Push vers **registry `172.16.10.20`** (`docker://registry.lab.local:5000/ocp4-422`). Virtualization = mirror **plus gros** + [nested virt](../proxmox/network.md) sur le cluster.
 
 ### Supprimer puis re-mirror GitOps (version épinglée)
 

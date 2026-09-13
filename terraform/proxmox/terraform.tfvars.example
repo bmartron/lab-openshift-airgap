@@ -16,6 +16,6 @@ registry_install_iso = ""   # ou ISO pour registry seule : voir terraform.tfvars
 
 lab_bridge       = "vmbr1"
 admin_bridge     = "vmbr0"
-bastion_admin_ip = "192.168.1.XXX"
+bastion_admin_ip = "192.168.1.144"
 
 ssh_user = "bernard"

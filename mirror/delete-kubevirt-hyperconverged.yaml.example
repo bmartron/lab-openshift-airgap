@@ -1,0 +1,9 @@
+# DeleteImageSet — supprimer le mirror kubevirt-hyperconverged sur registry 172.16.10.20
+# Bastion 192.168.1.144 : ~/lab/4.22-ga — voir mirror/README.md (section delete)
+apiVersion: mirror.openshift.io/v1alpha2
+kind: DeleteImageSetConfiguration
+delete:
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.22
+      packages:
+        - name: kubevirt-hyperconverged
