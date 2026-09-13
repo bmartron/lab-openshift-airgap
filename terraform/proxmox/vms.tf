@@ -1,4 +1,5 @@
 # telmate/proxmox 3.x — Proxmox VE 9 (schéma disque/réseau différent de 2.9)
+# dns / bastion : count via create_* — lab actuel = registry seule (tfvars.registry.example).
 
 resource "proxmox_vm_qemu" "dns" {
   count = var.create_dns ? 1 : 0
@@ -14,8 +15,15 @@ resource "proxmox_vm_qemu" "dns" {
   cpu {
     cores = local.vms_dns.cores
   }
-  scsihw      = "virtio-scsi-pci"
-  boot        = "order=scsi0"
+  bios    = local.vm_bios
+  machine = local.vm_machine
+  scsihw  = "virtio-scsi-pci"
+  boot    = "order=scsi0"
+
+  efidisk {
+    storage = var.storage
+    efitype = "4m"
+  }
 
   disk {
     slot     = "scsi0"
@@ -50,8 +58,15 @@ resource "proxmox_vm_qemu" "registry" {
   cpu {
     cores = local.vms_registry.cores
   }
-  scsihw      = "virtio-scsi-pci"
-  boot        = var.registry_install_iso != "" ? "order=ide2;scsi0" : "order=scsi0"
+  bios    = local.vm_bios
+  machine = local.vm_machine
+  scsihw  = "virtio-scsi-pci"
+  boot    = var.registry_install_iso != "" ? "order=ide2;scsi0" : "order=scsi0"
+
+  efidisk {
+    storage = var.storage
+    efitype = "4m"
+  }
 
   clone      = var.registry_install_iso == "" ? var.rhel_template : null
   full_clone = var.registry_install_iso == "" ? true : false
@@ -109,8 +124,15 @@ resource "proxmox_vm_qemu" "bastion" {
   cpu {
     cores = local.vms_bastion.cores
   }
-  scsihw      = "virtio-scsi-pci"
-  boot        = "order=scsi0"
+  bios    = local.vm_bios
+  machine = local.vm_machine
+  scsihw  = "virtio-scsi-pci"
+  boot    = "order=scsi0"
+
+  efidisk {
+    storage = var.storage
+    efitype = "4m"
+  }
 
   disk {
     slot     = "scsi0"

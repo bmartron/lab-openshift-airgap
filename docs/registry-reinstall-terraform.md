@@ -29,6 +29,8 @@ Terraform crée **uniquement** la VM `registry` :
 | scsi1 | 120 Go | données `/opt/registry` |
 | ide2 | ISO | install (boot `ide2;scsi0`) |
 
+Firmware : **OVMF (UEFI)** + **q35** + disque EFI — même réglage pour **dns**, **bastion**, **registry** (`locals.tf` / `vms.tf`).
+
 `create_dns` et `create_bastion` restent à `false`.
 
 ## Après `apply`

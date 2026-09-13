@@ -8,6 +8,7 @@ proxmox_api_token_secret = "REMPLACER"
 proxmox_node = "pve"
 storage      = "nfs-vm"   # datastore Proxmox (onglet VM → disque)
 
+# Lab actuel : dns/bastion déjà sur Proxmox — ne pas passer à true sans import (voir terraform/README.md).
 create_dns      = false
 create_bastion  = false
 create_registry = true

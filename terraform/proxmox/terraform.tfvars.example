@@ -6,6 +6,7 @@ proxmox_tls_insecure     = true
 proxmox_node = "pve"
 storage      = "nfs-vm"
 
+# VMs déjà manuelles (q35/OVMF) : laisser false et utiliser terraform.tfvars.registry.example pour registry seule.
 create_dns      = true
 create_bastion  = true
 create_registry = true

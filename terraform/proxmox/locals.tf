@@ -1,4 +1,8 @@
 locals {
+  # Toutes les VMs lab : aligné Proxmox (q35 + OVMF), template RHEL en UEFI recommandé
+  vm_bios    = "ovmf"
+  vm_machine = "q35"
+
   vms_dns = {
     name    = "dns"
     ip      = var.dns_ip

@@ -11,11 +11,12 @@ OpenShift (ISO agent, SNO, `oc-mirror`) reste documenté dans `openshift/` et `m
 
 ### Lab déjà en place (ton cas)
 
-1. Ne pas `terraform apply` sur des VMs existantes sans plan précis.
-2. `cp ansible/inventory/hosts.yml.example ansible/inventory/hosts.yml`
-3. `cp ansible/group_vars/all.yml.example ansible/group_vars/all.yml`
-4. `registry_data_device: ""` tant que la registry utilise `/home/registry` ou `/opt` manuel.
-5. `ansible-playbook ansible/playbooks/lab-infra.yml` (depuis le Mac, repo cloné).
+1. **Terraform** : uniquement **registry** (`create_dns` / `create_bastion` = `false`). dns et bastion restent hors state.
+2. Ne pas passer `create_dns` / `create_bastion` à `true` sans `terraform import` — sinon recréation des VMs.
+3. `cp ansible/inventory/hosts.yml.example ansible/inventory/hosts.yml`
+4. `cp ansible/group_vars/all.yml.example ansible/group_vars/all.yml`
+5. `registry_data_device: ""` tant que la registry utilise `/home/registry` ou `/opt` manuel.
+6. `ansible-playbook ansible/playbooks/lab-infra.yml` (depuis le Mac, repo cloné).
 
 ### Nouvelle registry propre
 

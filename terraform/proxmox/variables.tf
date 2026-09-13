@@ -33,7 +33,7 @@ variable "storage" {
 variable "rhel_template" {
   type        = string
   default     = ""
-  description = "Nom du template Proxmox (clone). Laisser vide si registry_install_iso est défini."
+  description = "Template Proxmox (clone) — idéalement q35 + OVMF comme les VMs Terraform. Vide si registry_install_iso est défini."
 }
 
 variable "registry_install_iso" {
