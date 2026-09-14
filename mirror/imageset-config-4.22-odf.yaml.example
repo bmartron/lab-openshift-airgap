@@ -1,0 +1,25 @@
+# Plateforme OCP 4.22.12 + OpenShift Data Foundation (odf-operator).
+# Déploie Ceph via Rook — viser cluster ≥ 3 nœuds + disques OSD dédiés (pas le SNO lab).
+# Rook est embarqué dans ODF ; ne pas miroir odf-operator + rook-ceph-operator sans besoin précis.
+# Bastion 192.168.1.144 :
+#   oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.22 \
+#     --package=odf-operator --authfile ~/lab/pull-secret-oc-mirror.txt --v2
+# Adapter minVersion/maxVersion au HEAD (ex. 4.22.3-rhodf).
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  platform:
+    architectures:
+      - amd64
+    channels:
+      - name: stable-4.22
+        minVersion: 4.22.12
+        maxVersion: 4.22.12
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.22
+      packages:
+        - name: odf-operator
+          channels:
+            - name: stable-4.22
+              minVersion: 4.22.3-rhodf
+              maxVersion: 4.22.3-rhodf

@@ -7,6 +7,10 @@ Deux pistes séparées — voir [docs/versions.md](../docs/versions.md).
 | **GA** | 4.22.12 | [imageset-config-4.22.yaml.example](imageset-config-4.22.yaml.example) (GitOps) | `ocp4-422` |
 | **GA plateforme seule** | 4.22.12 | [imageset-config-4.22-platform-only.yaml.example](imageset-config-4.22-platform-only.yaml.example) | `ocp4-422` |
 | **GA + Virtualization** | 4.22.12 | [imageset-config-4.22-virtualization.yaml.example](imageset-config-4.22-virtualization.yaml.example) | `ocp4-422` |
+| **GA + Virt + LVMS** | 4.22.12 | [imageset-config-4.22-virt-lvms.yaml.example](imageset-config-4.22-virt-lvms.yaml.example) | `ocp4-422` |
+| **GA + LVMS** | 4.22.12 | [imageset-config-4.22-lvms.yaml.example](imageset-config-4.22-lvms.yaml.example) | `ocp4-422` |
+| **GA + ODF** | 4.22.12 | [imageset-config-4.22-odf.yaml.example](imageset-config-4.22-odf.yaml.example) | `ocp4-422` |
+| **GA + Rook-Ceph seul** | 4.22.12 | [imageset-config-4.22-rook-ceph.yaml.example](imageset-config-4.22-rook-ceph.yaml.example) | `ocp4-422` |
 | **RC 5** | 5.0.0-ec.6 | [imageset-config-5-rc.yaml.example](imageset-config-5-rc.yaml.example) | `ocp5-rc` |
 
 ### Où exécuter quoi (lab NUC)
@@ -77,6 +81,10 @@ sudo chmod +x /usr/local/bin/oc-mirror
 | SNO sans opérateur | `imageset-config-4.22-platform-only.yaml.example` |
 | GitOps (Argo CD) | `imageset-config-4.22.yaml.example` |
 | OpenShift Virtualization | `imageset-config-4.22-virtualization.yaml.example` |
+| Virt + LVMS (SNO lab) | `imageset-config-4.22-virt-lvms.yaml.example` |
+| LVMS seul | `imageset-config-4.22-lvms.yaml.example` |
+| OpenShift Data Foundation (Rook/Ceph) | `imageset-config-4.22-odf.yaml.example` |
+| Rook-Ceph sans ODF (rare) | `imageset-config-4.22-rook-ceph.yaml.example` |
 
 **Mac → bastion `192.168.1.144`** (ex. Virtualization) :
 
@@ -95,13 +103,30 @@ cd ~/lab/4.22-ga
 # ou : cp depuis le dépôt cloné sur la bastion
 cp ~/Projet-Airgap-deploy/mirror/imageset-config-4.22.yaml.example imageset-config.yaml
 
+~/lab/scripts/pull-secret-for-oc-mirror.sh   # une fois — voit § Pull secret ci-dessous
+
 oc-mirror -c imageset-config.yaml \
   --workspace file://$HOME/lab/4.22-ga/workspace \
   docker://registry.lab.local:5000/ocp4-422 \
-  --authfile ~/lab/pull-secret.txt --dest-tls-verify=false --v2
+  --authfile ~/lab/pull-secret-oc-mirror.txt --dest-tls-verify=false --v2
 ```
 
 Durée observée en lab : **~7 min** (plateforme seule, une version 4.22.12).
+
+### Pull secret : deux fichiers sur la bastion
+
+| Fichier | Usage |
+|---------|--------|
+| `~/lab/pull-secret.txt` | **Install SNO** (`install-config` / chemins `…/release-images` + `auth` registry lab si besoin) |
+| `~/lab/pull-secret-oc-mirror.txt` | **`oc-mirror` uniquement** — 4 registres Red Hat, **sans** `registry.lab.local` ni clés avec `/` |
+
+Générer le fichier mirror après chaque mise à jour du pull secret :
+
+```bash
+~/lab/scripts/pull-secret-for-oc-mirror.sh
+```
+
+> Ne pas passer `~/lab/pull-secret.txt` à `--authfile` une fois le merge air-gap fait : `auth: "Og=="` et les clés avec chemin provoquent `invalid auth configuration file` au **rebuild catalogue**.
 
 **Opérateurs** : toujours **épingler** `channels` + `minVersion` / `maxVersion` identiques. Utiliser le **nom de channel du catalogue** (défaut du package), pas un nom inventé :
 
@@ -109,6 +134,9 @@ Durée observée en lab : **~7 min** (plateforme seule, une version 4.22.12).
 |---------|-------------------------------|
 | `openshift-gitops-operator` | `gitops-1.16` (pas `latest`) |
 | `kubevirt-hyperconverged` | **`stable`** (pas `stable-4.22`) |
+| `lvms-operator` | **`stable-4.22`** |
+| `odf-operator` | **`stable-4.22`** |
+| `rook-ceph-operator` | **`stable-4.22`** (préférer `odf-operator` pour ODF) |
 
 Erreur *default channel "stable" was filtered out* → mauvais channel dans `imageset-config.yaml` (ex. `stable-4.22` au lieu de `stable`).
 
@@ -117,7 +145,7 @@ Sur la **bastion `192.168.1.144`** (Internet) :
 ```bash
 oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.22 \
   --package=kubevirt-hyperconverged \
-  --authfile ~/lab/pull-secret.txt --v2
+  --authfile ~/lab/pull-secret-oc-mirror.txt --v2
 ```
 
 Pour **kubevirt-hyperconverged**, `minVersion` / `maxVersion` = semver du **HEAD** du canal `stable` dans `list operators` (ex. `4.22.9`), **pas** le z-stream OCP (`4.22.12`).
@@ -201,13 +229,13 @@ oc-mirror delete -c delete-gitops.yaml \
   --workspace file://$HOME/lab/4.22-ga/workspace-operators \
   --generate --delete-id gitops-full \
   docker://registry.lab.local:5000/ocp4-422 \
-  --authfile ~/lab/pull-secret.txt --dest-tls-verify=false --v2
+  --authfile ~/lab/pull-secret-oc-mirror.txt --dest-tls-verify=false --v2
 
 # Phase delete 2 — exécution (irréversible sur la registry)
 oc-mirror delete \
   --delete-yaml-file $HOME/lab/4.22-ga/workspace-operators/working-dir/delete/delete-images-gitops-full.yaml \
   docker://registry.lab.local:5000/ocp4-422 \
-  --authfile ~/lab/pull-secret.txt --dest-tls-verify=false --v2
+  --authfile ~/lab/pull-secret-oc-mirror.txt --dest-tls-verify=false --v2
 ```
 
 > Le chemin exact de `delete-images-*.yaml` est affiché en fin de phase `--generate`. Adapter si le nom diffère.
@@ -226,7 +254,7 @@ sudo podman exec ocp-registry registry garbage-collect /etc/docker/registry/conf
 oc-mirror -c imageset-config.yaml \
   --workspace file://$HOME/lab/4.22-ga/workspace-operators \
   docker://registry.lab.local:5000/ocp4-422 \
-  --authfile ~/lab/pull-secret.txt --dest-tls-verify=false --v2
+  --authfile ~/lab/pull-secret-oc-mirror.txt --dest-tls-verify=false --v2
 ```
 
 6. Si le cluster avait déjà des **IDMS/ITMS** opérateurs appliqués : `oc apply -f workspace-operators/.../cluster-resources/` après le nouveau mirror.
@@ -242,6 +270,7 @@ oc-mirror -c imageset-config.yaml \
 | `x509: certificate signed by unknown authority` | CA non trustée | Section trust TLS ci-dessus |
 | `Could not resolve host: registry.lab.local` | DNS maison prioritaire | [bastion/README.md](../bastion/README.md) § Résolution DNS lab |
 | `Could not resolve host: mirror.openshift.com` | DNS lab seul | `/etc/hosts` lab + DNS maison sur `ens18` |
-| `unauthorized` sur `registry.redhat.io` | Pull secret manquant / invalide | Vérifier `~/lab/pull-secret.txt` |
+| `unauthorized` sur `registry.redhat.io` | Pull secret manquant / invalide | Vérifier `~/lab/pull-secret.txt` (Red Hat) |
+| `invalid auth configuration file` (rebuild catalogue) | `--authfile` = pull secret merge lab (`Og==` ou clés avec `/`) | `~/lab/scripts/pull-secret-for-oc-mirror.sh` puis `--authfile ~/lab/pull-secret-oc-mirror.txt` |
 | `manifest unknown` sur release locale | Mauvais chemin image | Utiliser chemins `ocp4-422/openshift/release-images` (pas `quay.io/...` dans le tag) |
 | Push mirror **HTTP 500** | Registry disque plein | [registry/README.md](../registry/README.md) — 2e disque `/opt/registry` |

@@ -27,11 +27,17 @@ ocp_pull_secret_path: "{{ playbook_dir }}/../files/pull-secret.txt"
 ocp_ssh_pubkey_path: "{{ playbook_dir }}/../files/install_ssh_key.pub"
 ocp_registry_ca_fallback_path: "{{ playbook_dir }}/../files/registry-ca.crt"
 
-# imageset : platform-only | gitops | virtualization
+# imageset : platform-only | gitops | virtualization | lvms | odf | rook-ceph | virt-lvms
 ocp_imageset_profile: virtualization
 ocp_virt_operator_version: "4.22.9"
 ocp_gitops_channel: gitops-1.16
 ocp_gitops_version: "1.16.5"
+ocp_lvms_channel: stable-4.22
+ocp_lvms_operator_version: "4.22.0"
+ocp_odf_channel: stable-4.22
+ocp_odf_operator_version: "4.22.3-rhodf"
+ocp_rook_channel: stable-4.22
+ocp_rook_operator_version: "4.22.3-rhodf"
 
 ocp_deploy_lab_scripts: true
 ocp_configure_registry_trust: true

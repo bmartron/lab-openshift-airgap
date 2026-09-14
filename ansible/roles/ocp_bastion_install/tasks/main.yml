@@ -84,14 +84,6 @@
     mode: "0600"
   no_log: true
 
-- name: ca.crt sur bastion
-  ansible.builtin.copy:
-    content: "{{ ocp_registry_ca_pem }}\n"
-    dest: "{{ bastion_lab_dir }}/ca.crt"
-    owner: "{{ lab_user }}"
-    group: "{{ lab_user }}"
-    mode: "0644"
-
 - name: Scripts bastion (install / mirror)
   when: ocp_deploy_lab_scripts | bool
   ansible.builtin.copy:
@@ -106,6 +98,22 @@
     - install-config-embed-ca.sh
     - install-config-fix-pullsecret.sh
     - install-config-regenerate.sh
+    - pull-secret-for-oc-mirror.sh
+
+- name: pull-secret-oc-mirror.txt (auth Red Hat pour oc-mirror)
+  ansible.builtin.command:
+    cmd: "{{ bastion_lab_dir }}/scripts/pull-secret-for-oc-mirror.sh"
+  become: false
+  changed_when: true
+  no_log: true
+
+- name: ca.crt sur bastion
+  ansible.builtin.copy:
+    content: "{{ ocp_registry_ca_pem }}\n"
+    dest: "{{ bastion_lab_dir }}/ca.crt"
+    owner: "{{ lab_user }}"
+    group: "{{ lab_user }}"
+    mode: "0644"
 
 - name: Trust registry pour Podman/oc
   when: ocp_configure_registry_trust | bool

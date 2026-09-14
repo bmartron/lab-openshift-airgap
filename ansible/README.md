@@ -95,7 +95,7 @@ ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass
 
 | Variable | Rôle |
 |----------|------|
-| `ocp_imageset_profile` | `platform-only` \| `gitops` \| `virtualization` |
+| `ocp_imageset_profile` | `platform-only` \| `gitops` \| `virtualization` \| `lvms` \| `odf` \| `rook-ceph` \| `virt-lvms` |
 | `ocp_agent_generate_iso` | `true` = `openshift-install agent create image` sur la bastion |
 | `ocp_push_iso_to_proxmox` | `true` = `scp` ISO bastion → `root@192.168.1.147:/mnt/pve/nfs_iso/template/iso/` |
 | `ocp_virt_operator_version` | ex. `4.22.9` (canal stable Virt) |

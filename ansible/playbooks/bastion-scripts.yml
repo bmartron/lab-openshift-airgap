@@ -29,3 +29,4 @@
         - install-config-embed-ca.sh
         - install-config-fix-pullsecret.sh
         - install-config-regenerate.sh
+        - pull-secret-for-oc-mirror.sh

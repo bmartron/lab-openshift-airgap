@@ -37,7 +37,7 @@ Dans **`ansible/group_vars/all.yml`** (recommandé) :
 | Variable | Exemple | Description |
 |----------|---------|-------------|
 | `ocp_sno_mac` | `BC:24:11:E1:8F:82` | MAC Proxmox VM SNO (`qm config <VMID> \| grep net`) |
-| `ocp_imageset_profile` | `virtualization` | `platform-only` \| `gitops` \| `virtualization` |
+| `ocp_imageset_profile` | `virtualization` | `platform-only` \| `gitops` \| `virtualization` \| `lvms` \| `odf` \| `rook-ceph` \| `virt-lvms` |
 | `ocp_agent_generate_iso` | `false` | `true` = lance `openshift-install` sur la bastion |
 
 MAC et versions Virt : [roles/ocp_bastion_install/defaults/main.yml](../ansible/roles/ocp_bastion_install/defaults/main.yml).

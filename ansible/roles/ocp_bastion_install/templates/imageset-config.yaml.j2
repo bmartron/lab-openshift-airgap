@@ -24,5 +24,34 @@ mirror:
             - name: {{ ocp_gitops_channel }}
               minVersion: {{ ocp_gitops_version }}
               maxVersion: {{ ocp_gitops_version }}
+{% elif ocp_imageset_profile == 'lvms' %}
+        - name: lvms-operator
+          channels:
+            - name: {{ ocp_lvms_channel }}
+              minVersion: {{ ocp_lvms_operator_version }}
+              maxVersion: {{ ocp_lvms_operator_version }}
+{% elif ocp_imageset_profile == 'odf' %}
+        - name: odf-operator
+          channels:
+            - name: {{ ocp_odf_channel }}
+              minVersion: {{ ocp_odf_operator_version }}
+              maxVersion: {{ ocp_odf_operator_version }}
+{% elif ocp_imageset_profile == 'rook-ceph' %}
+        - name: rook-ceph-operator
+          channels:
+            - name: {{ ocp_rook_channel }}
+              minVersion: {{ ocp_rook_operator_version }}
+              maxVersion: {{ ocp_rook_operator_version }}
+{% elif ocp_imageset_profile == 'virt-lvms' %}
+        - name: kubevirt-hyperconverged
+          channels:
+            - name: stable
+              minVersion: {{ ocp_virt_operator_version }}
+              maxVersion: {{ ocp_virt_operator_version }}
+        - name: lvms-operator
+          channels:
+            - name: {{ ocp_lvms_channel }}
+              minVersion: {{ ocp_lvms_operator_version }}
+              maxVersion: {{ ocp_lvms_operator_version }}
 {% endif %}
 {% endif %}

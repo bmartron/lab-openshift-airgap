@@ -1,0 +1,28 @@
+# Plateforme 4.22.12 + Virtualization + LVMS (profil SNO lab courant).
+# Lister / épingler les versions :
+#   oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.22 \
+#     --package=kubevirt-hyperconverged --authfile ~/lab/pull-secret-oc-mirror.txt --v2
+#   oc-mirror list operators ... --package=lvms-operator ...
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  platform:
+    architectures:
+      - amd64
+    channels:
+      - name: stable-4.22
+        minVersion: 4.22.12
+        maxVersion: 4.22.12
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.22
+      packages:
+        - name: kubevirt-hyperconverged
+          channels:
+            - name: stable
+              minVersion: 4.22.9
+              maxVersion: 4.22.9
+        - name: lvms-operator
+          channels:
+            - name: stable-4.22
+              minVersion: 4.22.0
+              maxVersion: 4.22.0

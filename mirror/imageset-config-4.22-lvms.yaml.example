@@ -1,0 +1,24 @@
+# Plateforme OCP 4.22.12 + Logical Volume Manager Storage (LVMS).
+# SNO / lab Virt : PVC block sur disque local du nœud — plus léger qu'ODF.
+# Bastion 192.168.1.144 — versions canal stable-4.22 :
+#   oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.22 \
+#     --package=lvms-operator --authfile ~/lab/pull-secret-oc-mirror.txt --v2
+# HEAD stable-4.22 → minVersion = maxVersion (ex. 4.22.0).
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  platform:
+    architectures:
+      - amd64
+    channels:
+      - name: stable-4.22
+        minVersion: 4.22.12
+        maxVersion: 4.22.12
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.22
+      packages:
+        - name: lvms-operator
+          channels:
+            - name: stable-4.22
+              minVersion: 4.22.0
+              maxVersion: 4.22.0
