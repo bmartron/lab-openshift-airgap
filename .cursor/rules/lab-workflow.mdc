@@ -1,0 +1,48 @@
+---
+description: Lab OpenShift air-gap — une étape à la fois, hôte+IP, Ansible avant manuel
+alwaysApply: true
+---
+
+# Lab OpenShift air-gap — conduite agent
+
+## Langue
+
+Répondre en **français** pour les procédures lab et le dépannage.
+
+## Une étape à la fois
+
+- Donner **une seule action** (ou un mini-groupe indissociable, ex. `git add` + `commit`).
+- Attendre validation ou retour utilisateur avant l’étape suivante, sauf demande explicite de tout enchaîner.
+- Ne pas enchaîner playbook + ISO + Proxmox + `wait-for` dans un seul message sans que l’utilisateur le demande.
+
+## Toujours indiquer où exécuter
+
+Pour chaque commande, préciser **machine + accès + IP** :
+
+| Rôle | Nom | IP / accès |
+|------|-----|------------|
+| Mac (poste) | Mac | chemins `/Users/...`, `ansible-playbook` depuis `ansible/` |
+| Proxmox | `pve` | `root@192.168.1.147` |
+| Bastion (depuis Mac) | bastion | `bernard@192.168.1.144` |
+| Bastion (réseau lab) | bastion | `bernard@172.16.10.10` |
+| DNS | dns | `172.16.10.11` |
+| Registry | registry | `172.16.10.20` — `registry.lab.local:5000` |
+| SNO GA | ocp-sno | `172.16.10.100` — SSH `core@` (clé install-config) |
+
+Jump lab : `ProxyJump=root@192.168.1.147` depuis le Mac.
+
+Référence : [proxmox/access.md](proxmox/access.md), [versions.env.example](versions.env.example).
+
+## Ansible avant manuel
+
+- **Préférer** playbooks / rôles Ansible et variables `group_vars` plutôt que collages YAML ou `scp` répétés.
+- Playbooks clés :
+  - `ansible/playbooks/bastion-ocp-install.yml` — install-config, agent-config, CA, pull-secret, ISO (`ocp_agent_generate_iso`), push NFS (`ocp_push_iso_to_proxmox`)
+  - `ansible/playbooks/bastion-scripts.yml` — sync `~/lab/scripts/` sans dnf
+  - `ansible/playbooks/registry.yml` — registry VM
+- Doc : [docs/ansible-ocp-install.md](docs/ansible-ocp-install.md)
+- Manuel seulement si Ansible impossible (premier debug, secret non présent sur le Mac) ; alors indiquer l’équivalent playbook à ajouter ensuite.
+
+## Git
+
+Ne commit / push **que** sur demande explicite.
