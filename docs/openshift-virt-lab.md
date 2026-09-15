@@ -63,11 +63,13 @@ Les pods CDI (`virt-cdi-uploadserver`, `virt-cdi-importer`) référencent **`reg
 
 ```bash
 export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig-admin
-oc apply -f ~/lab/4.22-ga/workspace-lvms/working-dir/cluster-resources/idms-oc-mirror.yaml
-oc apply -f ~/lab/4.22-ga/workspace-lvms/working-dir/cluster-resources/itms-oc-mirror.yaml
+# Mirror opérateurs (CNV) — ne pas se limiter au workspace LVMS seul
+oc patch imagedigestmirrorset idms-operator-0 --type=json -p='[
+  {"op":"add","path":"/spec/imageDigestMirrors/-","value":{"source":"registry.redhat.io/container-native-virtualization","mirrors":["registry.lab.local:5000/ocp4-422/container-native-virtualization"]}}
+]' 2>/dev/null || true
+oc apply -f ~/lab/4.22-ga/workspace-operators/working-dir/cluster-resources/idms-oc-mirror.yaml
+# Conserver lvms4 si besoin : fusionner les entrées idms-operator-0, ne pas ré-appliquer le fichier LVMS seul après (écrase CNV).
 ```
-
-*(Utiliser le `cluster-resources/` du workspace du dernier `oc-mirror` opérateurs.)*
 
 ### `virtctl` (bastion)
 
@@ -85,15 +87,58 @@ file /tmp/virtctl   # ELF, pas HTML
 chmod +x /tmp/virtctl && sudo mv /tmp/virtctl /usr/local/bin/virtctl
 ```
 
-Upload (syntaxe récente) :
+Upload (syntaxe `virtctl` récente : **`pvc`** ou **`dv`**, puis le nom — pas `namespace/name`) :
 
 ```bash
-virtctl image-upload default/rhel-10-2-dvd \
+virtctl image-upload pvc rhel-10-2-dvd \
   --size=15Gi \
   --storage-class=lvms-vg1 \
   --image-path=$HOME/lab/isos/rhel-10.2-x86_64-dvd.iso \
   --insecure \
   --access-mode=ReadWriteOnce \
+  --force-bind \
+  --namespace=default
+```
+
+**Bastion — `/etc/hosts`** (DNS maison ne résout pas `*.apps`) :
+
+```text
+172.16.10.100  cdi-uploadproxy-openshift-cnv.apps.ocp422.lab.local
+172.16.10.100  console-openshift-console.apps.ocp422.lab.local
+172.16.10.100  oauth-openshift.apps.ocp422.lab.local
+```
+
+**ISO > ~8 Gio — OOM upload (limite 600M)** : patch **`HyperConverged`**, pas le CR `CDI` seul (HCO réconcilie CDI).
+
+```bash
+oc patch hyperconverged kubevirt-hyperconverged -n openshift-cnv --type=merge -p '
+{
+  "spec": {
+    "storage": {
+      "workloadResourceRequirements": {
+        "limits": { "cpu": "2", "memory": "4Gi" },
+        "requests": { "cpu": "100m", "memory": "512Mi" }
+      }
+    }
+  }
+}'
+```
+
+Recréer le pod `cdi-upload-*`, vérifier `limits.memory` ≠ `600M`, puis relancer `virtctl --no-create`.
+
+| Symptôme | Cause | Action |
+|----------|--------|--------|
+| Upload pod not ready | ImagePullBackOff `registry.redhat.io` | IDMS **container-native-virtualization** |
+| `no such host` cdi-uploadproxy | Bastion → DNS 192.168.1.1 | `/etc/hosts` → `172.16.10.100` |
+| **502** / connection refused | Pod **OOMKilled** (600M) | `workloadResourceRequirements` HCO ci-dessus |
+
+PVC déjà créé (console ou YAML) :
+
+```bash
+virtctl image-upload pvc rhel-10-2-dvd \
+  --no-create \
+  --image-path=$HOME/lab/isos/rhel-10.2-x86_64-dvd.iso \
+  --insecure \
   --namespace=default
 ```
 

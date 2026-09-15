@@ -164,6 +164,7 @@ sudo tee -a /etc/hosts << 'EOF'
 
 172.16.10.100  oauth-openshift.apps.ocp422.lab.local
 172.16.10.100  console-openshift-console.apps.ocp422.lab.local
+172.16.10.100  cdi-uploadproxy-openshift-cnv.apps.ocp422.lab.local
 EOF
 ```
 
