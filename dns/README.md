@@ -2,6 +2,8 @@
 
 Serveur DNS interne du lab air-gap. Résolution locale uniquement (pas d'upstream Internet).
 
+> **Ansible** : procédures manuelles ci-dessous + bloc *Équivalent Ansible* ; table globale → [docs/ansible-manual-parity.md](../docs/ansible-manual-parity.md).
+
 ## Spécifications VM (Proxmox)
 
 | Paramètre | Valeur |
@@ -59,6 +61,17 @@ sudo cp rhel-dvd.repo /etc/yum.repos.d/rhel-dvd.repo   # depuis le repo git ou c
 sudo dnf install -y dnsmasq bind-utils
 ```
 
+### Équivalent Ansible
+
+| | |
+|---|---|
+| **Playbook** | `ansible/playbooks/lab-infra.yml` |
+| **Hôte** | `dns` |
+| **Prérequis** | ISO RHEL complète sur la VM (`ide2` / `sr0`) ; inventaire + clé SSH — [ansible/README.md](../ansible/README.md) |
+| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/lab-infra.yml --limit dns --ask-become-pass` |
+| **Couverture** | Rôle `rhel_dvd` (montage DVD, repo local, désactivation repos CDN) + paquets `dnsmasq` / `bind-utils` via `common`/`dns` |
+| **Hors Ansible** | Réseau statique §2 ; contenu `/etc/dnsmasq.conf` §4 |
+
 ## 4. Configurer dnsmasq
 
 ```bash
@@ -89,6 +102,16 @@ sudo systemctl enable --now dnsmasq
 ```
 
 Ou créer le fichier directement sur la VM avec `sudo tee` — voir le contenu dans [dnsmasq.conf.example](dnsmasq.conf.example).
+
+### Équivalent Ansible
+
+| | |
+|---|---|
+| **Playbook** | `ansible/playbooks/lab-infra.yml` |
+| **Hôte** | `dns` |
+| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/lab-infra.yml --limit dns --ask-become-pass` |
+| **Couverture** | Paquets, chrony serveur NTP, firewall DNS/NTP, drop-in systemd dnsmasq (§ *dnsmasq au reboot*) |
+| **Hors Ansible** | Déployer [dnsmasq.conf.example](dnsmasq.conf.example) → `/etc/dnsmasq.conf` (`scp` + `sed interface=` ci-dessus) |
 
 ## 5. Vérifications
 
@@ -139,6 +162,16 @@ sudo timedatectl set-timezone Europe/Paris
 timedatectl
 ```
 
+### Équivalent Ansible
+
+| | |
+|---|---|
+| **Playbook** | `ansible/playbooks/lab-infra.yml` |
+| **Hôte** | `dns` |
+| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/lab-infra.yml --limit dns --ask-become-pass` |
+| **Couverture** | Rôle `dns` : chrony serveur (`/etc/chrony.d/lab.conf`), pools externes commentés, firewall `dns` + `ntp` ; rôle `common` : fuseau `Europe/Paris` si défini dans `group_vars` |
+| **Hors Ansible** | `additionalNTPSources` dans `agent-config.yaml` (install OCP) |
+
 Dans `agent-config.yaml` du cluster :
 
 ```yaml
@@ -157,6 +190,15 @@ sudo firewall-cmd --permanent --add-service=dns
 sudo firewall-cmd --reload
 ```
 
+### Équivalent Ansible
+
+| | |
+|---|---|
+| **Playbook** | `ansible/playbooks/lab-infra.yml` |
+| **Hôte** | `dns` |
+| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/lab-infra.yml --limit dns --ask-become-pass` |
+| **Couverture** | Rôle `dns` : `firewall-cmd --add-service=dns` et `ntp` |
+
 ## Enregistrements DNS
 
 | FQDN | IP |
@@ -171,7 +213,18 @@ sudo firewall-cmd --reload
 
 ## dnsmasq au reboot (recommandé)
 
-Sur la VM **DNS** `172.16.10.11` :
+Le rôle Ansible `dns` déploie `/etc/systemd/system/dnsmasq.service.d/after-network.conf` (`After=network-online.target`, `Restart=on-failure`) — voir `ansible/playbooks/lab-infra.yml`.
+
+### Équivalent Ansible
+
+| | |
+|---|---|
+| **Playbook** | `ansible/playbooks/lab-infra.yml` |
+| **Hôte** | `dns` |
+| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/lab-infra.yml --limit dns --ask-become-pass` |
+| **Couverture** | Drop-in `after-network.conf` + `systemctl enable` dnsmasq |
+
+Manuel (si pas encore passé par Ansible), sur la VM **DNS** `172.16.10.11` :
 
 ```bash
 sudo systemctl edit dnsmasq
@@ -189,7 +242,7 @@ Restart=on-failure
 RestartSec=5
 ```
 
-Puis `sudo systemctl daemon-reload`.
+Puis `sudo systemctl daemon-reload` et `sudo systemctl restart dnsmasq`.
 
 ## Dépannage
 

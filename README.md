@@ -66,8 +66,9 @@ Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.
 8. Générer l'ISO agent et installer — [openshift/4.22-ga/README.md](openshift/4.22-ga/README.md)
 9. VM SNO Proxmox (disque, réinstall) — [proxmox/sno-vm.md](proxmox/sno-vm.md)
 10. **Arrêt / démarrage quotidien** — [docs/lab-power-cycle.md](docs/lab-power-cycle.md) + script `bastion/scripts/lab-startup-check.sh`
-11. **Terraform + Ansible** (optionnel) — [docs/iac.md](docs/iac.md)
-12. **Alignement versions / audit** — [docs/lab-alignment.md](docs/lab-alignment.md)
+11. **Manuel ↔ Ansible** — [docs/ansible-manual-parity.md](docs/ansible-manual-parity.md)
+12. **Terraform + Ansible** (optionnel) — [docs/iac.md](docs/iac.md)
+13. **Alignement versions / audit** — [docs/lab-alignment.md](docs/lab-alignment.md)
 
 ## Progression lab
 

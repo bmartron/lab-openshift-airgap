@@ -52,6 +52,22 @@
     dest: /etc/yum.repos.d/rhel-dvd.repo
     mode: "0644"
 
+- name: Lister fichiers repo DNF
+  ansible.builtin.find:
+    paths: /etc/yum.repos.d
+    patterns: "*.repo"
+  register: rhel_dvd_repo_files
+
+- name: Désactiver repos CDN/RHSM (air-gap, hors rhel-dvd.repo)
+  ansible.builtin.replace:
+    path: "{{ item.path }}"
+    regexp: '^enabled\s*=\s*1'
+    replace: 'enabled=0'
+  loop: "{{ rhel_dvd_repo_files.files }}"
+  when: item.path | basename != 'rhel-dvd.repo'
+  loop_control:
+    label: "{{ item.path | basename }}"
+
 - name: Rafraîchir métadonnées DNF
   ansible.builtin.command: dnf clean all
   changed_when: true

@@ -17,6 +17,8 @@ all:
           ansible_host: 192.168.1.144   # IP LAN bastion (vmbr0) — lab NUC
 
     # Méthode A — jump Proxmox (décommenter et désactiver lab_jump_bastion)
+    # Prérequis Mac : ssh-copy-id root@192.168.1.147 puis, par VM lab :
+    #   ssh-copy-id -o ProxyJump=root@192.168.1.147 bernard@172.16.10.11
     lab_jump_proxmox:
       vars:
         ansible_ssh_common_args: '-o ProxyJump=root@192.168.1.147'

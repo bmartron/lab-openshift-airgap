@@ -1,4 +1,9 @@
 ---
+- name: Repos RHEL DVD (air-gap, dnsmasq)
+  ansible.builtin.include_role:
+    name: rhel_dvd
+  when: rhel_dvd_repo_enable | default(true) | bool
+
 - name: Paquets DNS
   ansible.builtin.dnf:
     name:
@@ -37,6 +42,28 @@
 - name: Firewall reload
   ansible.builtin.command: firewall-cmd --reload
   changed_when: true
+
+- name: Répertoire drop-in systemd dnsmasq
+  ansible.builtin.file:
+    path: /etc/systemd/system/dnsmasq.service.d
+    state: directory
+    mode: "0755"
+
+- name: dnsmasq après réseau (évite race au boot)
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/dnsmasq.service.d/after-network.conf
+    mode: "0644"
+    content: |
+      [Unit]
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Restart=on-failure
+      RestartSec=5
+  notify:
+    - reload systemd
+    - restart dnsmasq
 
 - name: dnsmasq démarré
   ansible.builtin.service:

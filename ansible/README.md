@@ -3,6 +3,8 @@
 Configure **DNS**, **registry** (disque données + Podman), **bastion** (NTP client, script preflight).  
 À lancer **depuis le Mac** (ProxyJump Proxmox) ou depuis la bastion pour les hôtes lab uniquement.
 
+> Chaque procédure manuelle des guides **dns**, **registry**, **bastion**, **rhel/dvd-repo**, **lab-power-cycle** indique le playbook équivalent (bloc *Équivalent Ansible*). Vue d’ensemble : [docs/ansible-manual-parity.md](../docs/ansible-manual-parity.md).
+
 ## Prérequis
 
 ```bash
@@ -106,6 +108,24 @@ Défauts : [roles/ocp_bastion_install/defaults/main.yml](roles/ocp_bastion_insta
 ansible-playbook playbooks/lab-infra.yml --limit registry
 ```
 
+### DNF / `rhel10-baseos` (DNS ou registry, air-gap)
+
+Symptôme : échec sur le rôle **common**, tâche **Paquets de base** — `Failed to download metadata for repo 'rhel10-baseos'`.
+
+Cause : la VM sur `vmbr1` n’a pas Internet ; **common** lance `dnf` avant que le repo **DVD** (`file:///mnt/rhel/...`) soit monté et activé.
+
+Actions :
+
+1. Proxmox : ISO RHEL 10 **complète** attachée sur la VM (CD/DVD `ide2`, ex. `sr0`) — [rhel/dvd-repo.md](../rhel/dvd-repo.md).
+2. Relancer le playbook (le rôle `rhel_dvd` est exécuté **avant** `common` pour `dns` et `registry` dans `lab-infra.yml` et `registry.yml`).
+
+```bash
+cd ansible
+ansible-playbook playbooks/lab-infra.yml --limit dns --ask-become-pass
+```
+
+La bastion (play séparé dans `lab-infra.yml`) n’inclut pas `rhel_dvd` en tête de play : si elle est aussi sans repo, attacher l’ISO ou mettre `rhel_dvd_repo_enable: false` et configurer les repos manuellement.
+
 Check sans modifier :
 
 ```bash
@@ -139,6 +159,15 @@ ssh-copy-id root@192.168.1.147
 ssh -o ProxyJump=root@192.168.1.147 bernard@172.16.10.20   # plus de password Proxmox
 ansible registry -m ping
 ```
+
+Si **`bernard@172.16.10.11` (ou `.20`) : Permission denied (publickey)`** : le jump Proxmox est OK, mais la clé SSH du **Mac** n’est pas dans `~bernard/.ssh/authorized_keys` sur la VM (la bastion en LAN a souvent déjà la clé ; DNS/registry sur `vmbr1` non).
+
+```bash
+ssh-copy-id -o ProxyJump=root@192.168.1.147 bernard@172.16.10.11
+ansible dns -m ping
+```
+
+(Même commande avec `172.16.10.20` pour le registry.)
 
 **Autres options** : jump **bastion** (`hosts.yml.example` méthode B), `hosts.sshconfig.yml.example`, ou playbook depuis la bastion (`hosts.from-bastion.yml.example`).
 

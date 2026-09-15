@@ -4,6 +4,8 @@ Procédure pour installer des paquets sur les VMs **infra** du lab (`vmbr1` isol
 
 Applicable à : `dns`, `registry`, `bastion` (phase install).
 
+> **Ansible** : le rôle `rhel_dvd` automatise montage, repo et désactivation RHSM — [docs/ansible-manual-parity.md](../docs/ansible-manual-parity.md).
+
 ## Prérequis
 
 - ISO/DVD RHEL 10 **complet** (pas l'ISO boot minimal seul)
@@ -66,6 +68,17 @@ sudo cp /tmp/rhel-dvd.repo /etc/yum.repos.d/rhel-dvd.repo
 
 Référence : [rhel-dvd.repo.example](rhel-dvd.repo.example)
 
+### Équivalent Ansible
+
+| | |
+|---|---|
+| **Playbook** | `ansible/playbooks/lab-infra.yml` ou `registry.yml` |
+| **Hôte** | `dns` et/ou `registry` (`--limit`) |
+| **Prérequis** | ISO attachée dans Proxmox (`/dev/sr0`) |
+| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/lab-infra.yml --limit dns --ask-become-pass` |
+| **Couverture** | Rôle `rhel_dvd` : montage, `/etc/yum.repos.d/rhel-dvd.repo`, plugin subscription-manager off, autres `.repo` désactivés |
+| **Hors Ansible** | Bastion sur LAN : souvent repos en ligne ; sinon même ISO + playbook avec `--limit bastion` si `rhel_dvd` ajouté au play |
+
 ## 4. Désactiver subscription-manager pour DNF
 
 Sans cette étape, `dnf` cherche des repos RHSM inexistants.
@@ -86,6 +99,15 @@ sudo dnf clean all
 sudo dnf repolist
 sudo dnf install -y dnsmasq bind-utils    # exemple DNS
 ```
+
+### Équivalent Ansible
+
+| | |
+|---|---|
+| **Playbook** | `ansible/playbooks/lab-infra.yml` |
+| **Hôte** | `dns` (exemple paquets DNS) |
+| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/lab-infra.yml --limit dns --ask-become-pass` |
+| **Couverture** | `dnf install` des paquets des rôles `common` / `dns` une fois le repo DVD actif |
 
 ## Dépannage
 

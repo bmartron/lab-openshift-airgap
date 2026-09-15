@@ -11,6 +11,8 @@ Registry local pour l'installation air-gap d'OpenShift.
 
 Ce lab utilise **`registry:2`** dans **Podman** sur RHEL 10.
 
+> **Ansible** : blocs *Équivalent Ansible* + [docs/ansible-manual-parity.md](../docs/ansible-manual-parity.md).
+
 ## Spécifications VM
 
 | Paramètre | Valeur |
@@ -57,6 +59,17 @@ Voir [rhel/dvd-repo.md](../rhel/dvd-repo.md).
 ```bash
 sudo dnf install -y podman openssl
 ```
+
+### Équivalent Ansible
+
+| | |
+|---|---|
+| **Playbook** | `ansible/playbooks/registry.yml` |
+| **Hôte** | `registry` |
+| **Prérequis** | `group_vars/all.yml` : `registry_data_device`, `registry_image_tar` (chemin `.tar` sur le Mac), ISO RHEL sur la VM |
+| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/registry.yml --ask-become-pass` |
+| **Couverture** | Rôle `rhel_dvd` + `podman`/`openssl` via `dnf` |
+| **Hors Ansible** | Réseau §1 ; tirer/sauver l’image sur le Mac §3 |
 
 ## 3. Image registry:2 amd64 — Mac → VM
 
@@ -111,6 +124,23 @@ sudo podman run -d --name ocp-registry --restart=always --pull=never \
 
 > `--pull=never` : obligatoire sur réseau isolé (pas d'accès Docker Hub).
 
+### Équivalent Ansible
+
+| | |
+|---|---|
+| **Playbook** | `ansible/playbooks/registry.yml` |
+| **Hôte** | `registry` |
+| **Variables** | `registry_tls_mode: generate` ; `registry_image_tar` → `podman load` + conteneur `--restart=always` |
+| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/registry.yml --ask-become-pass` |
+| **Couverture** | LV/disque `/opt/registry`, certs TLS, conteneur `ocp-registry` |
+| **Hors Ansible** | §3 image sur le Mac ; au reboot VM : `systemctl enable --now podman-restart.service` — [docs/lab-power-cycle.md](../docs/lab-power-cycle.md) § Registry |
+
+Disque données sans recréer le conteneur :
+
+```bash
+cd ansible && ansible-playbook playbooks/registry-data-disk.yml --limit registry --ask-become-pass
+```
+
 ## 5. Vérification
 
 Sur la VM :
@@ -154,6 +184,16 @@ sudo chmod 644 /opt/registry/certs/ca.crt
 ```
 
 → `additionalTrustBundle` dans les `install-config.yaml`. **Ne pas** committer les `.key`.
+
+### Équivalent Ansible
+
+| | |
+|---|---|
+| **Playbook** | `ansible/playbooks/bastion-ocp-install.yml` |
+| **Hôte** | `bastion` (+ lecture CA sur `registry`) |
+| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass` |
+| **Couverture** | Slurp `ca.crt` depuis la registry → `~/lab/ca.crt` sur la bastion, trust `oc` |
+| **Hors Ansible** | Copie manuelle `scp` ci-dessus si tu n’utilises pas le playbook OCP |
 
 ## Dépannage
 

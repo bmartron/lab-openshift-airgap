@@ -2,6 +2,8 @@
 
 Procédure pour éteindre et rallumer le lab sans casser le SNO (DNS, registry, NTP, certs kubelet).
 
+> **Ansible** : équivalents playbook dans les sections ci-dessous — [docs/ansible-manual-parity.md](ansible-manual-parity.md).
+
 ## VMs et IPs (`vmbr1`)
 
 | Ordre démarrage | VM | IP | Rôle |
@@ -77,6 +79,16 @@ Lancer **avant** de démarrer (ou juste après le démarrage de) le SNO :
 
 Code de sortie **0** = prérequis OK pour démarrer ou laisser finir le boot du SNO.
 
+### Équivalent Ansible
+
+| | |
+|---|---|
+| **Playbook** | `ansible/playbooks/bastion-scripts.yml` |
+| **Hôte** | `bastion` |
+| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/bastion-scripts.yml --ask-become-pass` |
+| **Couverture** | Déploie `~/lab/scripts/lab-startup-check.sh` (évite `scp` manuel) |
+| **Hors Ansible** | Exécution du script sur la bastion après boot infra |
+
 ### 4. Après démarrage du SNO
 
 Délai typique : **20–45 min** (RAM qui monte, CO qui passent au vert).
@@ -119,6 +131,14 @@ curl -k https://127.0.0.1:5000/v2/_catalog
 
 Persistance au boot : `podman-restart.service` + `--restart=always` — voir [registry/README.md](../registry/README.md).
 
+### Équivalent Ansible
+
+| | |
+|---|---|
+| **Playbook** | `ansible/playbooks/registry.yml` (conteneur `--restart=always` à la création) |
+| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/registry.yml --limit registry --ask-become-pass` |
+| **Hors Ansible** | `systemctl enable --now podman-restart.service` sur la VM si le conteneur reste **Exited** au reboot |
+
 ---
 
 ## DNS au boot
@@ -129,7 +149,17 @@ Si `dig @172.16.10.11` → *connection refused*, sur **DNS** `172.16.10.11` :
 sudo systemctl start dnsmasq
 ```
 
-Renforcer le boot : drop-in systemd `After=network-online.target` + `Restart=on-failure` — voir [dns/README.md](../dns/README.md).
+Renforcer le boot : drop-in systemd `After=network-online.target` + `Restart=on-failure` — déployé par le rôle Ansible `dns` (`lab-infra.yml`) ; manuel : [dns/README.md](../dns/README.md).
+
+### Équivalent Ansible
+
+| | |
+|---|---|
+| **Playbook** | `ansible/playbooks/lab-infra.yml` |
+| **Hôte** | `dns` |
+| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/lab-infra.yml --limit dns --ask-become-pass` |
+| **Couverture** | Drop-in `dnsmasq.service.d/after-network.conf`, enable dnsmasq |
+| **Hors Ansible** | `systemctl start dnsmasq` ponctuel si la VM est up sans le service |
 
 ---
 

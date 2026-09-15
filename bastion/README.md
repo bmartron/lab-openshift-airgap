@@ -2,6 +2,8 @@
 
 Poste d'orchestration : `oc`, `openshift-install`, `oc-mirror`, génération ISO agent.
 
+> **Ansible** : [docs/ansible-manual-parity.md](../docs/ansible-manual-parity.md) · install OCP → [docs/ansible-ocp-install.md](../docs/ansible-ocp-install.md).
+
 **Avantage double NIC** : SSH direct depuis le Mac (`vmbr0`) + accès au lab (`vmbr1`).
 
 ## Spécifications VM (Proxmox)
@@ -82,6 +84,16 @@ curl --cacert ~/lab/ca.crt https://registry.lab.local:5000/v2/_catalog
 
 > `/etc/hosts` est consulté avant le DNS — les noms `*.lab.local` fonctionnent sans casser `mirror.openshift.com`.
 
+### Équivalent Ansible
+
+| | |
+|---|---|
+| **Playbook** | `ansible/playbooks/lab-infra.yml` |
+| **Hôte** | `bastion` |
+| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/lab-infra.yml --limit bastion --ask-become-pass` |
+| **Couverture** | Client chrony vers DNS lab, script `lab-startup-check.sh` (si activé dans `group_vars`) |
+| **Hors Ansible** | `/etc/hosts` et `nmcli` (§2) ; binaires OCP §4–§8 |
+
 | Symptôme | Cause | Action |
 |----------|-------|--------|
 | `Insufficient privileges` sur `nmcli` | Pas de `sudo` | Préfixer avec `sudo` |
@@ -156,6 +168,16 @@ sudo update-ca-trust
 curl --cacert ~/lab/ca.crt https://registry.lab.local:5000/v2/_catalog
 ```
 
+### Équivalent Ansible
+
+| | |
+|---|---|
+| **Playbook** | `ansible/playbooks/bastion-ocp-install.yml` |
+| **Hôte** | `bastion` (+ CA lue sur `registry`) |
+| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass` |
+| **Couverture** | `~/lab/ca.crt`, trust registry pour `oc`, configs install — voir [docs/ansible-ocp-install.md](../docs/ansible-ocp-install.md) |
+| **Hors Ansible** | `scp` manuel ci-dessus si pas de playbook |
+
 ## 7. Piste RC 5 (optionnel, répertoire séparé)
 
 ```bash
@@ -186,6 +208,14 @@ Procédure complète : [mirror/README.md](../mirror/README.md).
 
 Voir [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) — workflow complet avec `config-backup/`.
 
+### Équivalent Ansible
+
+| | |
+|---|---|
+| **Playbook** | `ansible/playbooks/bastion-ocp-install.yml` |
+| **Variables** | `ocp_agent_generate_iso`, `ocp_push_iso_to_proxmox`, `ocp_imageset_profile` — [ansible/README.md](../ansible/README.md) |
+| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass` |
+
 ## Coupure quotidienne (arrêt / démarrage)
 
 Ordre de boot : **DNS → registry → bastion → SNO**. Avant de démarrer le SNO sur Proxmox, lancer sur la bastion :
@@ -196,6 +226,14 @@ mkdir -p ~/lab/scripts   # une fois si absent
 ```
 
 Procédure complète, NTP, dépannage : [docs/lab-power-cycle.md](../docs/lab-power-cycle.md).
+
+### Équivalent Ansible
+
+| | |
+|---|---|
+| **Playbook** | `ansible/playbooks/bastion-scripts.yml` (script seul) ou `lab-infra.yml --limit bastion` (NTP + script) |
+| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/bastion-scripts.yml --ask-become-pass` |
+| **Couverture** | Copie `~/lab/scripts/lab-startup-check.sh` depuis le dépôt (pas de `dnf`) |
 
 **NTP bastion** (client vers le DNS lab) :
 
@@ -209,6 +247,13 @@ EOF
 sudo systemctl enable --now chronyd
 timedatectl set-timezone Europe/Paris
 ```
+
+| | |
+|---|---|
+| **Playbook** | `ansible/playbooks/lab-infra.yml` |
+| **Hôte** | `bastion` |
+| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/lab-infra.yml --limit bastion --ask-become-pass` |
+| **Couverture** | Rôles `common` + `bastion` : chrony client, fuseau, script preflight |
 
 ## Accès SSH depuis le Mac
 

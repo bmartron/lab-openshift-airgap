@@ -3,6 +3,8 @@
   hosts: dns
   become: true
   roles:
+    - role: rhel_dvd
+      when: rhel_dvd_repo_enable | default(true) | bool
     - role: common
     - role: dns
 
@@ -10,6 +12,8 @@
   hosts: registry
   become: true
   roles:
+    - role: rhel_dvd
+      when: rhel_dvd_repo_enable | default(true) | bool
     - role: common
     - role: registry
 
