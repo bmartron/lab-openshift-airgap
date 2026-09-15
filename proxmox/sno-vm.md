@@ -61,6 +61,22 @@ qm start $VMID
 
 Adapter `VOTRE-STORAGE`, bus (`scsi0` / `virtio0`) et `VMID`.
 
+## SSH SNO après réinstall (`core@172.16.10.100`)
+
+Convention : **bastion uniquement** — [docs/sno-ssh-convention.md](../docs/sno-ssh-convention.md).
+
+Chaque réinstall → *REMOTE HOST IDENTIFICATION HAS CHANGED* → sur la **bastion** :
+
+```bash
+ssh-keygen -R 172.16.10.100
+ssh-keygen -R '[172.16.10.100]:22'
+ssh core@172.16.10.100
+```
+
+`sshKey` = clé publique **bastion** (`ansible/files/install_ssh_key.pub`). **Mac** : pas de SSH `core` direct.
+
+Voir [access.md](access.md) § SSH nœud SNO.
+
 ## Dépannage disque
 
 | Symptôme | Cause | Action |

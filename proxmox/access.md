@@ -171,12 +171,30 @@ Le cluster (`172.16.10.100`) n’est pas routé depuis le LAN. Options :
 
 | Méthode | Détail |
 |---------|--------|
-| **Tunnel SSH** | `sudo ssh -L 443:172.16.10.100:443 -N bernard@192.168.1.144` + `/etc/hosts` sur le Mac vers `127.0.0.1` (port 443 nécessite `sudo` sur macOS) |
+| **Tunnel SSH** | `sudo ssh -L 443:172.16.10.100:443 -N bernard@192.168.1.144` + `/etc/hosts` sur le Mac : FQDN apps en **`127.0.0.1`** (console, oauth, **`cdi-uploadproxy-openshift-cnv.apps.<cluster>.lab.local`** pour upload ISO Virt) — port 443 nécessite `sudo` sur macOS |
 | **Port 8443** | `ssh -L 8443:172.16.10.100:443 -N bernard@192.168.1.144` → URL avec `:8443` (OAuth peut exiger SOCKS) |
 | **SOCKS + Firefox** | `ssh -D 1080 -N bernard@192.168.1.144` + hosts `172.16.10.100` pour les FQDN apps |
 | **VM graphique lab** | Navigateur sur `vmbr1` — DNS lab natif |
 
 Sur la **bastion** : `oc login` et console sans tunnel — voir [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md).
+
+## SSH nœud SNO (`core@172.16.10.100`)
+
+Convention lab : **bastion seule** — [docs/sno-ssh-convention.md](../docs/sno-ssh-convention.md).
+
+Utilisateur **`core`**, clé = **`sshKey`** dans `install-config` (= pubkey **bastion**).
+
+Après **chaque réinstall** SNO, sur la **bastion** :
+
+```bash
+ssh-keygen -R 172.16.10.100
+ssh-keygen -R '[172.16.10.100]:22'
+ssh core@172.16.10.100
+```
+
+**Mac** : `ssh bernard@192.168.1.144` puis les commandes ci-dessus (pas de `ssh core` direct depuis le Mac).
+
+Détail : [sno-vm.md](sno-vm.md) § SSH SNO après réinstall.
 
 VM SNO (disque, réinstall) : [sno-vm.md](sno-vm.md).
 

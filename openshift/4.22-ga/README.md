@@ -186,6 +186,14 @@ cp ~/.kube/config ~/lab/4.22-ga/auth/kubeconfig
 export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig
 ```
 
+Pour le day‑2 (API **lb-ext**, certificats stables), préférer **`auth/kubeconfig-admin`** si présent :
+
+```bash
+export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig-admin
+```
+
+Virt / LVMS : [docs/openshift-virt-lab.md](../../docs/openshift-virt-lab.md).
+
 ### Miroirs cluster (air-gap)
 
 ```bash
@@ -203,7 +211,7 @@ oc apply -f workspace/working-dir/cluster-resources/itms-oc-mirror.yaml
 
 Depuis le **Mac** (lab isolé) : tunnel SSH ou VM graphique sur `vmbr1` — voir [proxmox/access.md](../../proxmox/access.md).
 
-SSH SNO : utilisateur **`core`**, clé = `sshKey` de `install-config.yaml` (souvent clé Mac, pas bastion).
+SSH SNO : **`core@172.16.10.100` depuis la bastion uniquement** — [docs/sno-ssh-convention.md](../../docs/sno-ssh-convention.md).
 
 Voir aussi [mirror/README.md](../../mirror/README.md) pour les opérateurs air-gap (Virt, ODF).
 

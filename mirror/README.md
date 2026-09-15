@@ -274,3 +274,5 @@ oc-mirror -c imageset-config.yaml \
 | `invalid auth configuration file` (rebuild catalogue) | `--authfile` = pull secret merge lab (`Og==` ou clés avec `/`) | `~/lab/scripts/pull-secret-for-oc-mirror.sh` puis `--authfile ~/lab/pull-secret-oc-mirror.txt` |
 | `manifest unknown` sur release locale | Mauvais chemin image | Utiliser chemins `ocp4-422/openshift/release-images` (pas `quay.io/...` dans le tag) |
 | Push mirror **HTTP 500** | Registry disque plein | [registry/README.md](../registry/README.md) — 2e disque `/opt/registry` |
+| Pas de **`lvms-operator`** / **`kubevirt-hyperconverged`** dans `packagemanifest` | Catalogue OLM pas rechargé | `oc delete pod -n openshift-marketplace -l olm.catalogSource=cs-redhat-operator-index-v4-22` puis revérifier |
+| Upload ISO / pods CDI **ImagePullBackOff** `registry.redhat.io` | IDMS/ITMS manquants ou mirror Virt incomplet | `oc apply -f .../cluster-resources/idms-oc-mirror.yaml` (+ ITMS) — [docs/openshift-virt-lab.md](../docs/openshift-virt-lab.md) |

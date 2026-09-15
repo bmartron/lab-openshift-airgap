@@ -15,7 +15,7 @@ Lab personnel pour se former à l'installation **agent-based** d'OpenShift en mo
 
 - [x] Installation **SNO** (Single Node OpenShift) en air-gap — GA 4.22.12 validée
 - [ ] Installation **3 nœuds** (cluster compact) en air-gap
-- [ ] OpenShift Virtualization (nested virt) — phase ultérieure
+- [ ] OpenShift Virtualization + LVMS — [docs/openshift-virt-lab.md](docs/openshift-virt-lab.md)
 
 ## Topologies réseau
 
@@ -67,8 +67,10 @@ Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.
 9. VM SNO Proxmox (disque, réinstall) — [proxmox/sno-vm.md](proxmox/sno-vm.md)
 10. **Arrêt / démarrage quotidien** — [docs/lab-power-cycle.md](docs/lab-power-cycle.md) + script `bastion/scripts/lab-startup-check.sh`
 11. **Manuel ↔ Ansible** — [docs/ansible-manual-parity.md](docs/ansible-manual-parity.md)
-12. **Terraform + Ansible** (optionnel) — [docs/iac.md](docs/iac.md)
-13. **Alignement versions / audit** — [docs/lab-alignment.md](docs/lab-alignment.md)
+12. **SSH SNO (`core`)** — bastion seule — [docs/sno-ssh-convention.md](docs/sno-ssh-convention.md)
+13. **Virt + LVMS air-gap** — [docs/openshift-virt-lab.md](docs/openshift-virt-lab.md)
+14. **Terraform + Ansible** (optionnel) — [docs/iac.md](docs/iac.md)
+15. **Alignement versions / audit** — [docs/lab-alignment.md](docs/lab-alignment.md)
 
 ## Progression lab
 

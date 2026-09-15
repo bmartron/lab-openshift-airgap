@@ -27,11 +27,15 @@ Pour chaque commande, préciser **machine + accès + IP** :
 | Bastion (réseau lab) | bastion | `bernard@172.16.10.10` |
 | DNS | dns | `172.16.10.11` |
 | Registry | registry | `172.16.10.20` — `registry.lab.local:5000` |
-| SNO GA | ocp-sno | `172.16.10.100` — SSH `core@` (clé install-config) |
+| SNO GA | ocp-sno | `172.16.10.100` — SSH **`core@` depuis la bastion uniquement** ([docs/sno-ssh-convention.md](docs/sno-ssh-convention.md)) |
 
-Jump lab : `ProxyJump=root@192.168.1.147` depuis le Mac.
+Jump lab : `ProxyJump=root@192.168.1.147` depuis le Mac (DNS/registry — **pas** pour `core@SNO`).
 
-Référence : [proxmox/access.md](proxmox/access.md), [versions.env.example](versions.env.example).
+Référence : [proxmox/access.md](proxmox/access.md), [docs/sno-ssh-convention.md](docs/sno-ssh-convention.md).
+
+## Rappel agent — réinstall SNO
+
+Après une **réinstall** du SNO : **`ssh-keygen -R 172.16.10.100`** sur la **bastion** uniquement, puis `ssh core@172.16.10.100` (alias `ssh sno` si configuré) — [docs/sno-ssh-convention.md](docs/sno-ssh-convention.md).
 
 ## Ansible avant manuel
 
