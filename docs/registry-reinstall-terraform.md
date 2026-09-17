@@ -5,13 +5,13 @@ Après **suppression** de la VM registry dans Proxmox (étape 1 manuelle).
 ## Prérequis
 
 - Token API Proxmox (`root@pam!terraform` + secret)
-- Nom exact du **datastore** et de l’**ISO RHEL 10** sur Proxmox (ex. `nfs-vm:iso/rhel-10....iso`)
+- Nom exact du **datastore** et de l’**ISO RHEL 10** sur Proxmox (ex. `nfs_iso:iso/rhel-10....iso`, disques **`nfs_vm`**)
 - Terraform ≥ 1.5 sur le **Mac**
 
 ## Commandes (une fois)
 
 ```bash
-cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/terraform/proxmox
+cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/terraform/lab-airgap
 
 cp terraform.tfvars.registry.example terraform.tfvars
 nano terraform.tfvars   # token, storage, registry_install_iso

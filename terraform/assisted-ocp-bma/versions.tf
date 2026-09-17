@@ -4,7 +4,6 @@ terraform {
   required_providers {
     proxmox = {
       source  = "telmate/proxmox"
-      # PVE 9 : VM.Monitor supprimé — corrige à partir de 3.0.2-rc04
       version = "3.0.2-rc10"
     }
   }

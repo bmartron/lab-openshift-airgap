@@ -1,0 +1,7 @@
+# Clé SSH — Assisted Installer ocp-bma (LAN maison, pas bastion lab)
+#
+# Poste d’admin : Mac (ssh core@<IP_DHCP_nœud> depuis le LAN).
+#   cat ~/.ssh/id_ed25519.pub
+#
+# Coller UNE ligne dans console.redhat.com → Create cluster → SSH public key.
+# Ne pas utiliser la clé bastion 172.16.10.10 sauf si tu t’y connectes vraiment en jump.

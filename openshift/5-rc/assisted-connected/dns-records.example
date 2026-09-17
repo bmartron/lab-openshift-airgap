@@ -1,0 +1,21 @@
+# DNS maison — cluster ocp-bma / base home.arpa
+# À créer sur la box / routeur (ou Pi-hole, Unbound local), PAS sur la VM dns 172.16.10.11.
+#
+# Remplacer 192.168.1.200 par OCP_API_VIP (IP libre sur le LAN).
+# Les nœuds peuvent rester en DHCP ; seuls api / api-int / apps doivent résoudre avant l’install.
+
+# API OpenShift (VIP Assisted Installer)
+api.ocp-bma.home.arpa.        IN A    192.168.1.200
+api-int.ocp-bma.home.arpa.    IN A    192.168.1.200
+
+# Ingress (wildcard) — même VIP si l’assistant ne propose qu’une VIP
+*.apps.ocp-bma.home.arpa.     IN A    192.168.1.200
+
+# Optionnel : noms stables par nœud (si IP statiques DHCP box ou réservations MAC)
+# ocp-bma-ai-0.home.arpa.     IN A    192.168.1.201
+# ocp-bma-ai-1.home.arpa.     IN A    192.168.1.202
+# ocp-bma-ai-2.home.arpa.     IN A    192.168.1.203
+
+# Test depuis le Mac :
+#   dig +short api.ocp-bma.home.arpa @192.168.1.1
+#   dig +short test.apps.ocp-bma.home.arpa @192.168.1.1

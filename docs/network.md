@@ -40,7 +40,22 @@
 | `api-int.ocp5.lab.local` | `172.16.10.110` | API interne |
 | `*.apps.ocp5.lab.local` | `172.16.10.110` | Wildcard ingress |
 
-### Cluster 3 nœuds (futur)
+### Cluster Assisted connecté — maison (`home.arpa`, pas lab air-gap)
+
+| Élément | Valeur |
+|---------|--------|
+| Cluster / API | `ocp-bma` → `api.ocp-bma.home.arpa` |
+| DNS | Box LAN (ex. `192.168.1.1`) — [openshift/5-rc/assisted-connected/dns-records.example](../openshift/5-rc/assisted-connected/dns-records.example) |
+| VMs Proxmox | `ocp-bma-ai-0..2` sur **`vmbr0`** |
+| VIP API (exemple) | `192.168.1.200` — à adapter |
+
+Doc : [openshift/5-rc/assisted-connected/README.md](../openshift/5-rc/assisted-connected/README.md).
+
+### Cluster 3 nœuds — Assisted (ancien plan lab.local / 172.16.10.x)
+
+Référence historique si retour sur `vmbr1` — **non** utilisé pour **ocp-bma**.
+
+### Cluster 3 nœuds (historique générique)
 
 | Hostname | IP |
 |----------|-----|

@@ -27,7 +27,7 @@ variable "proxmox_node" {
 
 variable "storage" {
   type        = string
-  description = "Datastore Proxmox (ex. nfs-datastore)"
+  description = "Datastore disques VM Proxmox (ex. nfs_vm)"
 }
 
 variable "rhel_template" {
@@ -39,7 +39,7 @@ variable "rhel_template" {
 variable "registry_install_iso" {
   type        = string
   default     = ""
-  description = "ISO RHEL sur Proxmox, ex. nfs-vm:iso/rhel-10.iso — création registry sans clone (install Anaconda)"
+  description = "ISO RHEL sur Proxmox, ex. nfs_iso:iso/rhel-10.iso — création registry sans clone (install Anaconda)"
 }
 
 variable "create_dns" {

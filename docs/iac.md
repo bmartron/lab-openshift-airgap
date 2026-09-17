@@ -2,10 +2,10 @@
 
 | Outil | Périmètre |
 |-------|-----------|
-| [Terraform](../terraform/README.md) | VMs Proxmox : dns, registry (+ disque données), bastion (2 NICs) |
+| [Terraform](../terraform/README.md) | VMs Proxmox : dns, registry (+ disque données), bastion (2 NICs), **ocp5-ai-* Assisted** |
 | [Ansible](../ansible/README.md) | OS : NTP, dnsmasq (base), disque `/opt/registry`, bastion preflight, **configs install OCP** |
 
-OpenShift : `oc-mirror` dans [mirror/](../mirror/README.md) ; install-config / ISO via [ansible-ocp-install.md](ansible-ocp-install.md) et [openshift/4.22-ga/](../openshift/4.22-ga/README.md).
+OpenShift : `oc-mirror` dans [mirror/](../mirror/README.md) ; install-config / ISO via [ansible-ocp-install.md](ansible-ocp-install.md) et [openshift/4.22-ga/](../openshift/4.22-ga/README.md). **OCP 5 connecté 3 nœuds** : [openshift/5-rc/assisted-connected/README.md](../openshift/5-rc/assisted-connected/README.md).
 
 ## Parcours recommandé
 
@@ -20,7 +20,7 @@ OpenShift : `oc-mirror` dans [mirror/](../mirror/README.md) ; install-config / I
 
 ### Nouvelle registry propre
 
-1. Token API Proxmox → `terraform/proxmox/terraform.tfvars`
+1. Token API Proxmox → `terraform/lab-airgap/terraform.tfvars`
 2. `terraform apply` → registry avec **scsi1 120G**
 3. `registry_data_device: /dev/sdb` dans Ansible
 4. Playbook + certs TLS + mirror

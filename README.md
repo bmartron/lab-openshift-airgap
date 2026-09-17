@@ -49,7 +49,7 @@ Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.
 ├── dns/                   # Configuration DNS
 ├── registry/              # Mirror registry + TLS
 ├── mirror/                # Procédures oc-mirror (GA + Beta)
-├── terraform/             # Proxmox (VMs lab)
+├── terraform/             # lab-airgap + assisted-ocp-bma (states séparés)
 ├── ansible/               # Config DNS, registry, bastion
 └── versions.env.example   # Variables de version (copier → versions.env)
 ```
@@ -85,6 +85,7 @@ Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.
 - [x] Mirror OCP 4.22.12 (`oc-mirror` v2 → ~22 Go)
 - [x] Install SNO GA 4.22.12 (+ réinstall de contrôle ~30 min)
 - [ ] Mirror OCP 5 RC + install SNO RC
+- [ ] **OCP 5 Assisted connecté** — `ocp-bma.home.arpa`, LAN + DNS maison — [openshift/5-rc/assisted-connected/README.md](openshift/5-rc/assisted-connected/README.md)
 - [ ] VM workstation graphique (console web, optionnel)
 
 ## Versions cibles

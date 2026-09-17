@@ -6,7 +6,7 @@ proxmox_api_token_id     = "root@pam!terraform"
 proxmox_api_token_secret = "REMPLACER"
 
 proxmox_node = "pve"
-storage      = "nfs-vm"   # datastore Proxmox (onglet VM → disque)
+storage      = "nfs_vm"   # datastore Proxmox (disques VM)
 
 # Lab actuel : dns/bastion déjà sur Proxmox — ne pas passer à true sans import (voir terraform/README.md).
 create_dns      = false
@@ -14,7 +14,7 @@ create_bastion  = false
 create_registry = true
 
 # Chemin ISO sur Proxmox : Datacenter → storage → ISO Images (format storage:iso/fichier.iso)
-registry_install_iso = "nfs-vm:iso/rhel-10.x-x86_64-dvd.iso"
+registry_install_iso = "nfs_iso:iso/rhel-10.x-x86_64-dvd.iso"
 
 # Laisser rhel_template vide en mode ISO
 rhel_template = ""

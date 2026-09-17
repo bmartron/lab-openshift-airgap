@@ -1,74 +1,57 @@
-# Terraform — Proxmox (lab infra)
+# Terraform — stacks Proxmox (labs séparés)
 
-Provisionne les VMs **dns**, **registry**, **bastion** sur Proxmox. Le SNO OpenShift reste hors Terraform (ISO agent / cycle de vie manuel) — voir [proxmox/sno-vm.md](../proxmox/sno-vm.md).
+Deux **répertoires = deux states** — ne jamais mélanger OCP5 connecté et infra air-gap 4.22.
 
-## Proxmox VE 9
+| Stack | Répertoire | Ressources | Réseau typique |
+|-------|------------|----------|----------------|
+| **Lab air-gap 4.22** | [`lab-airgap/`](lab-airgap/) | dns, registry, bastion | `vmbr1` + `vmbr0` (bastion) |
+| **OCP5 Assisted connecté** | [`assisted-ocp-bma/`](assisted-ocp-bma/) | `ocp-bma-ai-0..2` | `vmbr0` (LAN + Internet) |
 
-- Le privilège **`VM.Monitor` n’existe plus** (provider **2.9** → erreur Terraform). Ce dépôt utilise **telmate/proxmox 3.0.2-rc10**.
-- VMs avec **qemu-guest-agent** et lecture d’IP par Terraform : ajouter **`VM.GuestAgent.Audit`** au token/rôle. La VM **registry** (install ISO) a `agent = 0` → pas besoin pour ce apply.
+OpenShift / Proxmox manuel (SNO agent, etc.) : hors Terraform — [proxmox/sno-vm.md](../proxmox/sno-vm.md).
 
-Après mise à jour du provider : `rm -rf .terraform .terraform.lock.hcl && terraform init`.
+## Stockages NFS Proxmox (NUC)
 
-## Prérequis
+| ID Proxmox | Rôle | Chemin monté sur `pve` | Usage Terraform |
+|------------|------|-------------------------|-----------------|
+| **`nfs_vm`** | Disques VM, templates | `/mnt/pve/nfs_vm/` | `storage = "nfs_vm"` |
+| **`nfs_iso`** | Images ISO | `/mnt/pve/nfs_iso/template/iso/` | `nfs_iso:iso/fichier.iso` |
 
-- Proxmox `192.168.1.147` (ou `versions.env`)
-- Template RHEL 10 (cloud-init ou clone) sur le nœud Proxmox — **q35 + UEFI** recommandé (aligné `locals.tf`)
-- Token API : Proxmox → **Datacenter** → **Permissions** → **API Tokens**
+Format Proxmox : **`nfs_iso:iso/nom.iso`** (ISO), **`nfs_vm`** pour `scsi0` / `efidisk`.
 
-## Scope actuel du lab (registry seule)
-
-**dns** et **bastion** existent déjà sur Proxmox (q35 + OVMF), gérées **hors Terraform** pour l’instant.
-
-- Dans `terraform.tfvars` : `create_dns = false`, `create_bastion = false`, `create_registry = true` (voir `terraform.tfvars.registry.example`).
-- `terraform state` ne doit contenir que `proxmox_vm_qemu.registry[0]` tant qu’on n’importe pas les autres VMs.
-- Les blocs **dns** / **bastion** dans `vms.tf` sont prêts (même firmware que registry) ; les activer plus tard = `create_* = true` + **plan** (risque de recréation si import absent).
-
-`terraform plan` avec ce tfvars ne touche **pas** dns ni bastion.
-
-## Registry seule (réinstall)
-
-Voir [docs/registry-reinstall-terraform.md](../docs/registry-reinstall-terraform.md).
+Vérifier sur **pve** :
 
 ```bash
-cd terraform/proxmox
-cp terraform.tfvars.registry.example terraform.tfvars
+pvesm status
+pvesm path nfs_iso:iso
+ls /mnt/pve/nfs_iso/template/iso/
+```
+
+Variables partagées : [versions.env.example](../versions.env.example) (`PROXMOX_STORAGE_VM`, `PROXMOX_STORAGE_ISO`).
+
+## Lab air-gap
+
+```bash
+cd terraform/lab-airgap
+cp terraform.tfvars.registry.example terraform.tfvars   # ou terraform.tfvars.example
 terraform init && terraform plan && terraform apply
 ```
 
-## Tout le lab (dns + registry + bastion)
+Doc : [lab-airgap/README.md](lab-airgap/README.md) · réinstall registry [docs/registry-reinstall-terraform.md](../docs/registry-reinstall-terraform.md).
 
-**À utiliser seulement** pour une création from scratch ou après `terraform import` des VMs existantes — sinon `plan` peut proposer de **détruire/recréer** dns/bastion.
+## OCP5 connecté (ocp-bma.home.arpa)
 
 ```bash
-cd terraform/proxmox
+cd terraform/assisted-ocp-bma
 cp terraform.tfvars.example terraform.tfvars
-terraform init
-terraform plan
-terraform apply
+terraform init && terraform plan && terraform apply
 ```
 
-## Registry : second disque
+Doc : [assisted-ocp-bma/README.md](assisted-ocp-bma/README.md) · [openshift/5-rc/assisted-connected/README.md](../openshift/5-rc/assisted-connected/README.md).
 
-La VM **registry** reçoit :
+## Après suppression manuelle des VMs air-gap
 
-- **scsi0** : disque système (~32 Go) — OS uniquement
-- **scsi1** : disque données (~120 Go) — monté par Ansible sur `/opt/registry`
-- **Firmware (toutes les VMs)** : `local.vm_bios` / `local.vm_machine` → OVMF + q35 + `efidisk` sur `var.storage`
+1. Supprimer dans Proxmox (UI).
+2. **`cd terraform/lab-airgap`** → `terraform state list` → `terraform state rm <ressource>` pour chaque VM supprimée, **ou** supprimer `terraform.tfstate` et repartir sur un state vierge (puis `apply` ciblé).
+3. Ne pas toucher `assisted-ocp-bma/terraform.tfstate` pour le lab connecté.
 
-Évite le piège RHEL « `/` 70 Go + `/home` 70 Go » — voir [registry/README.md](../registry/README.md).
-
-## VMs déjà créées
-
-Terraform peut **recréer** des VMs si les noms/IDs entrent en conflit. Pour un lab existant :
-
-1. Commencer par **Ansible seul** ([ansible/README.md](../ansible/README.md)) sur l’inventaire actuel.
-2. Ou `terraform import` (avancé) — non documenté ici.
-
-## Secrets
-
-- `terraform.tfvars` est **gitignoré**
-- Ne pas committer de token Proxmox
-
-## Suite
-
-Après `apply` : [ansible/README.md](../ansible/README.md) — `playbooks/lab-infra.yml`.
+Provider **telmate/proxmox 3.0.2-rc10** (PVE 9) — lock file dans chaque stack.

@@ -5,7 +5,7 @@ Deux pistes de déploiement :
 | Piste | Version | Répertoire |
 |-------|---------|------------|
 | **GA** | OpenShift **4.22.12** | [4.22-ga/](4.22-ga/) |
-| **RC 5** | OpenShift **5.0.0-ec.6** | [5-rc/](5-rc/) |
+| **RC 5** | OpenShift **5.0.0-ec.6** | [5-rc/](5-rc/) — agent air-gap ; **Assisted connecté 3 nœuds** : [5-rc/assisted-connected/](5-rc/assisted-connected/) |
 
 ## Prérequis communs
 

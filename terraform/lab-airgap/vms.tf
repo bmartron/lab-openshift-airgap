@@ -9,8 +9,8 @@ resource "proxmox_vm_qemu" "dns" {
   clone       = var.rhel_template
   full_clone  = true
   agent       = 1
-  os_type = "cloud-init"
-  memory  = local.vms_dns.memory
+  os_type     = "cloud-init"
+  memory      = local.vms_dns.memory
 
   cpu {
     cores = local.vms_dns.cores
@@ -52,8 +52,8 @@ resource "proxmox_vm_qemu" "registry" {
   name        = local.vms_registry.name
   target_node = var.proxmox_node
   agent       = 0
-  os_type = "l26"
-  memory  = local.vms_registry.memory
+  os_type     = "l26"
+  memory      = local.vms_registry.memory
 
   cpu {
     cores = local.vms_registry.cores
@@ -118,8 +118,8 @@ resource "proxmox_vm_qemu" "bastion" {
   clone       = var.rhel_template
   full_clone  = true
   agent       = 1
-  os_type = "cloud-init"
-  memory  = local.vms_bastion.memory
+  os_type     = "cloud-init"
+  memory      = local.vms_bastion.memory
 
   cpu {
     cores = local.vms_bastion.cores

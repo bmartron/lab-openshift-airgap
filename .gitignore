@@ -3,10 +3,12 @@ versions.env
 
 # Terraform / Ansible secrets & state
 terraform/**/terraform.tfvars
+terraform/assisted-ocp-bma/terraform.tfvars
+terraform/**/*.auto.tfvars
 terraform/**/.terraform/
 terraform/**/*.tfstate
 terraform/**/*.tfstate.*
-# Conserver terraform/proxmox/.terraform.lock.hcl versionné (provider épinglé)
+# Conserver terraform/lab-airgap/.terraform.lock.hcl versionné (provider épinglé)
 ansible/inventory/hosts.yml
 ansible/group_vars/all.yml
 ansible/inventory/group_vars/all.yml

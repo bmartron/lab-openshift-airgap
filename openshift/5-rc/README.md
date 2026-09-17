@@ -5,9 +5,16 @@
 | Version | **5.0.0-ec.6** (Release Candidate / dev-preview) |
 | Kubernetes | 1.36 (attendu — confirmer via release notes) |
 | Cluster name | `ocp5` |
-| Base domain | `ocp5.lab.local` |
+| Base domain | `lab.local` (agent) / `ocp5.lab.local` (historique SNO doc) |
 | SNO IP | `172.16.10.110` |
 | Mirror registry | `registry.lab.local:5000/ocp5-rc` |
+
+## Deux pistes d’install
+
+| Piste | Doc |
+|-------|-----|
+| **Assisted Installer connecté** (`ocp-bma.home.arpa`) | **[assisted-connected/README.md](assisted-connected/README.md)** — Terraform [`terraform/assisted-ocp-bma/`](../../terraform/assisted-ocp-bma/) |
+| **Agent ISO air-gap** (SNO / mirror lab) | Ce fichier (sections ci-dessous) |
 
 > **Attention** : build pré-GA, non supporté en production. Stream : [5-dev-preview](https://amd64.ocp.releases.ci.openshift.org/#5-dev-preview). Épingler un tag `ec.X` précis.
 

@@ -4,7 +4,7 @@ proxmox_api_token_secret = "REMPLACER"
 proxmox_tls_insecure     = true
 
 proxmox_node = "pve"
-storage      = "nfs-vm"
+storage      = "nfs_vm"
 
 # VMs déjà manuelles (q35/OVMF) : laisser false et utiliser terraform.tfvars.registry.example pour registry seule.
 create_dns      = true

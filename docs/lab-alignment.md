@@ -8,7 +8,7 @@ Référence pour vérifier que dépôt, outils et infra correspondent. Dernière
 |-----------|-----------------|-----------------|
 | Proxmox | **9.2.x** (ex. 9.2.18) | Hôte NUC |
 | Terraform | ≥ 1.5 | Mac / bastion |
-| Provider Proxmox | **telmate/proxmox 3.0.2-rc10** | [terraform/proxmox/versions.tf](../terraform/proxmox/versions.tf) + `.terraform.lock.hcl` |
+| Provider Proxmox | **telmate/proxmox 3.0.2-rc10** | [terraform/lab-airgap/versions.tf](../terraform/lab-airgap/versions.tf) + `.terraform.lock.hcl` |
 | Token API | `root@pam!terraform`, **Privilege Separation : non** (lab) | Proxmox UI |
 | PVE 9 | **Pas de `VM.Monitor`** dans les rôles custom | [terraform/README.md](../terraform/README.md) |
 | Registry VM | scsi0 32G + scsi1 120G, `vmbr1`, ISO RHEL 10 | Terraform + [registry/README.md](../registry/README.md) |
@@ -45,8 +45,8 @@ Référence pour vérifier que dépôt, outils et infra correspondent. Dernière
 
 | Fichier | Commit git ? |
 |---------|----------------|
-| `terraform/proxmox/.terraform.lock.hcl` | **Oui** (provider épinglé) |
-| `terraform/proxmox/terraform.tfvars` | **Non** (secrets) |
+| `terraform/lab-airgap/.terraform.lock.hcl` | **Oui** (provider épinglé) |
+| `terraform/lab-airgap/terraform.tfvars` | **Non** (secrets) |
 | `versions.env` | **Non** |
 | `~/lab/` sur bastion | Hors dépôt |
 
@@ -54,7 +54,7 @@ Référence pour vérifier que dépôt, outils et infra correspondent. Dernière
 
 ```bash
 # Mac — Terraform registry
-cd terraform/proxmox && terraform validate
+cd terraform/lab-airgap && terraform validate
 
 # Bastion — binaire mirror
 oc-mirror version 2>/dev/null || oc-mirror --v2 --help | head -1
