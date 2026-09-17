@@ -35,6 +35,17 @@ resource "proxmox_vm_qemu" "node" {
   }
 
   dynamic "disk" {
+    for_each = var.extra_disk_gb > 0 ? [1] : []
+    content {
+      slot     = "scsi1"
+      size     = "${var.extra_disk_gb}G"
+      type     = "disk"
+      storage  = var.storage
+      iothread = true
+    }
+  }
+
+  dynamic "disk" {
     for_each = var.discovery_iso != "" ? [1] : []
     content {
       slot    = "ide2"

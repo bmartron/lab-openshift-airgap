@@ -1,0 +1,39 @@
+# Lab air-gap 4.22 — infra complète (dns + bastion + registry + SNO)
+# cp terraform.tfvars.airgap.example terraform.tfvars
+# OCP5 connecté : terraform/assisted-ocp-bma/ UNIQUEMENT — rien OCP5 ici.
+
+proxmox_api_url          = "https://192.168.1.147:8006/api2/json"
+proxmox_api_token_id     = "root@pam!terraform"
+proxmox_api_token_secret = "REMPLACER"
+proxmox_tls_insecure     = true
+
+proxmox_node = "pve"
+storage      = "nfs_vm"
+
+create_dns      = true
+create_bastion  = true
+create_registry = true
+create_sno      = true
+
+rhel_template        = "rhel-10-template"
+registry_install_iso = ""   # ou nfs_iso:iso/rhel-10....iso pour install Anaconda
+
+lab_bridge       = "vmbr1"
+admin_bridge     = "vmbr0"
+lab_gateway      = "172.16.10.1"
+bastion_admin_ip = "192.168.1.144"
+
+dns_ip      = "172.16.10.11"
+bastion_ip  = "172.16.10.10"
+registry_ip = "172.16.10.20"
+sno_ip      = "172.16.10.100"
+
+sno_vm_name           = "ocp-sno"
+sno_agent_iso         = "nfs_iso:iso/agent.x86_64.iso"
+sno_install_disk_gb   = 120
+sno_lvms_disk_gb      = 100
+sno_cpu_cores         = 8
+sno_cpu_type          = "host"
+sno_memory_mb         = 32768
+
+ssh_user = "bernard"

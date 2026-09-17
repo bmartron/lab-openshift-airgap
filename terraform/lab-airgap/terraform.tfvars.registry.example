@@ -1,26 +1,20 @@
-# Registry seule — copier vers terraform.tfvars
-# cp terraform.tfvars.registry.example terraform.tfvars
+# Registry seule — copier : cp terraform.tfvars.registry.example terraform.tfvars
 
 proxmox_api_url          = "https://192.168.1.147:8006/api2/json"
 proxmox_api_token_id     = "root@pam!terraform"
 proxmox_api_token_secret = "REMPLACER"
+proxmox_tls_insecure     = true
 
 proxmox_node = "pve"
-storage      = "nfs_vm"   # datastore Proxmox (disques VM)
+storage      = "nfs_vm"
 
-# Lab actuel : dns/bastion déjà sur Proxmox — ne pas passer à true sans import (voir terraform/README.md).
 create_dns      = false
 create_bastion  = false
 create_registry = true
+create_sno      = false
 
-# Chemin ISO sur Proxmox : Datacenter → storage → ISO Images (format storage:iso/fichier.iso)
+rhel_template        = ""
 registry_install_iso = "nfs_iso:iso/rhel-10.x-x86_64-dvd.iso"
-
-# Laisser rhel_template vide en mode ISO
-rhel_template = ""
-
-# Token API : PVE 9 — ne pas créer de rôle avec VM.Monitor (privilège supprimé).
-# Provider telmate/proxmox >= 3.0.2-rc04 requis (voir versions.tf).
 
 lab_bridge  = "vmbr1"
 registry_ip = "172.16.10.20"

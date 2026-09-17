@@ -6,13 +6,14 @@ proxmox_tls_insecure     = true
 proxmox_node = "pve"
 storage      = "nfs_vm"
 
-# VMs déjà manuelles (q35/OVMF) : laisser false et utiliser terraform.tfvars.registry.example pour registry seule.
+# From scratch lab air-gap — voir terraform.tfvars.airgap.example pour le détail SNO
 create_dns      = true
 create_bastion  = true
 create_registry = true
+create_sno      = false
 
 rhel_template        = "rhel-10-template"
-registry_install_iso = ""   # ou ISO pour registry seule : voir terraform.tfvars.registry.example
+registry_install_iso = ""
 
 lab_bridge       = "vmbr1"
 admin_bridge     = "vmbr0"

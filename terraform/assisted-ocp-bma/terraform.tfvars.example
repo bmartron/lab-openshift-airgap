@@ -6,6 +6,11 @@ proxmox_node = "pve"
 storage      = "nfs_vm"
 
 node_count    = 3
-name_prefix   = "ocp-bma-ai"
+name_prefix   = "ocp-bma"
 bridge        = "vmbr0"
 discovery_iso = "nfs_iso:iso/ocp-bma-discovery.iso"
+
+cpu_cores     = 13
+memory_mb     = 34816
+disk_gb       = 120
+extra_disk_gb = 50

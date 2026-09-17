@@ -47,15 +47,23 @@ variable "discovery_iso" {
 
 variable "cpu_cores" {
   type    = number
-  default = 8
+  default = 13
 }
 
 variable "memory_mb" {
-  type    = number
-  default = 16384
+  type        = number
+  default     = 34816
+  description = "34 GiB = 34816"
 }
 
 variable "disk_gb" {
-  type    = number
-  default = 120
+  type        = number
+  default     = 120
+  description = "Disque install OpenShift (scsi0)"
+}
+
+variable "extra_disk_gb" {
+  type        = number
+  default     = 50
+  description = "2e disque scsi1 (0 = désactivé)"
 }

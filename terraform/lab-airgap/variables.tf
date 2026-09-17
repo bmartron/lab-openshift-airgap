@@ -92,6 +92,12 @@ variable "registry_ip" {
   default = "172.16.10.20"
 }
 
+variable "sno_ip" {
+  type        = string
+  default     = "172.16.10.100"
+  description = "IP lab SNO (documentation / outputs — pas appliquée par Terraform sur RHCOS)"
+}
+
 variable "bastion_admin_ip" {
   type        = string
   description = "IP bastion sur vmbr0 (LAN) — pour SSH depuis le Mac"
@@ -101,4 +107,50 @@ variable "bastion_admin_ip" {
 variable "ssh_user" {
   type    = string
   default = "bernard"
+}
+
+# --- SNO agent-based (OpenShift 4.22 GA lab) ---
+
+variable "create_sno" {
+  type        = bool
+  default     = false
+  description = "VM ocp-sno sur vmbr1 — false si VM déjà manuelle (éviter recréation)"
+}
+
+variable "sno_vm_name" {
+  type    = string
+  default = "ocp-sno"
+}
+
+variable "sno_agent_iso" {
+  type        = string
+  default     = ""
+  description = "ISO agent bastion → nfs_iso, ex. nfs_iso:iso/agent.x86_64.iso"
+}
+
+variable "sno_install_disk_gb" {
+  type    = number
+  default = 120
+}
+
+variable "sno_lvms_disk_gb" {
+  type        = number
+  default     = 100
+  description = "2e disque scsi1 pour LVMS (/dev/sdb) — 0 pour désactiver"
+}
+
+variable "sno_cpu_cores" {
+  type    = number
+  default = 8
+}
+
+variable "sno_cpu_type" {
+  type        = string
+  default     = "host"
+  description = "host pour nested virt (OpenShift Virtualization sur SNO)"
+}
+
+variable "sno_memory_mb" {
+  type    = number
+  default = 32768
 }

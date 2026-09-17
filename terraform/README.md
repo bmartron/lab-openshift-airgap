@@ -32,11 +32,12 @@ Variables partagées : [versions.env.example](../versions.env.example) (`PROXMOX
 
 ```bash
 cd terraform/lab-airgap
-cp terraform.tfvars.registry.example terraform.tfvars   # ou terraform.tfvars.example
+cp terraform.tfvars.airgap.example terraform.tfvars   # ou .registry.example
 terraform init && terraform plan && terraform apply
 ```
 
-Doc : [lab-airgap/README.md](lab-airgap/README.md) · réinstall registry [docs/registry-reinstall-terraform.md](../docs/registry-reinstall-terraform.md).
+Fichiers VM : `vm-dns.tf`, `vm-registry.tf`, `vm-bastion.tf`, `vm-sno.tf`.  
+Doc : [lab-airgap/README.md](lab-airgap/README.md).
 
 ## OCP5 connecté (ocp-bma.home.arpa)
 

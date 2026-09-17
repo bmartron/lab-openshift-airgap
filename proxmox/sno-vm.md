@@ -2,6 +2,8 @@
 
 Gestion de la VM `ocp-sno` (172.16.10.100) sur `vmbr1`.
 
+Option Terraform : [terraform/lab-airgap/vm-sno.tf](../terraform/lab-airgap/vm-sno.tf) (`create_sno = true` dans `terraform.tfvars.airgap.example`).
+
 ## Spécifications (validées lab)
 
 | Paramètre | Valeur |

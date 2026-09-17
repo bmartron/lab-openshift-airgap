@@ -5,6 +5,7 @@ versions.env
 terraform/**/terraform.tfvars
 terraform/assisted-ocp-bma/terraform.tfvars
 terraform/**/*.auto.tfvars
+terraform/lab-airgap/ocp-bma.auto.tfvars
 terraform/**/.terraform/
 terraform/**/*.tfstate
 terraform/**/*.tfstate.*
