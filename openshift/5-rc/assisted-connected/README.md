@@ -36,9 +36,10 @@ Paramètres copiables : [cluster-params.env.example](cluster-params.env.example)
 | Proxmox + token | [terraform/README.md](../../terraform/README.md) |
 | ISO discovery | Téléchargée depuis la console (1 par cluster) → stockage ISO Proxmox |
 | Clé SSH publique | **Mac** : `cat ~/.ssh/id_ed25519.pub` — [ssh-key.notes.example](ssh-key.notes.example) |
-| **VIP API** | IP **libre** sur le LAN (ex. `192.168.1.200`) — identique DNS + console |
+| **API VIP** | `192.168.1.49` — DNS + console Assisted |
+| **Ingress VIP** | `192.168.1.48` — `*.apps` |
 | DNS maison | Enregistrements **avant** preflight — [dns-records.example](dns-records.example) |
-| Ressources / VM | Terraform : **8 vCPU, 16 GiB, 120 Go** par nœud (ajuster selon la console) |
+| Ressources / VM | Terraform : **8 vCPU, 24 GiB, 120 Go + 50 Go** par nœud |
 
 ## 1. Console Red Hat
 
@@ -48,16 +49,15 @@ Paramètres copiables : [cluster-params.env.example](cluster-params.env.example)
 4. **Cluster name** : `ocp-bma` — **Base domain** : `home.arpa`  
    (l’API attendue est `api.ocp-bma.home.arpa`, pas un seul champ « ocp-bma.home.arpa »).
 5. **SSH public key** : clé **Mac**.
-6. **API VIP** : ex. `192.168.1.200` (adapter à ton sous-réseau).
+6. **API VIP** : `192.168.1.49` — **Ingress VIP** : `192.168.1.48`.
 7. Télécharger l’**ISO discovery**.
 
 ## 2. DNS maison (obligatoire)
 
 Sur la **box** ou serveur DNS du LAN (pas le lab) :
 
-- `api.ocp-bma.home.arpa` → VIP API  
-- `api-int.ocp-bma.home.arpa` → même VIP (classique)  
-- `*.apps.ocp-bma.home.arpa` → même VIP ou VIP ingress indiquée par l’assistant  
+- `api.ocp-bma.home.arpa` / `api-int` → **`192.168.1.49`**
+- `*.apps.ocp-bma.home.arpa` → **`192.168.1.48`**
 
 Modèle : [dns-records.example](dns-records.example).
 

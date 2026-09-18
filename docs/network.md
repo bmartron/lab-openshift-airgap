@@ -47,7 +47,8 @@
 | Cluster / API | `ocp-bma` → `api.ocp-bma.home.arpa` |
 | DNS | Box LAN (ex. `192.168.1.1`) — [openshift/5-rc/assisted-connected/dns-records.example](../openshift/5-rc/assisted-connected/dns-records.example) |
 | VMs Proxmox | `ocp-bma-ai-0..2` sur **`vmbr0`** |
-| VIP API (exemple) | `192.168.1.200` — à adapter |
+| API VIP | `192.168.1.49` |
+| Ingress VIP | `192.168.1.48` |
 
 Doc : [openshift/5-rc/assisted-connected/README.md](../openshift/5-rc/assisted-connected/README.md).
 

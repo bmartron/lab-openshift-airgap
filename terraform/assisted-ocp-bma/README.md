@@ -25,8 +25,8 @@ Doc install : [openshift/5-rc/assisted-connected/README.md](../../openshift/5-rc
 
 | | Valeur |
 |---|--------|
-| vCPU | 13 (`cpu_cores`) |
-| RAM | 34 GiB (`memory_mb = 34816`) |
+| vCPU | 8 (`cpu_cores`) |
+| RAM | 24 GiB (`memory_mb = 24576`) |
 | scsi0 | 120 Go — install (`disk_gb`) |
 | scsi1 | 50 Go — optionnel (`extra_disk_gb`, `0` pour désactiver) |
 

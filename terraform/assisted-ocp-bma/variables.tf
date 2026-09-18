@@ -47,13 +47,13 @@ variable "discovery_iso" {
 
 variable "cpu_cores" {
   type    = number
-  default = 13
+  default = 8
 }
 
 variable "memory_mb" {
   type        = number
-  default     = 34816
-  description = "34 GiB = 34816"
+  default     = 24576
+  description = "24 GiB = 24576"
 }
 
 variable "disk_gb" {
