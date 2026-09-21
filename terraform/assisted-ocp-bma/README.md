@@ -25,12 +25,31 @@ Doc install : [openshift/5-rc/assisted-connected/README.md](../../openshift/5-rc
 
 | | Valeur |
 |---|--------|
-| vCPU | 8 (`cpu_cores`) |
-| RAM | 24 GiB (`memory_mb = 24576`) |
-| scsi0 | 120 Go — install (`disk_gb`) |
-| scsi1 | 50 Go — optionnel (`extra_disk_gb`, `0` pour désactiver) |
+| vCPU | 10 (`cpu_cores`) |
+| RAM | 18 GiB (`memory_mb = 18432`) |
+| scsi0 | 250 Go — install (`disk_gb`) |
+| scsi1 | optionnel (`extra_disk_gb`, défaut **0**) |
+| Contrôleur | **`virtio-scsi-single`** + `iothread` (warning Proxmox évité ; disques toujours `/dev/sda`) |
 
-`lifecycle { ignore_changes = [disk] }` : un **2e disque** sur VMs **déjà** créées ne s’ajoute pas toujours via `apply` — ajouter **scsi1 50 Go** à la main dans Proxmox, ou `terraform apply -replace='proxmox_vm_qemu.node[0]'` (destructif).
+`lifecycle { ignore_changes = [disk] }` : un **2e disque** sur VMs **déjà** créées ne s’ajoute pas toujours via `apply` — ajouter **scsi1** à la main dans Proxmox, ou `terraform apply -replace='proxmox_vm_qemu.node[0]'` (destructif).
+
+## Ordre de boot
+
+Terraform fixe **`order=scsi0;ide2`** (disque puis ISO discovery) :
+
+| État disque | Comportement |
+|-------------|--------------|
+| Vide (1er boot) | Échec boot scsi0 → bascule sur **ide2** (ISO Assisted) |
+| RHCOS installé | Boot **scsi0** — plus besoin de retirer l’ISO pour redémarrer |
+
+Appliquer sur VMs existantes :
+
+```bash
+cd terraform/assisted-ocp-bma
+terraform apply
+```
+
+(ou UI Proxmox → Options → Boot Order → scsi0 avant CD).
 
 ## Ancien state `lab-airgap` avec VMs ocp-bma
 

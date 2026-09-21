@@ -18,8 +18,11 @@ resource "proxmox_vm_qemu" "node" {
 
   bios    = local.vm_bios
   machine = local.vm_machine
-  scsihw  = "virtio-scsi-pci"
-  boot    = var.discovery_iso != "" ? "order=ide2;scsi0" : "order=scsi0"
+  # virtio-scsi-single : iothread valide (évite WARN Proxmox avec virtio-scsi-pci)
+  # Dispositifs Linux restent /dev/sda — pas VirtIO Block (/dev/vda)
+  scsihw = "virtio-scsi-single"
+  # Disque d'abord, ISO ensuite : disque vide → fallback discovery ; OS installé → boot RHCOS
+  boot = var.discovery_iso != "" ? "order=scsi0;ide2" : "order=scsi0"
 
   efidisk {
     storage = var.storage

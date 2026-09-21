@@ -47,23 +47,23 @@ variable "discovery_iso" {
 
 variable "cpu_cores" {
   type    = number
-  default = 8
+  default = 10
 }
 
 variable "memory_mb" {
   type        = number
-  default     = 24576
-  description = "24 GiB = 24576"
+  default     = 18432
+  description = "18 GiB = 18432 (lab NUC 64 Go : 3×18 ≈ 54 Go + marge hôte)"
 }
 
 variable "disk_gb" {
   type        = number
-  default     = 120
+  default     = 250
   description = "Disque install OpenShift (scsi0)"
 }
 
 variable "extra_disk_gb" {
   type        = number
-  default     = 50
-  description = "2e disque scsi1 (0 = désactivé)"
+  default     = 0
+  description = "2e disque scsi1 (0 = désactivé). Commenter la ligne ne suffit pas : le défaut s’applique."
 }
