@@ -17,7 +17,8 @@ resource "proxmox_vm_qemu" "sno" {
 
   bios    = local.vm_bios
   machine = local.vm_machine
-  scsihw  = "virtio-scsi-pci"
+  # virtio-scsi-single : iothread valide (aligné assisted-ocp-bma) — disques /dev/sda
+  scsihw = "virtio-scsi-single"
   boot    = var.sno_agent_iso != "" ? "order=ide2;scsi0" : "order=scsi0"
 
   efidisk {

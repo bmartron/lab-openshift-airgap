@@ -14,6 +14,8 @@ OpenShift 5 connecté (`ocp-bma`) → [`../assisted-ocp-bma/`](../assisted-ocp-b
 | `variables.tf` | `create_*`, stockages **`nfs_vm`** / ISO **`nfs_iso:iso/...`** |
 | `locals.tf` | OVMF + q35, tailles dns/registry/bastion |
 
+Contrôleur disque : **`virtio-scsi-single`** + `iothread` (comme `assisted-ocp-bma`) — pas VirtIO Block ; Linux voit **`/dev/sda`**.
+
 ## Exemples tfvars
 
 | Fichier | Usage |

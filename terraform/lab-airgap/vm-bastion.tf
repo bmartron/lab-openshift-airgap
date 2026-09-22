@@ -16,7 +16,8 @@ resource "proxmox_vm_qemu" "bastion" {
   }
   bios    = local.vm_bios
   machine = local.vm_machine
-  scsihw  = "virtio-scsi-pci"
+  # virtio-scsi-single : iothread valide (aligné assisted-ocp-bma) — disques /dev/sda
+  scsihw = "virtio-scsi-single"
   boot    = "order=scsi0"
 
   efidisk {
