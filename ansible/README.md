@@ -41,7 +41,7 @@ podman save -o ~/Downloads/registry2-amd64.tar docker.io/library/registry:2
 
 2. `group_vars/all.yml` :
 
-- `registry_data_device` : `/dev/sdb1` ou `/dev/sdb` selon `lsblk` sur la VM
+- `registry_data_device` : clone template → `/dev/vdb` ; install ISO → `/dev/sdb` ou `/dev/sdb1` (`lsblk`)
 - `registry_image_tar` : chemin absolu du `.tar` sur le Mac
 - `registry_tls_mode: generate`
 
@@ -177,7 +177,7 @@ Voir [proxmox/access.md](../proxmox/access.md).
 
 | Variable | Description |
 |----------|-------------|
-| `registry_data_device` | Ex. `/dev/sdb1` — vide = pas de formatage |
+| `registry_data_device` | Clone : `/dev/vdb` ; ISO : `/dev/sdb` — vide = pas de formatage |
 | `registry_tls_mode` | `generate` \| `copy` \| `skip` |
 | `registry_image_tar` | Tar `podman save` sur le Mac |
 | `registry_recreate_container` | `true` pour `podman rm` + recréer |

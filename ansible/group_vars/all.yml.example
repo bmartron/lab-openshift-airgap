@@ -17,8 +17,8 @@ registry_hostname: registry.lab.local
 registry_port: 5000
 registry_data_mount: /opt/registry
 
-# Second disque Terraform (scsi1) — partition install : souvent /dev/sdb1 ; disque entier : /dev/sdb
-registry_data_device: /dev/sdb1
+# Second disque Terraform (clone template) : virtio1 → /dev/vdb ; install ISO : scsi1 → /dev/sdb
+registry_data_device: /dev/vdb
 
 # TLS : generate (openssl sur la VM) | copy (ansible/files/registry-certs/) | skip
 registry_tls_mode: generate

@@ -1,6 +1,7 @@
 # Lab air-gap 4.22 — infra complète (dns + bastion + registry + SNO)
 # cp terraform.tfvars.airgap.example terraform.tfvars
 # OCP5 connecté : terraform/assisted-ocp-bma/ UNIQUEMENT — rien OCP5 ici.
+# Templates : voir proxmox/rhel-cloudinit-template.md (rhel10-tpl + rhel10-nfs).
 
 proxmox_api_url          = "https://192.168.1.147:8006/api2/json"
 proxmox_api_token_id     = "root@pam!terraform"
@@ -8,15 +9,20 @@ proxmox_api_token_secret = "REMPLACER"
 proxmox_tls_insecure     = true
 
 proxmox_node = "pve"
-storage      = "nfs_vm"
+
+# Mix : dns/bastion → nfs_vm (template rhel10-nfs) ; registry/SNO → local-lvm (rhel10-tpl)
+storage_infra     = "nfs_vm"
+storage_perf      = "local-lvm"
+storage_cloudinit = "local-lvm"
 
 create_dns      = true
 create_bastion  = true
 create_registry = true
-create_sno      = true
+create_sno      = false   # SNO = ISO agent, pas ce template
 
-rhel_template        = "rhel-10-template"
-registry_install_iso = ""   # ou nfs_iso:iso/rhel-10....iso pour install Anaconda
+rhel_template        = "rhel10-tpl"  # local-lvm → registry
+rhel_template_infra  = "rhel10-nfs"  # nfs_vm → dns/bastion
+registry_install_iso = ""            # vide = clone + virtio1 données
 
 lab_bridge       = "vmbr1"
 admin_bridge     = "vmbr0"
@@ -34,6 +40,6 @@ sno_install_disk_gb   = 120
 sno_lvms_disk_gb      = 100
 sno_cpu_cores         = 8
 sno_cpu_type          = "host"
-sno_memory_mb         = 32768
+sno_memory_mb         = 24576
 
 ssh_user = "bernard"

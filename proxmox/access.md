@@ -198,6 +198,8 @@ Détail : [sno-vm.md](sno-vm.md) § SSH SNO après réinstall.
 
 VM SNO (disque, réinstall) : [sno-vm.md](sno-vm.md).
 
+Templates RHEL (dns / bastion / registry) : [rhel-cloudinit-template.md](rhel-cloudinit-template.md).
+
 ## Bastion double NIC
 
 La VM `bastion` (`172.16.10.10`) a `vmbr0` + `vmbr1` → SSH direct depuis le Mac vers la bastion, puis accès au lab.

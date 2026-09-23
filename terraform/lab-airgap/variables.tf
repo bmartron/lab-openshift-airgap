@@ -25,15 +25,34 @@ variable "proxmox_node" {
   description = "Nom du nœud Proxmox (pve)"
 }
 
-variable "storage" {
+variable "storage_infra" {
   type        = string
-  description = "Datastore disques VM Proxmox (ex. nfs_vm)"
+  default     = "nfs_vm"
+  description = "Disques OS dns + bastion (NAS). Cloud-init reste sur storage_cloudinit (LVM)."
+}
+
+variable "storage_perf" {
+  type        = string
+  default     = "local-lvm"
+  description = "Disques registry + SNO (SSD local) — mirror / etcd"
+}
+
+variable "storage_cloudinit" {
+  type        = string
+  default     = "local-lvm"
+  description = "Drive cloud-init (LVM) — pas nfs_vm (telmate: unable to parse directory volume name)"
 }
 
 variable "rhel_template" {
   type        = string
   default     = ""
-  description = "Template Proxmox (clone) — idéalement q35 + OVMF comme les VMs Terraform. Vide si registry_install_iso est défini."
+  description = "Template sur storage_perf (local-lvm) — registry. Ex. rhel10-tpl"
+}
+
+variable "rhel_template_infra" {
+  type        = string
+  default     = ""
+  description = "Template sur storage_infra (nfs_vm) — dns/bastion. Ex. rhel10-nfs. Vide = rhel_template"
 }
 
 variable "registry_install_iso" {

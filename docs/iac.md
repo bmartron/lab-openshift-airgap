@@ -18,12 +18,13 @@ OpenShift : `oc-mirror` dans [mirror/](../mirror/README.md) ; install-config / I
 5. `registry_data_device: ""` tant que la registry utilise `/home/registry` ou `/opt` manuel.
 6. `ansible-playbook ansible/playbooks/lab-infra.yml` (depuis le Mac, repo cloné).
 
-### Nouvelle registry propre
+### Nouvelle registry propre (clone template)
 
 1. Token API Proxmox → `terraform/lab-airgap/terraform.tfvars`
-2. `terraform apply` → registry avec **scsi1 120G**
-3. `registry_data_device: /dev/sdb` dans Ansible
-4. Playbook + certs TLS + mirror
+2. Templates `rhel10-tpl` + `rhel10-nfs` — [proxmox/rhel-cloudinit-template.md](../proxmox/rhel-cloudinit-template.md)
+3. `terraform apply` → registry **virtio0** + **virtio1 120G** (`/dev/vda` + `/dev/vdb`)
+4. `registry_data_device: /dev/vdb` dans Ansible
+5. Playbook + certs TLS + mirror
 
 ## Variables partagées
 

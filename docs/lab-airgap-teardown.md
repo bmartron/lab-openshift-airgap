@@ -15,11 +15,13 @@ Ne lance **pas** `terraform destroy` dans `lab-airgap` si des VMs connectées pa
 
 | ID | Usage |
 |----|--------|
-| **`nfs_vm`** | Disques VM |
+| **`local-lvm`** | registry, SNO, cloud-init, template `rhel10-tpl` |
 | **`nfs_iso`** | ISO (`/mnt/pve/nfs_iso/template/iso/`) |
+| **`nfs_vm`** | dns, bastion, template `rhel10-nfs` |
 
 ## Reconstruire le 4.22 plus tard
 
-1. `terraform/lab-airgap` + `terraform.tfvars.registry.example`
-2. Ansible `lab-infra.yml` / `registry.yml`
-3. `oc-mirror` + SNO agent — [mirror/README.md](../mirror/README.md)
+1. Templates RHEL — [proxmox/rhel-cloudinit-template.md](../proxmox/rhel-cloudinit-template.md)
+2. `terraform/lab-airgap` + `terraform.tfvars.airgap.example`
+3. Ansible `lab-infra.yml` / `registry.yml`
+4. `oc-mirror` + SNO agent — [mirror/README.md](../mirror/README.md)

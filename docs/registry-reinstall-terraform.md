@@ -5,8 +5,10 @@ Après **suppression** de la VM registry dans Proxmox (étape 1 manuelle).
 ## Prérequis
 
 - Token API Proxmox (`root@pam!terraform` + secret)
-- Nom exact du **datastore** et de l’**ISO RHEL 10** sur Proxmox (ex. `nfs_iso:iso/rhel-10....iso`, disques **`nfs_vm`**)
+- Nom exact du **datastore** et templates (`rhel10-tpl`) ou **ISO RHEL 10** (`nfs_iso:iso/…`)
+- Disques registry : **`local-lvm`** (`storage_perf`)
 - Terraform ≥ 1.5 sur le **Mac**
+- Templates : [proxmox/rhel-cloudinit-template.md](../proxmox/rhel-cloudinit-template.md)
 
 ## Commandes (une fois)
 
@@ -23,15 +25,23 @@ terraform apply
 
 Terraform crée **uniquement** la VM `registry` :
 
+**Clone template** (`registry_install_iso = ""`) :
+
+| Disque | Taille | Rôle |
+|--------|--------|------|
+| virtio0 | 32 Go | RHEL (`/dev/vda`) |
+| virtio1 | 120 Go | données `/opt/registry` (`/dev/vdb`) |
+| ide0 | cloud-init | IP / user |
+
+**Install ISO** (`registry_install_iso = "nfs_iso:iso/..."`) :
+
 | Disque | Taille | Rôle |
 |--------|--------|------|
 | scsi0 | 32 Go | RHEL |
-| scsi1 | 120 Go | données `/opt/registry` |
-| ide2 | ISO | install (boot `ide2;scsi0`) |
+| scsi1 | 120 Go | données |
+| ide2 | ISO | boot `ide2;scsi0` |
 
-Firmware : **OVMF (UEFI)** + **q35** + disque EFI — même réglage pour **dns**, **bastion**, **registry** (`locals.tf` / `vms.tf`).
-
-`create_dns` et `create_bastion` restent à `false`.
+Firmware : **OVMF + q35**. `create_dns` / `create_bastion` = `false`.
 
 ## Après `apply`
 

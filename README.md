@@ -40,7 +40,7 @@ Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.
 ```
 .
 ├── docs/                  # Architecture, réseau, versions, procédures
-├── proxmox/               # Réseau, accès SSH, console
+├── proxmox/               # Réseau, accès SSH, templates RHEL (rhel10-tpl / rhel10-nfs)
 ├── rhel/                  # Repo DVD local (sans souscription)
 ├── bastion/               # VM bastion RHEL 10
 ├── openshift/
@@ -58,6 +58,7 @@ Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.
 
 1. Lire [docs/architecture.md](docs/architecture.md)
 2. Configurer le bridge `vmbr1` — [proxmox/network.md](proxmox/network.md)
+2b. Templates RHEL cloud-init + Terraform VMs — [proxmox/rhel-cloudinit-template.md](proxmox/rhel-cloudinit-template.md) + [terraform/lab-airgap/](terraform/lab-airgap/)
 3. Accès SSH aux VMs isolées — [proxmox/access.md](proxmox/access.md)
 4. Configs install SNO (install-config, agent-config, CA) — [docs/ansible-ocp-install.md](docs/ansible-ocp-install.md)
 5. Repo RHEL via DVD (sans souscription) — [rhel/dvd-repo.md](rhel/dvd-repo.md)

@@ -13,20 +13,21 @@ OpenShift / Proxmox manuel (SNO agent, etc.) : hors Terraform — [proxmox/sno-v
 
 | ID Proxmox | Rôle | Chemin monté sur `pve` | Usage Terraform |
 |------------|------|-------------------------|-----------------|
-| **`nfs_vm`** | Disques VM, templates | `/mnt/pve/nfs_vm/` | `storage = "nfs_vm"` |
+| **`local-lvm`** | Disques **registry + SNO** + cloud-init + template `rhel10-tpl` | LVM thin local | `storage_perf` / `storage_cloudinit` |
+| **`nfs_vm`** | Disques **dns + bastion** + template `rhel10-nfs` | `/mnt/pve/nfs_vm/` | `storage_infra = "nfs_vm"` |
 | **`nfs_iso`** | Images ISO | `/mnt/pve/nfs_iso/template/iso/` | `nfs_iso:iso/fichier.iso` |
 
-Format Proxmox : **`nfs_iso:iso/nom.iso`** (ISO), **`nfs_vm`** pour `scsi0` / `efidisk`.
+Format Proxmox : **`nfs_iso:iso/nom.iso`** (ISO) ; disques via `storage_infra` / `storage_perf`.  
+Templates RHEL : [proxmox/rhel-cloudinit-template.md](../proxmox/rhel-cloudinit-template.md) (**deux** templates — EFI + mix NFS/SSD).
 
 Vérifier sur **pve** :
 
 ```bash
 pvesm status
 pvesm path nfs_iso:iso
-ls /mnt/pve/nfs_iso/template/iso/
 ```
 
-Variables partagées : [versions.env.example](../versions.env.example) (`PROXMOX_STORAGE_VM`, `PROXMOX_STORAGE_ISO`).
+Variables : [versions.env.example](../versions.env.example) (`PROXMOX_STORAGE_INFRA`, `PROXMOX_STORAGE_PERF`, `PROXMOX_STORAGE_ISO`).
 
 ## Lab air-gap
 

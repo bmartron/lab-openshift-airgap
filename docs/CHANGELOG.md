@@ -18,7 +18,7 @@
 - [mirror/README.md](../mirror/README.md) : `oc-mirror` + `--authfile` (pas `oc mirror` / `--src-pull-secret`)
 
 ### Ajouté (IaC lab)
-- [terraform/](../terraform/) — VMs Proxmox (registry + disque données scsi1)
+- [terraform/](../terraform/) — VMs Proxmox (registry clone : virtio0 + virtio1 /dev/vdb)
 - [ansible/](../ansible/) — playbooks DNS / registry / bastion
 - [docs/iac.md](iac.md) — parcours lab existant vs greenfield
 

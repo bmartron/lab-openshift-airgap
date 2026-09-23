@@ -1,18 +1,24 @@
+# dns + bastion + registry (SNO hors Terraform) — détail SNO : terraform.tfvars.airgap.example
+# Templates : proxmox/rhel-cloudinit-template.md
+
 proxmox_api_url          = "https://192.168.1.147:8006/api2/json"
 proxmox_api_token_id     = "root@pam!terraform"
 proxmox_api_token_secret = "REMPLACER"
 proxmox_tls_insecure     = true
 
 proxmox_node = "pve"
-storage      = "nfs_vm"
 
-# From scratch lab air-gap — voir terraform.tfvars.airgap.example pour le détail SNO
+storage_infra     = "nfs_vm"
+storage_perf      = "local-lvm"
+storage_cloudinit = "local-lvm"
+
 create_dns      = true
 create_bastion  = true
 create_registry = true
 create_sno      = false
 
-rhel_template        = "rhel-10-template"
+rhel_template        = "rhel10-tpl"
+rhel_template_infra  = "rhel10-nfs"
 registry_install_iso = ""
 
 lab_bridge       = "vmbr1"

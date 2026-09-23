@@ -19,10 +19,10 @@ resource "proxmox_vm_qemu" "sno" {
   machine = local.vm_machine
   # virtio-scsi-single : iothread valide (aligné assisted-ocp-bma) — disques /dev/sda
   scsihw = "virtio-scsi-single"
-  boot    = var.sno_agent_iso != "" ? "order=ide2;scsi0" : "order=scsi0"
+  boot   = var.sno_agent_iso != "" ? "order=ide2;scsi0" : "order=scsi0"
 
   efidisk {
-    storage = var.storage
+    storage = var.storage_perf
     efitype = "4m"
   }
 
@@ -30,7 +30,7 @@ resource "proxmox_vm_qemu" "sno" {
     slot     = "scsi0"
     size     = "${var.sno_install_disk_gb}G"
     type     = "disk"
-    storage  = var.storage
+    storage  = var.storage_perf
     iothread = true
   }
 
@@ -40,7 +40,7 @@ resource "proxmox_vm_qemu" "sno" {
       slot     = "scsi1"
       size     = "${var.sno_lvms_disk_gb}G"
       type     = "disk"
-      storage  = var.storage
+      storage  = var.storage_perf
       iothread = true
     }
   }

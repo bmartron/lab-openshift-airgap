@@ -1,4 +1,5 @@
 # Registry seule — copier : cp terraform.tfvars.registry.example terraform.tfvars
+# Clone template (recommandé) OU install ISO Anaconda.
 
 proxmox_api_url          = "https://192.168.1.147:8006/api2/json"
 proxmox_api_token_id     = "root@pam!terraform"
@@ -6,15 +7,25 @@ proxmox_api_token_secret = "REMPLACER"
 proxmox_tls_insecure     = true
 
 proxmox_node = "pve"
-storage      = "nfs_vm"
+
+storage_infra     = "nfs_vm"      # inutilisé si create_dns/bastion = false
+storage_perf      = "local-lvm"
+storage_cloudinit = "local-lvm"
 
 create_dns      = false
 create_bastion  = false
 create_registry = true
 create_sno      = false
 
-rhel_template        = ""
-registry_install_iso = "nfs_iso:iso/rhel-10.x-x86_64-dvd.iso"
+# Option A — clone (virtio0 + virtio1 → /dev/vda + /dev/vdb)
+rhel_template        = "rhel10-tpl"
+rhel_template_infra  = ""
+registry_install_iso = ""
+
+# Option B — Anaconda (décommenter, vider rhel_template) :
+# rhel_template        = ""
+# registry_install_iso = "nfs_iso:iso/rhel-10.x-x86_64-dvd.iso"
 
 lab_bridge  = "vmbr1"
 registry_ip = "172.16.10.20"
+ssh_user    = "bernard"

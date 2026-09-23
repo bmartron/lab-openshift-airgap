@@ -16,7 +16,7 @@ bastion_lab_ip: 172.16.10.10
 registry_hostname: registry.lab.local
 registry_port: 5000
 registry_data_mount: /opt/registry
-registry_data_device: /dev/sdb1
+registry_data_device: /dev/vdb   # clone template virtio1 ; ISO Anaconda : /dev/sdb ou /dev/sdb1
 
 registry_tls_mode: generate
 registry_image_tar: /Users/bmartron/Downloads/registry2-amd64.tar

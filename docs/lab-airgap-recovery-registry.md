@@ -42,10 +42,12 @@ Référence : [registry-reinstall-terraform.md](registry-reinstall-terraform.md)
 
 ### 3. Réinstaller RHEL + disque données
 
-Console Proxmox → VM **registry** :
+Console Proxmox → VM **registry** (clone template) :
 
-- **scsi0** : OS  
-- **scsi1** : ~120 Go → `/opt/registry` (Ansible `registry_data_device: /dev/sdb`)
+- **virtio0** : OS (`/dev/vda`)
+- **virtio1** : ~120 Go → `/opt/registry` (Ansible `registry_data_device: /dev/vdb`)
+
+Si install **ISO Anaconda** : scsi0 + scsi1 → `/dev/sda` + `/dev/sdb`.
 
 Suivre [registry/README.md](../registry/README.md) (réseau `172.16.10.20`, podman, TLS).
 
@@ -58,7 +60,7 @@ cd ansible
 ansible-playbook playbooks/registry.yml --ask-become-pass
 ```
 
-(`registry_data_device` dans `group_vars/all.yml` si scsi1.)
+(`registry_data_device` dans `group_vars/all.yml` — clone : `/dev/vdb`.)
 
 ### 5. Re-mirror OCP 4.22 (obligatoire si disques NFS recréés)
 

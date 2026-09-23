@@ -11,8 +11,8 @@ Référence pour vérifier que dépôt, outils et infra correspondent. Dernière
 | Provider Proxmox | **telmate/proxmox 3.0.2-rc10** | [terraform/lab-airgap/versions.tf](../terraform/lab-airgap/versions.tf) + `.terraform.lock.hcl` |
 | Token API | `root@pam!terraform`, **Privilege Separation : non** (lab) | Proxmox UI |
 | PVE 9 | **Pas de `VM.Monitor`** dans les rôles custom | [terraform/README.md](../terraform/README.md) |
-| Registry VM | scsi0 32G + scsi1 120G, `vmbr1`, ISO RHEL 10 | Terraform + [registry/README.md](../registry/README.md) |
-| Données registry | `/opt/registry` sur **scsi1** (pas `/` + `/home` 50/50) | Install RHEL + [registry/README.md](../registry/README.md) § partitionnement |
+| Registry VM | virtio0 32G + virtio1 120G (`/dev/vda`+`/dev/vdb`), clone `rhel10-tpl`, `vmbr1` | Terraform + [proxmox/rhel-cloudinit-template.md](../proxmox/rhel-cloudinit-template.md) |
+| Données registry | `/opt/registry` sur **virtio1** (`/dev/vdb`) | Ansible `registry_data_device` |
 
 ## OpenShift GA (piste active)
 
@@ -37,7 +37,7 @@ Référence pour vérifier que dépôt, outils et infra correspondent. Dernière
 | `oc mirror -c ...` | `oc-mirror -c ...` |
 | `--src-pull-secret` | `--authfile ~/lab/pull-secret.txt` |
 | Provider **telmate/proxmox 2.9** sur PVE 9 | **3.0.2-rc10** |
-| `disk { type = "scsi" }` (provider 3) | `type = "disk"`, slot `scsi0` / `scsi1` |
+| `disk { type = "scsi" }` (provider 3) | `type = "disk"`, slot `scsi0`/`scsi1` (SNO) ou `virtio0`/`virtio1` (RHEL clone) |
 | `cores = N` (provider 3) | bloc `cpu { cores = N }` |
 | Rôle PVE avec **VM.Monitor** | Administrator / token sans separation |
 
