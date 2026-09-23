@@ -1,4 +1,5 @@
 ---
 rhel_dvd_repo_enable: true
 rhel_dvd_mount: /mnt/rhel
-rhel_dvd_device: /dev/sr0
+# Préféré si c’est le DVD RHEL ; sinon le rôle scanne /dev/sr* (ide0=cidata → sr0, ide2=DVD → sr1)
+rhel_dvd_device: /dev/sr1

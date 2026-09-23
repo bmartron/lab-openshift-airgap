@@ -55,6 +55,12 @@ variable "registry_install_iso" {
   description = "ISO RHEL sur Proxmox, ex. nfs_iso:iso/rhel-10.iso — création registry sans clone (install Anaconda)"
 }
 
+variable "rhel_dvd_iso" {
+  type        = string
+  default     = ""
+  description = "DVD RHEL complet (BaseOS+AppStream) en ide2 après clone — repo dnf air-gap. Ex. nfs_iso:iso/rhel-10.2-x86_64-dvd.iso. Vide = pas de CD."
+}
+
 variable "create_dns" {
   type    = bool
   default = false
@@ -115,6 +121,18 @@ variable "bastion_admin_ip" {
   type        = string
   description = "IP bastion sur vmbr0 (LAN) — pour SSH depuis le Mac"
   default     = ""
+}
+
+variable "bastion_admin_dns" {
+  type        = string
+  default     = "192.168.1.1"
+  description = "DNS Internet (LAN maison) pour cloud-init bastion — pas le gateway lab 172.16.10.1"
+}
+
+variable "bastion_admin_gateway" {
+  type        = string
+  default     = "192.168.1.1"
+  description = "Gateway Internet (LAN maison) sur eth0/vmbr0 — la NIC lab ne doit PAS avoir de gateway par défaut"
 }
 
 variable "ssh_user" {

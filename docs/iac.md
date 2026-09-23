@@ -3,7 +3,7 @@
 | Outil | Périmètre |
 |-------|-----------|
 | [Terraform](../terraform/README.md) | VMs Proxmox : dns, registry (+ disque données), bastion (2 NICs), **ocp5-ai-* Assisted** |
-| [Ansible](../ansible/README.md) | OS : NTP, dnsmasq (base), disque `/opt/registry`, bastion preflight, **configs install OCP** |
+| [Ansible](../ansible/README.md) | OS : DVD repo, NTP, dnsmasq (base), registry (Podman/TLS), bastion (`/etc/hosts`, CA, paquets ISO), **configs install OCP** |
 
 OpenShift : `oc-mirror` dans [mirror/](../mirror/README.md) ; install-config / ISO via [ansible-ocp-install.md](ansible-ocp-install.md) et [openshift/4.22-ga/](../openshift/4.22-ga/README.md). **OCP 5 connecté 3 nœuds** : [openshift/5-rc/assisted-connected/README.md](../openshift/5-rc/assisted-connected/README.md).
 

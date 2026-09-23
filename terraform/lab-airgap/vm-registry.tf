@@ -69,6 +69,17 @@ resource "proxmox_vm_qemu" "registry" {
     }
   }
 
+  # Clone : DVD repo dnf (ide2). Install Anaconda : ide2 = registry_install_iso (ci-dessous).
+  dynamic "disk" {
+    for_each = var.registry_install_iso == "" && var.rhel_dvd_iso != "" ? [1] : []
+    content {
+      slot    = "ide2"
+      type    = "cdrom"
+      iso     = var.rhel_dvd_iso
+      storage = split(":", var.rhel_dvd_iso)[0]
+    }
+  }
+
   dynamic "disk" {
     for_each = var.registry_install_iso != "" ? [1] : []
     content {

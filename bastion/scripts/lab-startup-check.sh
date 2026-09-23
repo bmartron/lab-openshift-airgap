@@ -132,7 +132,7 @@ info "Résumé : ${PASS} OK, ${FAIL} FAIL"
 if [[ "$FAIL" -gt 0 ]]; then
   echo
   echo "=> Corriger les FAIL avant de démarrer (ou continuer) le SNO sur Proxmox (192.168.1.147)."
-  echo "   Ordre : DNS -> registry (podman) -> bastion -> SNO"
+  echo "   Ordre : DNS -> registry -> bastion -> SNO"
   exit 1
 fi
 

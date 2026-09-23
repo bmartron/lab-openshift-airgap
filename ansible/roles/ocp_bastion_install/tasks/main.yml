@@ -115,7 +115,7 @@
     group: "{{ lab_user }}"
     mode: "0644"
 
-- name: Trust registry pour Podman/oc
+- name: Trust registry pour oc-mirror / curl
   when: ocp_configure_registry_trust | bool
   block:
     - name: certs.d registry

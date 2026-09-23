@@ -5,10 +5,64 @@
     state: directory
     mode: "0755"
 
-- name: Monter DVD/ISO RHEL ({{ rhel_dvd_device }})
+# cloud-init (ide0) = souvent /dev/sr0 (cidata) ; DVD repo (ide2) = /dev/sr1
+- name: Résoudre le lecteur DVD RHEL (BaseOS+AppStream, pas cidata)
+  ansible.builtin.shell: |
+    set -euo pipefail
+    probe() {
+      local d="$1" m
+      m=$(mktemp -d)
+      if mount -o ro "$d" "$m" 2>/dev/null; then
+        if [ -d "$m/BaseOS" ] && [ -d "$m/AppStream" ]; then
+          umount "$m"
+          rmdir "$m"
+          echo "$d"
+          return 0
+        fi
+        umount "$m" || true
+      fi
+      rmdir "$m" 2>/dev/null || true
+      return 1
+    }
+    # Prefer explicit device if it is the RHEL DVD
+    if [ -n "{{ rhel_dvd_device }}" ] && [ -b "{{ rhel_dvd_device }}" ]; then
+      if probe "{{ rhel_dvd_device }}"; then
+        exit 0
+      fi
+    fi
+    for d in /dev/sr*; do
+      [ -b "$d" ] || continue
+      if probe "$d"; then
+        exit 0
+      fi
+    done
+    echo "Aucun /dev/sr* avec BaseOS+AppStream — attacher rhel_dvd_iso (ide2) dans Proxmox" >&2
+    exit 1
+  args:
+    executable: /bin/bash
+  register: rhel_dvd_resolved
+  changed_when: false
+
+- name: Périphérique DVD retenu
+  ansible.builtin.set_fact:
+    rhel_dvd_device_effective: "{{ rhel_dvd_resolved.stdout | trim }}"
+
+# Évite de garder /mnt/rhel monté sur cidata (sr0) après un premier échec
+- name: Contenu actuel du point de montage
+  ansible.builtin.stat:
+    path: "{{ rhel_dvd_mount }}/BaseOS"
+  register: rhel_mount_baseos_before
+
+- name: Démonter si le point n'est pas le DVD RHEL
   ansible.builtin.mount:
     path: "{{ rhel_dvd_mount }}"
-    src: "{{ rhel_dvd_device }}"
+    state: absent
+  when: not (rhel_mount_baseos_before.stat.exists | default(false))
+
+- name: Monter DVD/ISO RHEL ({{ rhel_dvd_device_effective }})
+  ansible.builtin.mount:
+    path: "{{ rhel_dvd_mount }}"
+    src: "{{ rhel_dvd_device_effective }}"
     fstype: iso9660
     opts: ro,defaults
     state: mounted

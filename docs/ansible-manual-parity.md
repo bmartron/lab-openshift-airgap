@@ -21,11 +21,11 @@ Détail inventaire, SSH, variables : [ansible/README.md](../ansible/README.md).
 
 | Action manuelle (doc) | Playbook | `--limit` | Rôle(s) | Non couvert par Ansible (reste manuel) |
 |----------------------|----------|-----------|---------|----------------------------------------|
-| Repo DVD RHEL | `lab-infra.yml`, `registry.yml` | `dns`, `registry` | `rhel_dvd` | Attacher l’ISO dans Proxmox |
+| Repo DVD RHEL | `lab-infra.yml`, `registry.yml` | `dns`, `registry`, `bastion` | `rhel_dvd` | Attacher l’ISO (`ide2` / `rhel_dvd_iso`) |
 | VM DNS (NTP, firewall, dnsmasq au boot) | `lab-infra.yml` | `dns` | `rhel_dvd`, `common`, `dns` | `/etc/dnsmasq.conf` (zones lab) — [dns/README.md](../dns/README.md) §4 |
 | VM registry (disque, TLS, conteneur) | `registry.yml` | `registry` | `rhel_dvd`, `common`, `registry` | Image `.tar` sur le Mac → `registry_image_tar` ; `podman-restart.service` au boot |
 | Disque données registry seul | `registry-data-disk.yml` | `registry` | `registry` (disque) | — |
-| Bastion (NTP client, script preflight) | `lab-infra.yml` | `bastion` | `common`, `bastion` | `oc` / `openshift-install` / `oc-mirror` — [bastion/README.md](../bastion/README.md) |
+| Bastion (DVD, NTP, `/etc/hosts`, trust CA, paquets, clients OCP, test catalog) | `lab-infra.yml` | `bastion` | `rhel_dvd`, `common`, `bastion` | pull-secret / mirror — [bastion/README.md](../bastion/README.md), [mirror/README.md](../mirror/README.md) |
 | Scripts bastion seulement | `bastion-scripts.yml` | `bastion` | scripts | Pas de `dnf` |
 | Install-config, ISO agent, CA | `bastion-ocp-install.yml` | `bastion` (+ lecture CA sur `registry`) | `ocp_bastion_install` | `pull-secret.txt` dans `ansible/files/` |
 | Infra complète (DNS + registry + bastion) | `lab-infra.yml` | (tous) | voir ci-dessus | Création VMs Proxmox / Terraform |

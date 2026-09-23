@@ -66,7 +66,7 @@ oc-mirror version 2>/dev/null || oc-mirror --v2 --help | head -1
 
 ## Hors scope / connu
 
-- **Ansible** : squelette ; pas de déploiement complet dnsmasq/registry TLS automatisé.
+- **Mirror** (`oc-mirror`) et **pull-secret** : procédures manuelles / [mirror/README.md](../mirror/README.md) — binaires clients installés via Ansible (`lab-infra` bastion).
 - **RC 5** (`ocp5-rc`) : configs exemple ; pas la piste active du lab aujourd’hui.
 - Titres historiques « oc mirror » dans CHANGELOG ancien : le comportement documenté est **oc-mirror**.
 

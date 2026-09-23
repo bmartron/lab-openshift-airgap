@@ -1,0 +1,33 @@
+---
+bastion_lab_dir: /home/bernard/lab
+bastion_install_startup_check: true
+bastion_manage_etc_hosts: true
+bastion_configure_registry_trust: true
+bastion_verify_registry: true
+bastion_install_packages: true
+bastion_install_ocp_clients: true
+bastion_configure_admin_dns: true
+# DNS + gateway LAN maison (pas 172.16.10.1 — sinon Network unreachable vers Internet)
+bastion_admin_dns: 192.168.1.1
+bastion_admin_gateway: 192.168.1.1
+bastion_admin_nic: eth0
+bastion_lab_nic: eth1
+bastion_dns_check_host: mirror.openshift.com
+bastion_internet_check_url: https://mirror.openshift.com/
+# Aligné sur ocp_platform_version (ocp_bastion_install) / versions.env OCP_GA_VERSION
+bastion_ocp_version: "{{ ocp_platform_version | default('4.22.12') }}"
+bastion_ocp_clients_baseurl: https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp
+# Prérequis réels bastion (docs + scripts) — pas podman/git/jq (registry=Mac/VM registry ; scripts=python3)
+bastion_packages:
+  - nmstate      # openshift-install agent-config (nmstatectl)
+  - xorriso      # openshift-install agent create image
+  - bind-utils   # dig — lab-startup-check.sh / verify-mirror-before-sno.sh
+
+# Entrées /etc/hosts (avant DNS maison) — noms lab + VIP SNO
+bastion_etc_hosts_entries: |
+  {{ dns_ip }}  dns.lab.local dns
+  {{ registry_ip }}  {{ registry_hostname }} registry
+  {{ bastion_lab_ip }}  bastion.lab.local bastion
+  {{ ocp_sno_ip | default('172.16.10.100') }}  api.{{ ocp_cluster_name | default('ocp422') }}.{{ ocp_base_domain | default('lab.local') }}
+  {{ ocp_sno_ip | default('172.16.10.100') }}  oauth-openshift.apps.{{ ocp_cluster_name | default('ocp422') }}.{{ ocp_base_domain | default('lab.local') }}
+  {{ ocp_sno_ip | default('172.16.10.100') }}  console-openshift-console.apps.{{ ocp_cluster_name | default('ocp422') }}.{{ ocp_base_domain | default('lab.local') }}

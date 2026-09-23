@@ -20,10 +20,12 @@ create_sno      = false
 rhel_template        = "rhel10-tpl"
 rhel_template_infra  = ""
 registry_install_iso = ""
+rhel_dvd_iso         = "nfs_iso:iso/rhel-10.2-x86_64-dvd.iso" # ide2 — repo dnf
 
 # Option B — Anaconda (décommenter, vider rhel_template) :
 # rhel_template        = ""
 # registry_install_iso = "nfs_iso:iso/rhel-10.x-x86_64-dvd.iso"
+# rhel_dvd_iso         = ""  # ide2 déjà pris par registry_install_iso
 
 lab_bridge  = "vmbr1"
 registry_ip = "172.16.10.20"

@@ -43,6 +43,17 @@ resource "proxmox_vm_qemu" "dns" {
     storage = var.storage_infra # même datastore que l’OS (nfs_vm)
   }
 
+  # Repo dnf air-gap (rôle Ansible rhel_dvd) — boot reste virtio0
+  dynamic "disk" {
+    for_each = var.rhel_dvd_iso != "" ? [1] : []
+    content {
+      slot    = "ide2"
+      type    = "cdrom"
+      iso     = var.rhel_dvd_iso
+      storage = split(":", var.rhel_dvd_iso)[0]
+    }
+  }
+
   network {
     id     = 0
     model  = "virtio"

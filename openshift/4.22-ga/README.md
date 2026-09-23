@@ -34,7 +34,7 @@ Avant chaque nouvelle tentative : **effacer le disque** — voir [proxmox/sno-vm
 ## Prérequis bastion
 
 ```bash
-sudo dnf install -y nmstate xorriso genisoimage
+sudo dnf install -y nmstate xorriso bind-utils
 nmstatectl --version
 which xorriso
 ```
@@ -42,7 +42,8 @@ which xorriso
 | Prérequis | Détail |
 |-----------|--------|
 | `nmstate` | Requis pour valider `networkConfig` dans `agent-config.yaml` |
-| `xorriso` / `genisoimage` | Requis pour `openshift-install agent create image` |
+| `xorriso` | Requis pour `openshift-install agent create image` (RHEL 10 : pas de `genisoimage`) |
+| `bind-utils` | `dig` — scripts lab (`lab-startup-check.sh`) |
 | `oc-mirror` v2 | Plugin séparé — voir [mirror/README.md](../../mirror/README.md) |
 | `agent-config.yaml` | **`apiVersion: v1beta1`** (pas `v1`) |
 | NTP | `additionalNTPSources` dans **agent-config** (pas dans install-config) |

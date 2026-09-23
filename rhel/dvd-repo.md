@@ -1,8 +1,8 @@
 # Repo local RHEL 10 via DVD (sans souscription)
 
-Procédure pour installer des paquets sur les VMs **infra** du lab (`vmbr1` isolé) **sans Internet** et **sans `subscription-manager`**, en utilisant le DVD/ISO RHEL 10 complet (BaseOS + AppStream).
+Procédure pour installer des paquets sur les VMs **infra** du lab **sans `subscription-manager`**, via le DVD/ISO RHEL 10 complet (BaseOS + AppStream).
 
-Applicable à : `dns`, `registry`, `bastion` (phase install).
+Applicable à : `dns`, `registry`, `bastion` (même DVD `ide2` — bastion a Internet `vmbr0` mais **pas** d’abonnement RH dans ce lab).
 
 > **Ansible** : le rôle `rhel_dvd` automatise montage, repo et désactivation RHSM — [docs/ansible-manual-parity.md](../docs/ansible-manual-parity.md).
 
@@ -13,13 +13,28 @@ Applicable à : `dns`, `registry`, `bastion` (phase install).
 
 ## 1. Attacher l'ISO dans Proxmox
 
-VM → **Hardware** → **CD/DVD Drive** → sélectionner l'ISO RHEL 10 sur le NFS.
+**Terraform (recommandé au clone)** — dans `terraform/lab-airgap/terraform.tfvars` :
+
+```hcl
+rhel_dvd_iso = "nfs_iso:iso/rhel-10.2-x86_64-dvd.iso"
+```
+
+Attaché en **`ide2`** sur dns / bastion / registry (`lifecycle.ignore_changes` sur `disk` : un `apply` ne ré-attache pas une VM déjà créée — `qm set` ou recreate).
+
+**Manuel** — VM → **Hardware** → **CD/DVD Drive** → ISO RHEL 10 sur le NFS, ou :
+
+```bash
+# Proxmox pve — root@192.168.1.147
+qm set <VMID> --ide2 nfs_iso:iso/rhel-10.2-x86_64-dvd.iso,media=cdrom
+```
 
 ## 2. Monter le DVD sur la VM
 
+Avec cloud-init (`ide0`) + DVD (`ide2`) : **`/dev/sr0` = cidata**, **`/dev/sr1` = DVD RHEL**. Vérifier : `lsblk -f` (label `RHEL-*-BaseOS-*`).
+
 ```bash
 sudo mkdir -p /mnt/rhel
-sudo mount /dev/sr0 /mnt/rhel
+sudo mount /dev/sr1 /mnt/rhel   # pas sr0 si cloud-init présent
 ls /mnt/rhel
 # Attendu : BaseOS  AppStream
 ```
@@ -27,7 +42,7 @@ ls /mnt/rhel
 Montage permanent (tant que l'ISO reste attachée) :
 
 ```bash
-echo '/dev/sr0 /mnt/rhel iso9660 ro,defaults 0 0' | sudo tee -a /etc/fstab
+echo '/dev/sr1 /mnt/rhel iso9660 ro,defaults 0 0' | sudo tee -a /etc/fstab
 ```
 
 ## 3. Déclarer les repos locaux
@@ -73,11 +88,11 @@ Référence : [rhel-dvd.repo.example](rhel-dvd.repo.example)
 | | |
 |---|---|
 | **Playbook** | `ansible/playbooks/lab-infra.yml` ou `registry.yml` |
-| **Hôte** | `dns` et/ou `registry` (`--limit`) |
-| **Prérequis** | ISO attachée dans Proxmox (`/dev/sr0`) |
-| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/lab-infra.yml --limit dns --ask-become-pass` |
+| **Hôte** | `dns`, `registry` ou `bastion` (`--limit`) |
+| **Prérequis** | ISO attachée dans Proxmox (`ide2`, souvent `/dev/sr1`) ; Terraform `rhel_dvd_iso` |
+| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/lab-infra.yml --limit dns` |
 | **Couverture** | Rôle `rhel_dvd` : montage, `/etc/yum.repos.d/rhel-dvd.repo`, plugin subscription-manager off, autres `.repo` désactivés |
-| **Hors Ansible** | Bastion sur LAN : souvent repos en ligne ; sinon même ISO + playbook avec `--limit bastion` si `rhel_dvd` ajouté au play |
+| **Hors Ansible** | Attacher l’ISO (`qm set --ide2` ou `rhel_dvd_iso`) si absente |
 
 ## 4. Désactiver subscription-manager pour DNF
 

@@ -59,30 +59,23 @@ curl -I https://mirror.openshift.com
 
 ### Résolution DNS lab (double NIC)
 
-La bastion a besoin des **deux** résolveurs : DNS maison (Internet) + noms lab.
+Noms lab → `/etc/hosts` (Ansible). Internet → **gateway + DNS** maison sur **eth0** (`192.168.1.1`).
 
-**Fix validé** — `/etc/hosts` pour le lab + DNS maison sur `ens18` :
+**Piège** : si la gateway par défaut est `172.16.10.1` (eth1), le registry lab répond mais Internet échoue (`Network is unreachable` / timeout). Terraform : `gw` sur `ipconfig0` seulement.
+
+**Ansible** : `dns_admin.yml` (route + DNS + `curl` mirror.openshift.com) dans `lab-infra.yml --limit bastion`.
+
+**Manuel** (secours) :
 
 ```bash
-sudo nmcli con mod ens18 ipv4.ignore-auto-dns no
-sudo nmcli con up ens18
-sudo nmcli con up ens19
-
-sudo tee -a /etc/hosts << 'EOF'
-
-172.16.10.11  dns.lab.local dns
-172.16.10.20  registry.lab.local registry
-172.16.10.10  bastion.lab.local bastion
-172.16.10.100 api.ocp422.lab.local
-172.16.10.100 oauth-openshift.apps.ocp422.lab.local
-172.16.10.100 console-openshift-console.apps.ocp422.lab.local
-EOF
-
-dig mirror.openshift.com +short          # Internet OK
-curl --cacert ~/lab/ca.crt https://registry.lab.local:5000/v2/_catalog
+sudo nmcli con mod "cloud-init eth0" ipv4.gateway 192.168.1.1 ipv4.dns 192.168.1.1 \
+  ipv4.ignore-auto-dns yes ipv4.route-metric 100
+sudo nmcli con mod "cloud-init eth1" ipv4.gateway "" ipv4.never-default yes \
+  ipv4.ignore-auto-dns yes ipv4.dns "" ipv4.route-metric 200
+sudo nmcli con up "cloud-init eth0" && sudo nmcli con up "cloud-init eth1"
+ip -4 route show default   # attendu : via 192.168.1.1 dev eth0
+curl -I https://mirror.openshift.com
 ```
-
-> `/etc/hosts` est consulté avant le DNS — les noms `*.lab.local` fonctionnent sans casser `mirror.openshift.com`.
 
 ### Équivalent Ansible
 
@@ -90,47 +83,70 @@ curl --cacert ~/lab/ca.crt https://registry.lab.local:5000/v2/_catalog
 |---|---|
 | **Playbook** | `ansible/playbooks/lab-infra.yml` |
 | **Hôte** | `bastion` |
-| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/lab-infra.yml --limit bastion --ask-become-pass` |
-| **Couverture** | Client chrony vers DNS lab, script `lab-startup-check.sh` (si activé dans `group_vars`) |
-| **Hors Ansible** | `/etc/hosts` et `nmcli` (§2) ; binaires OCP §4–§8 |
+| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/lab-infra.yml --limit bastion` |
+| **Couverture** | DNS admin, `/etc/hosts`, trust CA, paquets, clients OCP, test catalog |
+| **Hors Ansible** | — |
 
 | Symptôme | Cause | Action |
 |----------|-------|--------|
 | `Insufficient privileges` sur `nmcli` | Pas de `sudo` | Préfixer avec `sudo` |
-| `resolvectl` : *not activatable* | `systemd-resolved` inactif sur RHEL | Utiliser `/etc/hosts` + NetworkManager |
-| `Could not resolve host: mirror.openshift.com` | DNS lab seul (sans Internet) | `ipv4.ignore-auto-dns no` sur `ens18` |
-| `curl registry.lab.local` échoue | DNS maison ne connaît pas `lab.local` | Entrées `/etc/hosts` (ci-dessus) |
-| `oc login` : *no such host* `oauth-openshift.apps...` | Apps non résolus par DNS maison | Lignes OAuth/console dans `/etc/hosts` |
+| `Name or service not known` / `Network is unreachable` vers mirror.openshift.com | Default route = `172.16.10.1` (eth1) | Ansible `dns_admin` ou recreate TF avec gw sur eth0 |
+| `curl registry.lab.local` échoue | Pas d’entrées `/etc/hosts` | Relancer rôle bastion |
+| `oc login` : *no such host* `oauth-openshift.apps...` | Apps absents de `/etc/hosts` | Relancer rôle bastion |
 
 ## 3. Repo DVD + paquets (phase install)
 
-Sur `vmbr1` seul, utiliser le DVD — [rhel/dvd-repo.md](../rhel/dvd-repo.md).
+La bastion a Internet via `vmbr0`, mais **sans souscription RH** le lab utilise le **DVD RHEL** (`ide2` / souvent `/dev/sr1`) — comme dns/registry.
 
-Avec Internet via `vmbr0`, enregistrement Red Hat ou DVD au choix.
+Ansible : rôle `rhel_dvd` puis `bastion_packages` dans `lab-infra.yml`.
+
+Manuel :
 
 ```bash
-sudo dnf install -y podman skopeo jq git bind-utils tar nmstate xorriso genisoimage
+sudo mkdir -p /mnt/rhel && sudo mount /dev/sr1 /mnt/rhel
+# repo : voir rhel/dvd-repo.md
+sudo dnf install -y nmstate xorriso bind-utils
 ```
 
 | Paquet | Usage |
 |--------|-------|
-| `nmstate` | Validation `agent-config.yaml` (`nmstatectl` requis par openshift-install) |
-| `xorriso` / `genisoimage` | Génération ISO agent (`openshift-install agent create image`) |
+| `nmstate` | `nmstatectl` — validation `agent-config.yaml` |
+| `xorriso` | `openshift-install agent create image` |
+| `bind-utils` | `dig` — [lab-startup-check.sh](scripts/lab-startup-check.sh) |
 
-## 4. Installer oc / openshift-install (GA 4.22.12)
+### Équivalent Ansible
+
+| | |
+|---|---|
+| **Playbook** | `ansible/playbooks/lab-infra.yml` |
+| **Hôte** | `bastion` |
+| **Prérequis** | ISO RHEL complète en `ide2` (`rhel_dvd_iso` Terraform) |
+| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/lab-infra.yml --limit bastion` |
+| **Couverture** | `rhel_dvd` + paquets + clients OCP (`oc`, `openshift-install`, `oc-mirror`) |
+| **Hors Ansible** | Souscription RH à la place du DVD si tu préfères |
+
+## 4. Installer oc / openshift-install / oc-mirror (GA 4.22.12)
+
+**Ansible (recommandé)** — Internet `vmbr0` requis :
+
+```bash
+cd ansible && ansible-playbook playbooks/lab-infra.yml --limit bastion
+```
+
+Variable : `bastion_ocp_version` (défaut `4.22.12` / `ocp_platform_version`).
+
+**Manuel** :
 
 ```bash
 export OCP_VERSION=4.22.12
 cd /tmp
-
 curl -LO https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/${OCP_VERSION}/openshift-client-linux-${OCP_VERSION}.tar.gz
 curl -LO https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/${OCP_VERSION}/openshift-install-linux-${OCP_VERSION}.tar.gz
-
+curl -LO https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/${OCP_VERSION}/oc-mirror.tar.gz
 sudo tar xzf openshift-client-linux-${OCP_VERSION}.tar.gz -C /usr/local/bin oc kubectl
 sudo tar xzf openshift-install-linux-${OCP_VERSION}.tar.gz -C /usr/local/bin openshift-install
-
-oc version
-openshift-install version
+tar xzf oc-mirror.tar.gz && sudo mv oc-mirror /usr/local/bin/ && sudo chmod +x /usr/local/bin/oc-mirror
+oc version --client && openshift-install version && oc-mirror version --v2
 ```
 
 ## 5. Répertoires de travail
@@ -144,24 +160,20 @@ Copier le **pull-secret** Red Hat → `~/lab/pull-secret.txt` (non versionné).
 
 ## 6. Trust registry lab (CA)
 
-Récupérer la CA depuis la VM registry :
+**Ansible (recommandé)** — déjà dans `lab-infra.yml` (rôle `bastion`) : `~/lab/ca.crt`, `certs.d` pour oc-mirror, trust store.
+
+```bash
+cd ansible && ansible-playbook playbooks/lab-infra.yml --limit bastion
+```
+
+**Manuel** (secours) — récupérer la CA puis installer pour `oc-mirror` / `curl` / `oc` :
 
 ```bash
 scp -o ProxyJump=root@192.168.1.147 bernard@172.16.10.20:/opt/registry/certs/ca.crt ~/lab/ca.crt
-```
+# ou depuis la bastion : scp bernard@172.16.10.20:/opt/registry/certs/ca.crt ~/lab/ca.crt
 
-Ou depuis la bastion (une fois sur vmbr1) :
-
-```bash
-scp bernard@172.16.10.20:/opt/registry/certs/ca.crt ~/lab/ca.crt
-```
-
-Installer la CA pour `oc-mirror`, `curl` et Podman :
-
-```bash
 sudo mkdir -p /etc/containers/certs.d/registry.lab.local:5000
 sudo cp ~/lab/ca.crt /etc/containers/certs.d/registry.lab.local:5000/ca.crt
-
 sudo cp ~/lab/ca.crt /etc/pki/ca-trust/source/anchors/registry-lab.crt
 sudo update-ca-trust
 
@@ -172,11 +184,11 @@ curl --cacert ~/lab/ca.crt https://registry.lab.local:5000/v2/_catalog
 
 | | |
 |---|---|
-| **Playbook** | `ansible/playbooks/bastion-ocp-install.yml` |
-| **Hôte** | `bastion` (+ CA lue sur `registry`) |
-| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass` |
-| **Couverture** | `~/lab/ca.crt`, trust registry pour `oc`, configs install — voir [docs/ansible-ocp-install.md](../docs/ansible-ocp-install.md) |
-| **Hors Ansible** | `scp` manuel ci-dessus si pas de playbook |
+| **Playbook** | `lab-infra.yml` (trust CA) ; `bastion-ocp-install.yml` (configs install + re-trust) |
+| **Hôte** | `bastion` (+ lecture CA sur `registry`) |
+| **Commande (Mac)** | `ansible-playbook playbooks/lab-infra.yml --limit bastion` |
+| **Couverture** | `~/lab/ca.crt`, `certs.d`, `update-ca-trust`, test catalog — [docs/ansible-manual-parity.md](../docs/ansible-manual-parity.md) |
+| **Hors Ansible** | `scp` manuel ci-dessus si playbook non utilisé |
 
 ## 7. Piste RC 5 (optionnel, répertoire séparé)
 
@@ -190,19 +202,7 @@ export PATH=~/ocp-5-rc/bin:$PATH
 
 ## 8. oc-mirror v2 (GA 4.22.12)
 
-Installer le plugin (une fois) :
-
-```bash
-export OCP_VERSION=4.22.12
-cd /tmp
-curl -LO https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/${OCP_VERSION}/oc-mirror.tar.gz
-tar xzf oc-mirror.tar.gz
-sudo mv oc-mirror /usr/local/bin/
-sudo chmod +x /usr/local/bin/oc-mirror
-oc-mirror --v2 --help
-```
-
-Procédure complète : [mirror/README.md](../mirror/README.md).
+Binaire installé avec la §4 (Ansible ou manuel). Procédure mirror : [mirror/README.md](../mirror/README.md).
 
 ## 9. Génération ISO agent
 
@@ -279,7 +279,7 @@ dig @172.16.10.11 registry.lab.local
 - [x] CA registry (`~/lab/ca.crt` + trust système)
 - [x] Pull secret (`~/lab/pull-secret.txt`)
 - [x] `oc-mirror` v2 → `registry.lab.local:5000/ocp4-422` (~22 Go)
-- [x] `nmstate`, `xorriso` installés
+- [x] `nmstate`, `xorriso`, `bind-utils` installés
 - [x] Install SNO GA 4.22.12 (validée + réinstall ~30 min)
 
 → Suite : opérateurs air-gap — [mirror](../mirror/README.md) ; VM SNO — [proxmox/sno-vm.md](../proxmox/sno-vm.md)

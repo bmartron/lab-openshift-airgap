@@ -55,7 +55,7 @@ Voir [rhel/dvd-repo.md](../rhel/dvd-repo.md) pour la procédure complète.
 Résumé :
 
 ```bash
-sudo mount /dev/sr0 /mnt/rhel
+sudo mount /dev/sr1 /mnt/rhel   # cloud-init = sr0 ; DVD ide2 = souvent sr1 — lsblk -f
 sudo cp rhel-dvd.repo /etc/yum.repos.d/rhel-dvd.repo   # depuis le repo git ou copier le .example
 # Désactiver plugin subscription-manager (voir rhel/dvd-repo.md)
 sudo dnf install -y dnsmasq bind-utils
@@ -67,7 +67,7 @@ sudo dnf install -y dnsmasq bind-utils
 |---|---|
 | **Playbook** | `ansible/playbooks/lab-infra.yml` |
 | **Hôte** | `dns` |
-| **Prérequis** | ISO RHEL complète sur la VM (`ide2` / `sr0`) ; inventaire + clé SSH — [ansible/README.md](../ansible/README.md) |
+| **Prérequis** | ISO RHEL complète (`ide2` / souvent `/dev/sr1`) ; inventaire + clé SSH — [ansible/README.md](../ansible/README.md) |
 | **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/lab-infra.yml --limit dns --ask-become-pass` |
 | **Couverture** | Rôle `rhel_dvd` (montage DVD, repo local, désactivation repos CDN) + paquets `dnsmasq` / `bind-utils` via `common`/`dns` |
 | **Hors Ansible** | Réseau statique §2 ; contenu `/etc/dnsmasq.conf` §4 |

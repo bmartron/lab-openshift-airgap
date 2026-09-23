@@ -1,0 +1,103 @@
+---
+# Double NIC :
+# - eth0 (vmbr0) : DNS + gateway Internet (maison)
+# - eth1 (vmbr1) : IP lab seule — pas de gateway (sinon default via 172.16.10.1 → pas d’Internet)
+# Noms *.lab.local : /etc/hosts — bastion/README.md §2
+
+- name: Connexion NetworkManager NIC admin
+  ansible.builtin.command:
+    cmd: nmcli -g GENERAL.CONNECTION device show {{ bastion_admin_nic }}
+  register: bastion_admin_nm_con
+  changed_when: false
+
+- name: Connexion NetworkManager NIC lab
+  ansible.builtin.command:
+    cmd: nmcli -g GENERAL.CONNECTION device show {{ bastion_lab_nic }}
+  register: bastion_lab_nm_con
+  changed_when: false
+
+- name: eth0 — DNS + gateway Internet
+  ansible.builtin.command:
+    cmd: >-
+      nmcli con mod "{{ bastion_admin_nm_con.stdout | trim }}"
+      ipv4.gateway "{{ bastion_admin_gateway }}"
+      ipv4.dns "{{ bastion_admin_dns }}"
+      ipv4.ignore-auto-dns yes
+      ipv4.route-metric 100
+      ipv4.dns-priority -100
+  register: bastion_admin_net_mod
+  changed_when: true
+
+- name: eth1 — lab sans gateway ni DNS
+  ansible.builtin.command:
+    cmd: >-
+      nmcli con mod "{{ bastion_lab_nm_con.stdout | trim }}"
+      ipv4.gateway ""
+      ipv4.never-default yes
+      ipv4.ignore-auto-dns yes
+      ipv4.dns ""
+      ipv4.route-metric 200
+      ipv4.dns-priority 100
+  register: bastion_lab_net_mod
+  changed_when: true
+
+- name: Réactiver NIC admin
+  ansible.builtin.command:
+    cmd: nmcli con up "{{ bastion_admin_nm_con.stdout | trim }}"
+
+- name: Réactiver NIC lab
+  ansible.builtin.command:
+    cmd: nmcli con up "{{ bastion_lab_nm_con.stdout | trim }}"
+
+- name: Vérifier default route via NIC admin
+  ansible.builtin.command:
+    cmd: ip -4 route show default
+  register: bastion_default_route
+  changed_when: false
+
+- name: Default route doit passer par {{ bastion_admin_gateway }}
+  ansible.builtin.assert:
+    that:
+      - bastion_admin_gateway in bastion_default_route.stdout
+      - bastion_admin_nic in bastion_default_route.stdout
+    fail_msg: >-
+      Route par défaut incorrecte : {{ bastion_default_route.stdout | trim }} —
+      attendu via {{ bastion_admin_gateway }} dev {{ bastion_admin_nic }}
+      (Terraform : gw sur ipconfig0, pas sur ipconfig1)
+    success_msg: "{{ bastion_default_route.stdout | trim }}"
+
+- name: Vérifier résolution Internet
+  ansible.builtin.command:
+    cmd: dig +short {{ bastion_dns_check_host }}
+  register: bastion_dns_check
+  changed_when: false
+  retries: 3
+  delay: 2
+  until: bastion_dns_check.stdout | length > 0
+
+- name: DNS Internet OK
+  ansible.builtin.assert:
+    that:
+      - bastion_dns_check.stdout | length > 0
+    fail_msg: >-
+      Impossible de résoudre {{ bastion_dns_check_host }} —
+      vérifier bastion_admin_dns ({{ bastion_admin_dns }})
+    success_msg: "{{ bastion_dns_check_host }} → {{ bastion_dns_check.stdout | trim }}"
+
+- name: Test curl HTTPS Internet ({{ bastion_internet_check_url }})
+  ansible.builtin.uri:
+    url: "{{ bastion_internet_check_url }}"
+    method: HEAD
+    status_code: [200, 301, 302, 403]
+    timeout: 30
+  register: bastion_internet_curl
+
+- name: Internet HTTPS OK
+  ansible.builtin.assert:
+    that:
+      - bastion_internet_curl.status is defined
+    fail_msg: >-
+      Pas d’accès Internet depuis la bastion ({{ bastion_internet_check_url }}).
+      Catalog registry OK ≠ Internet : le registry est sur 172.16.10.0/24 (eth1).
+      Vérifier gateway eth0={{ bastion_admin_gateway }}.
+    success_msg: "curl {{ bastion_internet_check_url }} → HTTP {{ bastion_internet_curl.status }}"

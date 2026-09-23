@@ -8,6 +8,97 @@
       makestep 1.0 3
   notify: restart chronyd
 
+# Bastion : pas de souscription → repo DVD (rhel_dvd avant ce rôle dans lab-infra.yml)
+- name: Paquets bastion (prérequis ISO / scripts)
+  ansible.builtin.dnf:
+    name: "{{ bastion_packages }}"
+    state: present
+  when: bastion_install_packages | bool
+
+# Noms lab avant le DNS maison (double NIC) — voir bastion/README.md §2
+- name: Entrées lab dans /etc/hosts
+  ansible.builtin.blockinfile:
+    path: /etc/hosts
+    marker: "# {mark} ANSIBLE MANAGED lab-airgap"
+    block: "{{ bastion_etc_hosts_entries }}"
+    create: false
+  when: bastion_manage_etc_hosts | bool
+
+# DNS + gateway Internet (eth0) — avant clients OCP / oc-mirror
+- name: Réseau admin (Internet)
+  ansible.builtin.include_tasks: dns_admin.yml
+  when: bastion_configure_admin_dns | bool
+
+# CA registry (slurp sur 172.16.10.20) → ~/lab + trust système + certs.d (oc-mirror)
+- name: Trust CA registry
+  when: bastion_configure_registry_trust | bool
+  block:
+    - name: Répertoire {{ bastion_lab_dir }}
+      ansible.builtin.file:
+        path: "{{ bastion_lab_dir }}"
+        state: directory
+        owner: "{{ lab_user }}"
+        group: "{{ lab_user }}"
+        mode: "0755"
+
+    - name: Lire ca.crt sur la VM registry
+      ansible.builtin.slurp:
+        src: "{{ registry_data_mount }}/certs/ca.crt"
+      delegate_to: registry
+      register: bastion_registry_ca_slurp
+
+    - name: ca.crt dans {{ bastion_lab_dir }}
+      ansible.builtin.copy:
+        content: "{{ bastion_registry_ca_slurp.content | b64decode }}\n"
+        dest: "{{ bastion_lab_dir }}/ca.crt"
+        owner: "{{ lab_user }}"
+        group: "{{ lab_user }}"
+        mode: "0644"
+
+    - name: Répertoire certs.d (oc-mirror / containers/image)
+      ansible.builtin.file:
+        path: "/etc/containers/certs.d/{{ registry_hostname }}:{{ registry_port }}"
+        state: directory
+        mode: "0755"
+
+    - name: CA dans certs.d
+      ansible.builtin.copy:
+        content: "{{ bastion_registry_ca_slurp.content | b64decode }}\n"
+        dest: "/etc/containers/certs.d/{{ registry_hostname }}:{{ registry_port }}/ca.crt"
+        mode: "0644"
+
+    - name: CA dans le trust store système
+      ansible.builtin.copy:
+        content: "{{ bastion_registry_ca_slurp.content | b64decode }}\n"
+        dest: /etc/pki/ca-trust/source/anchors/registry-lab.crt
+        mode: "0644"
+
+    - name: update-ca-trust
+      ansible.builtin.command: update-ca-trust extract
+      changed_when: true
+
+- name: Vérifier HTTPS registry (catalog)
+  when: bastion_verify_registry | bool
+  block:
+    - name: GET /v2/_catalog
+      ansible.builtin.uri:
+        url: "https://{{ registry_hostname }}:{{ registry_port }}/v2/_catalog"
+        ca_path: "{{ bastion_lab_dir }}/ca.crt"
+        return_content: true
+        status_code: 200
+      register: bastion_registry_catalog
+
+    - name: Catalog JSON valide
+      ansible.builtin.assert:
+        that:
+          - bastion_registry_catalog.json is defined
+          - bastion_registry_catalog.json.repositories is defined
+        fail_msg: >-
+          Registry injoignable ou TLS KO depuis la bastion —
+          https://{{ registry_hostname }}:{{ registry_port }}/v2/_catalog
+        success_msg: >-
+          Registry OK — repositories={{ bastion_registry_catalog.json.repositories }}
+
 - name: Répertoire lab scripts
   ansible.builtin.file:
     path: "{{ bastion_lab_dir }}/scripts"
@@ -25,8 +116,6 @@
     mode: "0755"
   when: bastion_install_startup_check | bool
 
-- name: Rappel outils OCP
-  ansible.builtin.debug:
-    msg: >-
-      Installer oc, openshift-install, oc-mirror manuellement ou rôle dédié —
-      voir bastion/README.md
+- name: Clients OCP (oc, openshift-install, oc-mirror)
+  ansible.builtin.include_tasks: clients.yml
+  when: bastion_install_ocp_clients | bool

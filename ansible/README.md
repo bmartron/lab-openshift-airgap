@@ -1,6 +1,6 @@
 # Ansible — configuration lab infra
 
-Configure **DNS**, **registry** (disque données + Podman), **bastion** (NTP client, script preflight).  
+Configure **DNS**, **registry** (disque + Podman), **bastion** (DVD repo, NTP, `/etc/hosts`, trust CA, paquets ISO, clients OCP, script preflight).  
 À lancer **depuis le Mac** (ProxyJump Proxmox) ou depuis la bastion pour les hôtes lab uniquement.
 
 > Chaque procédure manuelle des guides **dns**, **registry**, **bastion**, **rhel/dvd-repo**, **lab-power-cycle** indique le playbook équivalent (bloc *Équivalent Ansible*). Vue d’ensemble : [docs/ansible-manual-parity.md](../docs/ansible-manual-parity.md).
@@ -56,7 +56,7 @@ Sur une install RHEL standard, `bernard` est dans **wheel** mais sudo **demande 
 
 Option lab (sur la VM, une fois) : sudo sans mot de passe pour l’automation — `sudo visudo` → `bernard ALL=(ALL) NOPASSWD: ALL` (à n’utiliser que sur ce lab isolé).
 
-Le playbook : repo **DVD RHEL** (ISO Proxmox sur `sr0`) → NTP → disque `/opt/registry` → `podman`/`openssl` → certs → `podman load` → conteneur `oc-registry`.
+Le playbook : repo **DVD RHEL** (ISO Proxmox `ide2`, souvent `/dev/sr1`) → NTP → disque `/opt/registry` → `podman`/`openssl` → certs → `podman load` → conteneur `oc-registry`.
 
 Sans ISO attachée : `No package podman available` — voir [rhel/dvd-repo.md](../rhel/dvd-repo.md).
 
@@ -108,23 +108,21 @@ Défauts : [roles/ocp_bastion_install/defaults/main.yml](roles/ocp_bastion_insta
 ansible-playbook playbooks/lab-infra.yml --limit registry
 ```
 
-### DNF / `rhel10-baseos` (DNS ou registry, air-gap)
+### DNF / `rhel10-baseos` (dns, registry ou bastion, air-gap)
 
 Symptôme : échec sur le rôle **common**, tâche **Paquets de base** — `Failed to download metadata for repo 'rhel10-baseos'`.
 
-Cause : la VM sur `vmbr1` n’a pas Internet ; **common** lance `dnf` avant que le repo **DVD** (`file:///mnt/rhel/...`) soit monté et activé.
+Cause : sans souscription RH, **common** lance `dnf` avant que le repo **DVD** (`file:///mnt/rhel/...`) soit monté et activé.
 
 Actions :
 
-1. Proxmox : ISO RHEL 10 **complète** attachée sur la VM (CD/DVD `ide2`, ex. `sr0`) — [rhel/dvd-repo.md](../rhel/dvd-repo.md).
-2. Relancer le playbook (le rôle `rhel_dvd` est exécuté **avant** `common` pour `dns` et `registry` dans `lab-infra.yml` et `registry.yml`).
+1. Proxmox : ISO RHEL 10 **complète** en `ide2` (souvent `/dev/sr1` ; `/dev/sr0` = cloud-init cidata) — [rhel/dvd-repo.md](../rhel/dvd-repo.md) ; Terraform : `rhel_dvd_iso`.
+2. Relancer le playbook (`rhel_dvd` **avant** `common` pour **dns**, **registry** et **bastion** dans `lab-infra.yml`).
 
 ```bash
 cd ansible
-ansible-playbook playbooks/lab-infra.yml --limit dns --ask-become-pass
+ansible-playbook playbooks/lab-infra.yml --limit dns
 ```
-
-La bastion (play séparé dans `lab-infra.yml`) n’inclut pas `rhel_dvd` en tête de play : si elle est aussi sans repo, attacher l’ISO ou mettre `rhel_dvd_repo_enable: false` et configurer les repos manuellement.
 
 Check sans modifier :
 

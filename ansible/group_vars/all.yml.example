@@ -7,7 +7,7 @@ lab_ntp_server: 172.16.10.11
 # Repo DVD local (vm air-gap) — ISO RHEL complète attachée dans Proxmox (ide2)
 rhel_dvd_repo_enable: true
 rhel_dvd_mount: /mnt/rhel
-rhel_dvd_device: /dev/sr0
+rhel_dvd_device: /dev/sr1   # ide2 DVD ; sr0 = souvent cloud-init — rôle auto-détecte sinon
 
 dns_ip: 172.16.10.11
 registry_ip: 172.16.10.20
@@ -32,7 +32,7 @@ registry_recreate_container: false
 bastion_lab_dir: /home/bernard/lab
 bastion_install_startup_check: true
 
-ocp_sno_mac: "BC:24:11:XX:XX:XX"
+ocp_sno_mac: "BC:24:11:E1:8F:82"
 # platform-only | gitops | virtualization | lvms | odf | rook-ceph | virt-lvms
 ocp_imageset_profile: virt-lvms
 ocp_agent_generate_iso: false

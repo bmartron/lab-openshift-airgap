@@ -36,7 +36,9 @@ source versions.env
 
 ### Trust TLS registry (CA auto-signée)
 
-À faire une fois sur la bastion avant le mirror :
+**Ansible** : `lab-infra.yml --limit bastion` (déjà fait si infra rejouée).
+
+Manuel (secours) avant le mirror :
 
 ```bash
 sudo mkdir -p /etc/containers/certs.d/registry.lab.local:5000
@@ -153,8 +155,8 @@ Pour **kubevirt-hyperconverged**, `minVersion` / `maxVersion` = semver du **HEAD
 ### Vérification post-mirror
 
 ```bash
-curl -s --cacert ~/lab/ca.crt https://registry.lab.local:5000/v2/_catalog | jq '.repositories | length'
-# Attendu : 2 repos (release + release-images)
+curl -s --cacert ~/lab/ca.crt https://registry.lab.local:5000/v2/_catalog
+# Attendu : {"repositories":[...]} — compter : python3 -c "import json,sys; print(len(json.load(sys.stdin)['repositories']))"
 
 ls ~/lab/4.22-ga/workspace/working-dir/cluster-resources/
 # idms-oc-mirror.yaml  itms-oc-mirror.yaml  signature-configmap.*

@@ -2,11 +2,14 @@
 # Déploie install-config, agent-config, imageset, CA et pull-secret sur la bastion.
 # Lance depuis le Mac : cd ansible && ansible-playbook playbooks/bastion-ocp-install.yml
 #
-# Prérequis locaux (ansible/files/) :
-#   pull-secret.txt   — console.redhat.com
-#   install_ssh_key.pub — clé publique SSH pour core@SNO (souvent clé Mac)
+# Prérequis :
+#   - lab-infra.yml déjà OK (DVD, DNS/gw Internet eth0, clients oc/oc-mirror, /etc/hosts)
+#   - ansible/files/pull-secret.txt          — console.redhat.com
+#   - ansible/files/install_ssh_key.pub     — clé publique **bastion** (pas Mac)
+#     scp bernard@192.168.1.144:~/.ssh/id_ed25519.pub ansible/files/install_ssh_key.pub
+#   - ocp_sno_mac dans inventory/group_vars/all.yml (MAC Proxmox SNO)
 #
-# group_vars : ocp_sno_mac (MAC Proxmox VM SNO)
+# CA trust : rejoué ici (idempotent) ; déjà fait par lab-infra rôle bastion.
 
 - name: Lire CA TLS registry
   hosts: registry
@@ -26,10 +29,8 @@
   hosts: bastion
   gather_facts: false
   become: true
-  # Priorité sur inventory/group_vars — éditer souvent ansible/group_vars/all.yml
-  # Dernier fichier gagne — préférer inventory/group_vars pour ocp_sno_mac
+  # Un seul all.yml actif : inventory/group_vars (prioritaire). Éviter un second all.yml divergent.
   vars_files:
-    - "{{ playbook_dir }}/../group_vars/all.yml"
     - "{{ playbook_dir }}/../inventory/group_vars/all.yml"
   vars:
     ocp_pull_secret_path: "{{ playbook_dir }}/../files/pull-secret.txt"

@@ -1,0 +1,73 @@
+---
+# oc + kubectl + openshift-install + oc-mirror — Internet bastion (vmbr0)
+# Version : bastion_ocp_version (défaut = ocp_platform_version)
+
+- name: Binaires OCP présents
+  ansible.builtin.stat:
+    path: "/usr/local/bin/{{ item }}"
+  loop:
+    - oc
+    - openshift-install
+    - oc-mirror
+  register: bastion_ocp_bins
+
+- name: Version oc installée
+  ansible.builtin.command:
+    cmd: /usr/local/bin/oc version --client
+  register: bastion_oc_version_out
+  changed_when: false
+  failed_when: false
+  when: bastion_ocp_bins.results[0].stat.exists | default(false)
+
+- name: Clients OCP à (ré)installer
+  ansible.builtin.set_fact:
+    bastion_ocp_clients_needed: "{{ (not (bastion_ocp_bins.results[0].stat.exists | default(false))) or (not (bastion_ocp_bins.results[1].stat.exists | default(false))) or (not (bastion_ocp_bins.results[2].stat.exists | default(false))) or (bastion_ocp_version not in (bastion_oc_version_out.stdout | default(''))) }}"
+
+- name: Installer clients OCP {{ bastion_ocp_version }}
+  when: bastion_ocp_clients_needed | bool
+  block:
+    - name: Télécharger archives clients
+      ansible.builtin.get_url:
+        url: "{{ bastion_ocp_clients_baseurl }}/{{ bastion_ocp_version }}/{{ item }}"
+        dest: "/tmp/{{ item }}"
+        mode: "0644"
+      loop:
+        - "openshift-client-linux-{{ bastion_ocp_version }}.tar.gz"
+        - "openshift-install-linux-{{ bastion_ocp_version }}.tar.gz"
+        - oc-mirror.tar.gz
+
+    - name: Extraire oc et kubectl
+      ansible.builtin.command:
+        cmd: >-
+          tar xzf /tmp/openshift-client-linux-{{ bastion_ocp_version }}.tar.gz
+          -C /usr/local/bin oc kubectl
+
+    - name: Extraire openshift-install
+      ansible.builtin.command:
+        cmd: >-
+          tar xzf /tmp/openshift-install-linux-{{ bastion_ocp_version }}.tar.gz
+          -C /usr/local/bin openshift-install
+
+    - name: Extraire oc-mirror
+      ansible.builtin.command:
+        cmd: tar xzf /tmp/oc-mirror.tar.gz -C /tmp
+
+    - name: Installer oc-mirror dans /usr/local/bin
+      ansible.builtin.copy:
+        src: /tmp/oc-mirror
+        dest: /usr/local/bin/oc-mirror
+        remote_src: true
+        mode: "0755"
+
+- name: Vérifier oc
+  ansible.builtin.command:
+    cmd: /usr/local/bin/oc version --client
+  register: bastion_oc_check
+  changed_when: false
+
+- name: Version oc attendue
+  ansible.builtin.assert:
+    that:
+      - bastion_ocp_version in bastion_oc_check.stdout
+    fail_msg: "oc n'est pas en {{ bastion_ocp_version }} — {{ bastion_oc_check.stdout }}"
+    success_msg: "oc {{ bastion_ocp_version }} OK"
