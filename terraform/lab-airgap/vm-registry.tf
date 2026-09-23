@@ -22,6 +22,7 @@ resource "proxmox_vm_qemu" "registry" {
   boot    = var.registry_install_iso != "" ? "order=ide2;scsi0" : "order=virtio0"
 
   ciuser       = var.registry_install_iso != "" ? null : var.ssh_user
+  sshkeys      = var.registry_install_iso != "" || local.sshkeys == "" ? null : local.sshkeys
   nameserver   = var.registry_install_iso != "" ? null : var.lab_gateway
   searchdomain = var.registry_install_iso != "" ? null : "lab.local"
   ipconfig0    = var.registry_install_iso != "" ? null : "ip=${local.vms_registry.ip}/24,gw=${var.lab_gateway}"

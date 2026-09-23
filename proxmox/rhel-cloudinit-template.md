@@ -70,6 +70,7 @@ storage_perf  = "local-lvm"
 rhel_template        = "rhel10-tpl"
 rhel_template_infra  = "rhel10-nfs"
 registry_install_iso = ""
+# ssh_public_key_file = "/Users/VOUS/.ssh/id_ed25519.pub"  # SSH bernard@ depuis le Mac
 ```
 
 ```bash

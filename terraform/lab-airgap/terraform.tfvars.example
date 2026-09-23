@@ -25,3 +25,4 @@ admin_bridge     = "vmbr0"
 bastion_admin_ip = "192.168.1.144"
 
 ssh_user = "bernard"
+# ssh_public_key_file = "/Users/VOUS/.ssh/id_ed25519.pub"

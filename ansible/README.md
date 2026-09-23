@@ -160,14 +160,18 @@ ssh -o ProxyJump=root@192.168.1.147 bernard@172.16.10.20   # plus de password Pr
 ansible registry -m ping
 ```
 
-Si **`bernard@172.16.10.11` (ou `.20`) : Permission denied (publickey)`** : le jump Proxmox est OK, mais la clé SSH du **Mac** n’est pas dans `~bernard/.ssh/authorized_keys` sur la VM (la bastion en LAN a souvent déjà la clé ; DNS/registry sur `vmbr1` non).
+Si **`bernard@… : Permission denied (publickey)`** : la clé Mac doit être dans Terraform (`ssh_public_keys`) **avant** le clone, ou injectée une fois :
 
 ```bash
-ssh-copy-id -o ProxyJump=root@192.168.1.147 bernard@172.16.10.11
-ansible dns -m ping
+# Dans terraform.tfvars (puis apply — pris en compte aux *prochains* recreates) :
+# ssh_public_keys = file("/Users/…/.ssh/id_ed25519.pub")
+
+# Injection immédiate via Proxmox (VMs déjà up) — root@192.168.1.147 :
+# KEY=$(cat ~/.ssh/id_ed25519.pub)
+# qm guest exec <VMID> -- bash -lc "install -d -m 700 -o bernard -g bernard /home/bernard/.ssh && grep -qxF '$KEY' /home/bernard/.ssh/authorized_keys 2>/dev/null || echo '$KEY' >> /home/bernard/.ssh/authorized_keys && chown bernard:bernard /home/bernard/.ssh/authorized_keys && chmod 600 /home/bernard/.ssh/authorized_keys"
 ```
 
-(Même commande avec `172.16.10.20` pour le registry.)
+Sinon (si un mot de passe cloud-init existe) : `ssh-copy-id -o ProxyJump=root@192.168.1.147 bernard@172.16.10.11`
 
 **Autres options** : jump **bastion** (`hosts.yml.example` méthode B), `hosts.sshconfig.yml.example`, ou playbook depuis la bastion (`hosts.from-bastion.yml.example`).
 

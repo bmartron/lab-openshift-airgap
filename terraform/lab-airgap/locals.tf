@@ -3,6 +3,13 @@ locals {
   vm_bios    = "ovmf"
   vm_machine = "q35"
 
+  # Clés SSH cloud-init (tfvars ne peut pas appeler file())
+  sshkeys = trimspace(
+    var.ssh_public_keys != "" ? var.ssh_public_keys : (
+      var.ssh_public_key_file != "" ? file(pathexpand(var.ssh_public_key_file)) : ""
+    )
+  )
+
   vms_dns = {
     name    = "dns"
     ip      = var.dns_ip

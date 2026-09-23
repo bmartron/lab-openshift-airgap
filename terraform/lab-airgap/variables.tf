@@ -122,6 +122,18 @@ variable "ssh_user" {
   default = "bernard"
 }
 
+variable "ssh_public_keys" {
+  type        = string
+  default     = ""
+  description = "Clé(s) publique(s) en clair (une par ligne). Prioritaire sur ssh_public_key_file."
+}
+
+variable "ssh_public_key_file" {
+  type        = string
+  default     = ""
+  description = "Chemin vers un fichier .pub (ex. /Users/…/.ssh/id_ed25519.pub) — lu via file() dans locals"
+}
+
 # --- SNO agent-based (OpenShift 4.22 GA lab) ---
 
 variable "create_sno" {

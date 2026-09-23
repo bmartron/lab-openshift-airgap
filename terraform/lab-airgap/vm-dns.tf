@@ -23,6 +23,7 @@ resource "proxmox_vm_qemu" "dns" {
   boot    = "order=virtio0"
 
   ciuser       = var.ssh_user
+  sshkeys      = local.sshkeys != "" ? local.sshkeys : null
   nameserver   = var.lab_gateway
   searchdomain = "lab.local"
   ipconfig0    = "ip=${local.vms_dns.ip}/24,gw=${var.lab_gateway}"

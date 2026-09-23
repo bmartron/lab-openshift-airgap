@@ -23,6 +23,7 @@ resource "proxmox_vm_qemu" "bastion" {
   boot    = "order=virtio0"
 
   ciuser       = var.ssh_user
+  sshkeys      = local.sshkeys != "" ? local.sshkeys : null
   nameserver   = var.lab_gateway
   searchdomain = "lab.local"
   ipconfig0    = var.bastion_admin_ip != "" ? "ip=${var.bastion_admin_ip}/24" : "ip=dhcp"
