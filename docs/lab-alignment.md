@@ -22,7 +22,7 @@ Référence pour vérifier que dépôt, outils et infra correspondent. Dernière
 | Mirror namespace | `ocp4-422` |
 | SNO IP | `172.16.10.100` |
 | Binaires bastion | `oc`, `openshift-install`, **`oc-mirror`** (binaire séparé, pas `oc mirror`) |
-| Mirror pull auth | **`--authfile ~/lab/pull-secret.txt`** + `--dest-tls-verify=false` si CA lab |
+| Mirror pull auth | **`--authfile ~/lab/pull-secret-oc-mirror.txt`** ; TLS registry via CA lab (`certs.d` / `update-ca-trust`) |
 | ImageSet | `apiVersion: mirror.openshift.io/v1alpha2` — **GitOps épinglé** (channel + min/max) |
 | Delete GitOps | [mirror/delete-openshift-gitops.yaml.example](../mirror/delete-openshift-gitops.yaml.example) |
 | Imageset Virtualization | [mirror/imageset-config-4.22-virtualization.yaml.example](../mirror/imageset-config-4.22-virtualization.yaml.example) |

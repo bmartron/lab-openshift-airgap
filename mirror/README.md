@@ -110,7 +110,7 @@ cp ~/Projet-Airgap-deploy/mirror/imageset-config-4.22.yaml.example imageset-conf
 oc-mirror -c imageset-config.yaml \
   --workspace file://$HOME/lab/4.22-ga/workspace \
   docker://registry.lab.local:5000/ocp4-422 \
-  --authfile ~/lab/pull-secret-oc-mirror.txt --dest-tls-verify=false --v2
+  --authfile ~/lab/pull-secret-oc-mirror.txt --v2
 ```
 
 Durée observée en lab : **~7 min** (plateforme seule, une version 4.22.12).
@@ -231,13 +231,13 @@ oc-mirror delete -c delete-gitops.yaml \
   --workspace file://$HOME/lab/4.22-ga/workspace-operators \
   --generate --delete-id gitops-full \
   docker://registry.lab.local:5000/ocp4-422 \
-  --authfile ~/lab/pull-secret-oc-mirror.txt --dest-tls-verify=false --v2
+  --authfile ~/lab/pull-secret-oc-mirror.txt --v2
 
 # Phase delete 2 — exécution (irréversible sur la registry)
 oc-mirror delete \
   --delete-yaml-file $HOME/lab/4.22-ga/workspace-operators/working-dir/delete/delete-images-gitops-full.yaml \
   docker://registry.lab.local:5000/ocp4-422 \
-  --authfile ~/lab/pull-secret-oc-mirror.txt --dest-tls-verify=false --v2
+  --authfile ~/lab/pull-secret-oc-mirror.txt --v2
 ```
 
 > Le chemin exact de `delete-images-*.yaml` est affiché en fin de phase `--generate`. Adapter si le nom diffère.
@@ -256,7 +256,7 @@ sudo podman exec ocp-registry registry garbage-collect /etc/docker/registry/conf
 oc-mirror -c imageset-config.yaml \
   --workspace file://$HOME/lab/4.22-ga/workspace-operators \
   docker://registry.lab.local:5000/ocp4-422 \
-  --authfile ~/lab/pull-secret-oc-mirror.txt --dest-tls-verify=false --v2
+  --authfile ~/lab/pull-secret-oc-mirror.txt --v2
 ```
 
 6. Si le cluster avait déjà des **IDMS/ITMS** opérateurs appliqués : `oc apply -f workspace-operators/.../cluster-resources/` après le nouveau mirror.
