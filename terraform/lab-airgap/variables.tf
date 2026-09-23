@@ -28,19 +28,13 @@ variable "proxmox_node" {
 variable "storage_infra" {
   type        = string
   default     = "nfs_vm"
-  description = "Disques OS dns + bastion (NAS). Cloud-init reste sur storage_cloudinit (LVM)."
+  description = "OS + EFI + cloud-init dns/bastion (même datastore que rhel10-nfs)"
 }
 
 variable "storage_perf" {
   type        = string
   default     = "local-lvm"
-  description = "Disques registry + SNO (SSD local) — mirror / etcd"
-}
-
-variable "storage_cloudinit" {
-  type        = string
-  default     = "local-lvm"
-  description = "Drive cloud-init (LVM) — pas nfs_vm (telmate: unable to parse directory volume name)"
+  description = "OS + EFI + cloud-init + données registry/SNO (même datastore que rhel10-tpl)"
 }
 
 variable "rhel_template" {

@@ -13,11 +13,12 @@ OpenShift / Proxmox manuel (SNO agent, etc.) : hors Terraform — [proxmox/sno-v
 
 | ID Proxmox | Rôle | Chemin monté sur `pve` | Usage Terraform |
 |------------|------|-------------------------|-----------------|
-| **`local-lvm`** | Disques **registry + SNO** + cloud-init + template `rhel10-tpl` | LVM thin local | `storage_perf` / `storage_cloudinit` |
-| **`nfs_vm`** | Disques **dns + bastion** + template `rhel10-nfs` | `/mnt/pve/nfs_vm/` | `storage_infra = "nfs_vm"` |
+| **`local-lvm`** | Disques **registry + SNO** + template `rhel10-tpl` | LVM thin local | `storage_perf` |
+| **`nfs_vm`** | Disques **dns + bastion** + template `rhel10-nfs` | `/mnt/pve/nfs_vm/` | `storage_infra` |
 | **`nfs_iso`** | Images ISO | `/mnt/pve/nfs_iso/template/iso/` | `nfs_iso:iso/fichier.iso` |
 
 Format Proxmox : **`nfs_iso:iso/nom.iso`** (ISO) ; disques via `storage_infra` / `storage_perf`.  
+Cloud-init : **même datastore que l’OS** (pas de 3ᵉ variable).  
 Templates RHEL : [proxmox/rhel-cloudinit-template.md](../proxmox/rhel-cloudinit-template.md) (**deux** templates — EFI + mix NFS/SSD).
 
 Vérifier sur **pve** :

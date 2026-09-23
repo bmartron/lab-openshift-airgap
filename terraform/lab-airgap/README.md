@@ -23,9 +23,8 @@ SNO / Assisted restent en **SCSI** (`/dev/sda`).
 
 | Variable | Datastore | Usage |
 |----------|-----------|--------|
-| **`storage_infra`** | **`nfs_vm`** | OS + EFI **dns**, **bastion** (template `rhel10-nfs`) |
-| **`storage_perf`** | **`local-lvm`** | **registry**, **SNO** (template `rhel10-tpl` pour registry) |
-| **`storage_cloudinit`** | **`local-lvm`** | Drive cloud-init `ide0` |
+| **`storage_infra`** | **`nfs_vm`** | OS + EFI + cloud-init **dns**, **bastion** (`rhel10-nfs`) |
+| **`storage_perf`** | **`local-lvm`** | OS + EFI + cloud-init + données **registry** / **SNO** (`rhel10-tpl`) |
 | ISO | **`nfs_iso:iso/...`** | CD-ROM |
 
 ## Exemples tfvars

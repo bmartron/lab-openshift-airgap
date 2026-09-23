@@ -64,12 +64,11 @@ qm config "$NEXT" | egrep '^(name|efidisk|virtio)'
 ## 6. Terraform
 
 ```hcl
-storage_infra     = "nfs_vm"
-storage_perf      = "local-lvm"
-storage_cloudinit = "local-lvm"
+storage_infra = "nfs_vm"
+storage_perf  = "local-lvm"
 
-rhel_template       = "rhel10-tpl"
-rhel_template_infra = "rhel10-nfs"
+rhel_template        = "rhel10-tpl"
+rhel_template_infra  = "rhel10-nfs"
 registry_install_iso = ""
 ```
 
@@ -78,17 +77,18 @@ cd terraform/lab-airgap
 terraform plan && terraform apply
 ```
 
-| VM | Template | OS + EFI | Extra |
-|----|----------|----------|-------|
+| VM | Template | OS + EFI + cloud-init | Extra |
+|----|----------|----------------------|-------|
 | dns | `rhel10-nfs` | `nfs_vm` | — |
 | bastion | `rhel10-nfs` | `nfs_vm` | resize possible (lent sur NFS) |
 | registry | `rhel10-tpl` | `local-lvm` | **virtio1** 120 Go → `/dev/vdb` |
 | SNO | — (RHCOS) | `local-lvm` | scsi0 + scsi1 LVMS + ISO agent |
 
-Cloud-init : **`ide0`** sur **`local-lvm`** (`storage_cloudinit`) — pas sur `nfs_vm` (Telmate 3.0.2).
+Règle : **cloud-init sur le même datastore que l’OS** (validé aussi sur `nfs_vm` une fois les templates duals en place).
 
 ## Notes
 
 - Ne **pas** convertir la registry en template (elle a `virtio1` données).
 - Après clone, cloud-init applique `ipconfig0` / `ipconfig1`.
 - Guest agent : souvent OK **sans** Serial Port VirtIO sur RHEL 10 + Proxmox récents.
+- En dépannage : après plusieurs changements d’un coup, **revenir en arrière** sur ce qui n’était pas nécessaire une fois le vrai fix identifié (ex. forcer cloud-init en LVM n’était plus requis).

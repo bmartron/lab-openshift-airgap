@@ -40,7 +40,7 @@ resource "proxmox_vm_qemu" "bastion" {
   disk {
     slot    = "ide0"
     type    = "cloudinit"
-    storage = var.storage_cloudinit
+    storage = var.storage_infra # même datastore que l’OS (nfs_vm)
   }
 
   network {

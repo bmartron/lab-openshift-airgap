@@ -11,9 +11,9 @@ proxmox_tls_insecure     = true
 proxmox_node = "pve"
 
 # Mix : dns/bastion → nfs_vm (template rhel10-nfs) ; registry/SNO → local-lvm (rhel10-tpl)
-storage_infra     = "nfs_vm"
-storage_perf      = "local-lvm"
-storage_cloudinit = "local-lvm"
+# Cloud-init = même datastore que l’OS (pas de variable séparée)
+storage_infra = "nfs_vm"
+storage_perf  = "local-lvm"
 
 create_dns      = true
 create_bastion  = true

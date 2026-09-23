@@ -64,7 +64,7 @@ resource "proxmox_vm_qemu" "registry" {
     content {
       slot    = "ide0"
       type    = "cloudinit"
-      storage = var.storage_cloudinit
+      storage = var.storage_perf # même datastore que l’OS (local-lvm)
     }
   }
 

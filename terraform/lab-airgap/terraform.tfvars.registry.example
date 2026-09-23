@@ -8,9 +8,8 @@ proxmox_tls_insecure     = true
 
 proxmox_node = "pve"
 
-storage_infra     = "nfs_vm"      # inutilisé si create_dns/bastion = false
-storage_perf      = "local-lvm"
-storage_cloudinit = "local-lvm"
+storage_infra = "nfs_vm"      # inutilisé si create_dns/bastion = false
+storage_perf  = "local-lvm"   # registry OS + cloud-init + virtio1
 
 create_dns      = false
 create_bastion  = false
