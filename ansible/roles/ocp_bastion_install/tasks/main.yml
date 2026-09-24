@@ -206,12 +206,39 @@
   register: ocp_agent_iso_stat
   when: ocp_push_iso_to_proxmox | bool
 
+- name: Read bastion pubkey for Proxmox authorize
+  when:
+    - ocp_push_iso_to_proxmox | bool
+    - ocp_agent_iso_stat.stat.exists | default(false)
+  ansible.builtin.slurp:
+    src: "/home/{{ lab_user }}/.ssh/id_ed25519.pub"
+  register: ocp_bastion_pubkey_slurp
+
+- name: Authorize bastion key on Proxmox (ISO scp)
+  when:
+    - ocp_push_iso_to_proxmox | bool
+    - ocp_agent_iso_stat.stat.exists | default(false)
+  ansible.builtin.shell: |
+    set -euo pipefail
+    KEY={{ ocp_bastion_pubkey_slurp.content | b64decode | trim | quote }}
+    ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new \
+      "root@{{ ocp_proxmox_host }}" \
+      "umask 077; mkdir -p /root/.ssh; touch /root/.ssh/authorized_keys;
+       grep -qxF \"${KEY}\" /root/.ssh/authorized_keys || echo \"${KEY}\" >> /root/.ssh/authorized_keys"
+  args:
+    executable: /bin/bash
+  delegate_to: localhost
+  become: false
+  changed_when: false
+
 - name: Copier agent ISO vers NFS Proxmox
   become: true
   become_user: "{{ lab_user }}"
   ansible.builtin.command:
     argv:
       - scp
+      - -o
+      - BatchMode=yes
       - -o
       - StrictHostKeyChecking=accept-new
       - "{{ ocp_install_dir }}/{{ ocp_proxmox_iso_filename }}"

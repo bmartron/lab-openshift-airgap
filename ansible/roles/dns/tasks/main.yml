@@ -49,7 +49,7 @@
     state: directory
     mode: "0755"
 
-- name: dnsmasq après réseau (évite race au boot)
+- name: dnsmasq after network (avoid boot race)
   ansible.builtin.copy:
     dest: /etc/systemd/system/dnsmasq.service.d/after-network.conf
     mode: "0644"
@@ -65,15 +65,18 @@
     - reload systemd
     - restart dnsmasq
 
-- name: dnsmasq démarré
+- name: Deploy /etc/dnsmasq.conf (lab records)
+  when: dns_deploy_dnsmasq_conf | default(true) | bool
+  ansible.builtin.template:
+    src: dnsmasq.conf.j2
+    dest: /etc/dnsmasq.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart dnsmasq
+
+- name: dnsmasq started and enabled
   ansible.builtin.service:
     name: dnsmasq
     state: started
     enabled: true
-
-# dnsmasq.conf : déployer depuis le dépôt ou templater — voir dns/dnsmasq.conf.example
-- name: Rappel configuration dnsmasq
-  ansible.builtin.debug:
-    msg: >-
-      Déployer dnsmasq.conf (listen-address={{ dns_ip }}) depuis
-      dns/dnsmasq.conf.example — pas de template complet dans ce rôle pour éviter la dérive.

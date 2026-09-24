@@ -23,6 +23,10 @@ bastion_packages:
   - xorriso      # openshift-install agent create image
   - bind-utils   # dig — lab-startup-check.sh / verify-mirror-before-sno.sh
 
+# Bastion → root@Proxmox (agent ISO scp). Mac controller must already SSH root@pve (ProxyJump).
+bastion_authorize_proxmox_ssh: true
+bastion_proxmox_host: 192.168.1.147
+
 # Entrées /etc/hosts (avant DNS maison) — noms lab + VIP SNO
 bastion_etc_hosts_entries: |
   {{ dns_ip }}  dns.lab.local dns

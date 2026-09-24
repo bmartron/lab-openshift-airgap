@@ -114,7 +114,13 @@ variable "registry_ip" {
 variable "sno_ip" {
   type        = string
   default     = "172.16.10.100"
-  description = "IP lab SNO (documentation / outputs — pas appliquée par Terraform sur RHCOS)"
+  description = "Lab SNO IP (docs / outputs — not applied by Terraform on RHCOS)"
+}
+
+variable "sno_mac" {
+  type        = string
+  default     = "BC:24:11:E1:8F:82"
+  description = "Fixed VirtIO NIC MAC — must match Ansible ocp_sno_mac / agent-config"
 }
 
 variable "bastion_admin_ip" {
@@ -179,7 +185,7 @@ variable "sno_install_disk_gb" {
 variable "sno_lvms_disk_gb" {
   type        = number
   default     = 100
-  description = "2e disque scsi1 pour LVMS (/dev/sdb) — 0 pour désactiver"
+  description = "2nd VirtIO disk virtio1 for LVMS (/dev/vdb) — 0 to disable"
 }
 
 variable "sno_cpu_cores" {

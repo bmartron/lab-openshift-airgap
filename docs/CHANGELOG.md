@@ -87,6 +87,6 @@
 
 ### Ajouté (install SNO validée + réinstall)
 - Install GA 4.22.12 SNO air-gap validée en lab (~30 min avec mirror existant)
-- [proxmox/sno-vm.md](../proxmox/sno-vm.md) — detach disque, **Unused Disk**, réinstall sans recréer la VM
+- SNO VM notes (`proxmox/sno-vm.md`) removed — use Terraform `vm-sno.tf` + [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md)
 - [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) — post-install (`oc login`, OAuth `/etc/hosts`), faux timeout `wait-for`, réinstall
 - Bastion `/etc/hosts` : `oauth-openshift` et `console-openshift-console`

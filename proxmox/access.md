@@ -194,9 +194,9 @@ ssh core@172.16.10.100
 
 **Mac** : `ssh bernard@192.168.1.144` puis les commandes ci-dessus (pas de `ssh core` direct depuis le Mac).
 
-Détail : [sno-vm.md](sno-vm.md) § SSH SNO après réinstall.
+Detail: [docs/sno-ssh-convention.md](../docs/sno-ssh-convention.md).
 
-VM SNO (disque, réinstall) : [sno-vm.md](sno-vm.md).
+SNO VM (Terraform): [terraform/lab-airgap/vm-sno.tf](../terraform/lab-airgap/vm-sno.tf) · install: [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md).
 
 Templates RHEL (dns / bastion / registry) : [rhel-cloudinit-template.md](rhel-cloudinit-template.md).
 

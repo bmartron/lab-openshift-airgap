@@ -90,12 +90,11 @@ Connected Assisted (OCP 5): separate Terraform stack — `ocp-bma-ai-0..2` on `v
 3. Build RHEL cloud-init templates — [proxmox/rhel-cloudinit-template.md](proxmox/rhel-cloudinit-template.md)
 4. **Terraform** VMs — [terraform/lab-airgap/](terraform/lab-airgap/)
 5. **Ansible** infra — `ansible-playbook playbooks/lab-infra.yml` ([ansible/README.md](ansible/README.md))
-6. **Ansible** OCP configs + pull-secret — `playbooks/bastion-ocp-install.yml` ([docs/ansible-ocp-install.md](docs/ansible-ocp-install.md))
-7. Mirror images on bastion — [mirror/README.md](mirror/README.md)
-8. Agent ISO + install — [openshift/4.22-ga/README.md](openshift/4.22-ga/README.md)
-9. SNO VM notes — [proxmox/sno-vm.md](proxmox/sno-vm.md)
-10. Daily power cycle — [docs/lab-power-cycle.md](docs/lab-power-cycle.md)
-11. SSH to SNO (`core@`) **from bastion only** — [docs/sno-ssh-convention.md](docs/sno-ssh-convention.md)
+6. **Ansible** OCP configs + agent ISO + upload — `bastion-ocp-install.yml` with `ocp_agent_generate_iso` / `ocp_push_iso_to_proxmox` ([docs/ansible-ocp-install.md](docs/ansible-ocp-install.md))
+7. Mirror images on bastion — [mirror/README.md](mirror/README.md) (**before** booting SNO)
+8. Boot SNO + wait — [openshift/4.22-ga/README.md](openshift/4.22-ga/README.md)
+9. Daily power cycle — [docs/lab-power-cycle.md](docs/lab-power-cycle.md)
+10. SSH to SNO (`core@`) **from bastion only** — [docs/sno-ssh-convention.md](docs/sno-ssh-convention.md)
 
 ### Connected Assisted (OCP 5, 3 nodes)
 

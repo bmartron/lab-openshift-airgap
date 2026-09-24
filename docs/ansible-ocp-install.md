@@ -9,10 +9,10 @@ Deploys install YAML on the **bastion** (`192.168.1.144`): no manual editing of 
 
 | Situation | Action |
 |-----------|--------|
-| After `lab-infra` + before / after mirror | `bastion-ocp-install.yml` |
-| New SNO install / ISO regenerate | then `openshift-install agent create image` |
-| Registry reinstalled (new CA) | Re-run (CA read from `172.16.10.20`) + regenerate ISO |
-| SNO MAC, IP, or imageset change | Edit `inventory/group_vars/all.yml` + re-run |
+| After `lab-infra`, **before** mirror | `bastion-ocp-install.yml` with `ocp_agent_generate_iso` + `ocp_push_iso_to_proxmox` (preferred) |
+| Mirror OCP images | `oc-mirror` on bastion — [mirror/README.md](../mirror/README.md) — **then** boot SNO |
+| Registry reinstalled (new CA) | Re-run playbook + regenerate ISO |
+| SNO MAC, IP, or imageset change | Edit `inventory/group_vars/all.yml` + re-run (+ new ISO) |
 | Bastion **recreated** (Terraform) | Resync `install_ssh_key.pub` from the new bastion |
 
 ## Prerequisites (Mac)
@@ -111,9 +111,9 @@ ocp_push_iso_to_proxmox: true
 # optional: ocp_proxmox_host, ocp_proxmox_iso_dir (defaults = lab NUC)
 ```
 
-Prerequisite: **`bernard@bastion`** can `scp` to **`root@192.168.1.147`** (`ssh-copy-id root@192.168.1.147` from bastion).
+Prerequisite: the **Mac** can `ssh root@192.168.1.147` (ProxyJump). Ansible installs the **bastion** pubkey into Proxmox `authorized_keys` (via `lab-infra` / before ISO push) — no manual `ssh-copy-id` from bastion.
 
-Re-run: `ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass`
+Re-run: `ansible-playbook playbooks/bastion-ocp-install.yml`
 
 **Manual** on bastion:
 
@@ -122,9 +122,9 @@ scp ~/lab/4.22-ga/agent.x86_64.iso \
   root@192.168.1.147:/mnt/pve/nfs_iso/template/iso/
 ```
 
-In Proxmox UI: datastore **`nfs_iso`** → ISO **`agent.x86_64.iso`** → attach as **ide2** on the SNO VM. See [proxmox/sno-vm.md](../proxmox/sno-vm.md).
+In Proxmox UI: datastore **`nfs_iso`** → ISO **`agent.x86_64.iso`** → attach as **ide2** on the SNO VM (or rely on Terraform `sno_agent_iso`).
 
-Then attach and boot — [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md).
+Then boot — [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md).
 
 ## Troubleshooting
 

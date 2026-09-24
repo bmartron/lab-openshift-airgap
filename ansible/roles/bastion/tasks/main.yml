@@ -119,3 +119,7 @@
 - name: Clients OCP (oc, openshift-install, oc-mirror)
   ansible.builtin.include_tasks: clients.yml
   when: bastion_install_ocp_clients | bool
+
+- name: Bastion SSH key → Proxmox root (ISO scp)
+  ansible.builtin.include_tasks: proxmox_ssh.yml
+  when: bastion_authorize_proxmox_ssh | default(true) | bool

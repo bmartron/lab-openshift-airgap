@@ -1,164 +1,140 @@
-# OpenShift 4.22 GA — installation agent-based (air-gap)
+# OpenShift 4.22 GA — agent-based air-gap (SNO)
 
-| Paramètre | Valeur |
+| Parameter | Value |
 |-----------|--------|
-| Version | **4.22.12** (z-stream GA — vérifier la dernière sur console.redhat.com) |
-| Kubernetes | 1.35 |
+| Version | **4.22.12** |
 | Cluster name | `ocp422` |
-| Base domain | `lab.local` |
-| FQDN API | `api.ocp422.lab.local` |
+| Base domain | `lab.local` → API `api.ocp422.lab.local` |
 | SNO IP | `172.16.10.100` |
-| Mirror registry | `registry.lab.local:5000/ocp4-422` |
+| Mirror | `registry.lab.local:5000/ocp4-422` |
 
-> **Important** : `baseDomain` = `lab.local` + `metadata.name` = `ocp422` → API sur `api.ocp422.lab.local`.  
-> Ne pas mettre `baseDomain: ocp422.lab.local` (double sous-domaine).
+**Do not** set `baseDomain: ocp422.lab.local` (double subdomain → `api.ocp422.ocp422.lab.local`).
 
-## DNS requis
+## Recommended order
 
-```
-api.ocp422.lab.local        → 172.16.10.100
-api-int.ocp422.lab.local    → 172.16.10.100
-*.apps.ocp422.lab.local     → 172.16.10.100
-```
+1. Terraform + `lab-infra.yml`
+2. **`bastion-ocp-install.yml`** with ISO generate + upload to Proxmox (configs do not need the mirror yet)
+3. **`oc-mirror`** — [mirror/README.md](../../mirror/README.md)
+4. Verify mirror, **then** boot the SNO (this doc from §3)
 
-## VM SNO (Proxmox)
+Do **not** start the SNO until the mirror is OK — the ISO only embeds URLs/CA; image blobs come from `oc-mirror`.
 
-| Paramètre | Valeur recommandée |
-|-----------|-------------------|
-| Disque install | 120 Go, bus **SCSI** → `/dev/sda` dans `rootDeviceHints` |
-| NIC | `vmbr1`, VirtIO, MAC notée pour `agent-config.yaml` |
-| Boot | ISO agent `agent.x86_64.iso` |
+Install YAML on bastion: `~/lab/4.22-ga/config-backup/`. Prefer Ansible over hand-editing `.example` files.
 
-Avant chaque nouvelle tentative : **effacer le disque** — voir [proxmox/sno-vm.md](../../proxmox/sno-vm.md).
+## 1. Agent ISO via Ansible (preferred)
 
-## Prérequis bastion
-
-```bash
-sudo dnf install -y nmstate xorriso bind-utils
-nmstatectl --version
-which xorriso
-```
-
-| Prérequis | Détail |
-|-----------|--------|
-| `nmstate` | Requis pour valider `networkConfig` dans `agent-config.yaml` |
-| `xorriso` | Requis pour `openshift-install agent create image` (RHEL 10 : pas de `genisoimage`) |
-| `bind-utils` | `dig` — scripts lab (`lab-startup-check.sh`) |
-| `oc-mirror` v2 | Plugin séparé — voir [mirror/README.md](../../mirror/README.md) |
-| `agent-config.yaml` | **`apiVersion: v1beta1`** (pas `v1`) |
-| NTP | `additionalNTPSources` dans **agent-config** (pas dans install-config) |
-| CA registry | `additionalTrustBundle` dans install-config |
-
-Chemins mirror oc-mirror v2 dans `install-config.yaml` — vérifier contre `workspace/working-dir/cluster-resources/itms-oc-mirror.yaml` :
+**Mac** — in `ansible/inventory/group_vars/all.yml`:
 
 ```yaml
-imageContentSources:
-- source: quay.io/openshift-release-dev/ocp-release
-  mirrors:
-  - registry.lab.local:5000/ocp4-422/openshift/release-images
-- source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
-  mirrors:
-  - registry.lab.local:5000/ocp4-422/openshift/release
+ocp_agent_generate_iso: true
+ocp_push_iso_to_proxmox: true
 ```
 
-## Disque d'installation (`rootDeviceHints`)
-
-Identifier le disque sur le SNO (phase live ISO, SSH `core@172.16.10.100`) :
+Prerequisite for push: Mac can SSH `root@192.168.1.147`. Ansible places the bastion pubkey on Proxmox (`lab-infra` role bastion / before ISO scp).
 
 ```bash
-lsblk -o NAME,SIZE,TYPE,MODEL,TRAN
+cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/ansible
+ansible-playbook playbooks/bastion-ocp-install.yml
 ```
 
-| Bus Proxmox | Device Linux typique |
-|-------------|---------------------|
-| SCSI (`drive-scsi0`) | `/dev/sda` |
-| VirtIO Block | `/dev/vda` |
-| SATA | `/dev/sda` |
+Details: [docs/ansible-ocp-install.md](../../docs/ansible-ocp-install.md).
 
-Mettre à jour `agent-config.yaml` :
+### Fallback — ISO by hand on bastion
 
-```yaml
-rootDeviceHints:
-  deviceName: /dev/sda
-```
-
-> Chemins `/dev/disk/by-id/...` **non acceptés** — seulement `/dev/*` ou `/dev/disk/by-path/*`.
-
-Symptôme si mauvais disque : `failed to set installation disk path </dev/not-found-by-hints>` dans `journalctl -u assisted-service`.
-
-## Workflow Ansible (recommandé)
-
-Depuis le **Mac** : configs générées sans éditer le YAML à la main — [ansible/README.md](../../ansible/README.md) § *Install OCP sur la bastion*.
-
-Prérequis : `ansible/files/pull-secret.txt`, `ansible/files/install_ssh_key.pub`, `ocp_sno_mac` dans `group_vars/all.yml`.
+Only if the flags above were `false`. `create image` **deletes** work-dir YAML — restore from `config-backup/`:
 
 ```bash
-cd ansible
-ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass
-```
-
-Puis ISO sur la bastion (ou `ocp_agent_generate_iso: true`).
-
-## Workflow manuel
-
-```bash
-mkdir -p ~/lab/4.22-ga/config-backup
 cd ~/lab/4.22-ga
-
-# 1. Créer / éditer install-config.yaml et agent-config.yaml (MAC, IP, /dev/sda)
-# 2. Sauvegarder AVANT génération ISO — openshift-install supprime les configs après create image
-cp install-config.yaml agent-config.yaml config-backup/
+cp config-backup/install-config.yaml config-backup/agent-config.yaml .
+rm -f .openshift_install_state.json agent.x86_64.iso
 
 openshift-install agent create cluster-manifests --dir .
 openshift-install agent create image --dir . --log-level info
 
-# 3. Restaurer les configs pour regénérer l'ISO ou relancer wait-for
 cp config-backup/install-config.yaml config-backup/agent-config.yaml .
-
-# Bastion → NFS ISO Proxmox (lab NUC) :
-# scp ~/lab/4.22-ga/agent.x86_64.iso root@192.168.1.147:/mnt/pve/nfs_iso/template/iso/
-# Puis boot VM SNO (ide2, datastore nfs_iso)
-openshift-install agent wait-for install-complete --dir . --log-level debug
+scp ~/lab/4.22-ga/agent.x86_64.iso \
+  root@192.168.1.147:/mnt/pve/nfs_iso/template/iso/
 ```
 
-> **Comportement normal** : `openshift-install agent create image` intègre les secrets dans l'ISO puis **supprime** `install-config.yaml` et `agent-config.yaml` du répertoire. Conserver une copie dans `config-backup/` (non versionné).
+## 2. Mirror (after ISO is ready)
 
-### Régénération ISO (dépannage)
-
-Si `create image` échoue avec *Reusing previously-fetched Agent Installer ISO* sans détail :
+On bastion — [mirror/README.md](../../mirror/README.md). Then:
 
 ```bash
-rm -f .openshift_install_state.json agent.x86_64.iso
+~/lab/scripts/verify-mirror-before-sno.sh ~/lab/4.22-ga
+~/lab/scripts/lab-startup-check.sh
+```
+
+Fix any `[FAIL]` before booting.
+
+## 3. Create / boot SNO (Proxmox)
+
+**Host:** Mac — Terraform; then Proxmox UI / console if needed.
+
+| Setting | Value |
+|---------|--------|
+| Disk | 120 GiB **VirtIO** → `/dev/vda` in agent-config |
+| NIC | `vmbr1`, VirtIO — MAC **`BC:24:11:E1:8F:82`** (`sno_mac` / `ocp_sno_mac`) |
+| CD-ROM | `nfs_iso` → `agent.x86_64.iso` on **ide2** |
+| LVMS (optional) | 2nd VirtIO disk → `/dev/vdb` |
+
+In `terraform/lab-airgap/terraform.tfvars`: `create_sno = true`.
+
+Create / apply:
+
+```bash
+cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/terraform/lab-airgap
+terraform apply -target='proxmox_vm_qemu.sno[0]' -auto-approve
+```
+
+Retry (recreate VM):
+
+```bash
+cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/terraform/lab-airgap
+terraform apply -replace='proxmox_vm_qemu.sno[0]' -auto-approve
+```
+
+Also documented in [terraform/lab-airgap/README.md](../../terraform/lab-airgap/README.md).
+
+## 4. Wait for install
+
+**Host:** bastion — `bernard@192.168.1.144`
+
+Restore configs and refresh manifests first (avoids `panic: AgentHosts is nil` when `.openshift_install_state.json` is stale after ISO generation):
+
+```bash
+cd ~/lab/4.22-ga
 cp config-backup/install-config.yaml config-backup/agent-config.yaml .
+rm -f .openshift_install_state.json
 openshift-install agent create cluster-manifests --dir .
-openshift-install agent create image --dir . --log-level debug
+openshift-install agent wait-for install-complete --dir . --log-level info
 ```
 
-### Surveillance install (SSH SNO)
+Typical duration: **~30 min** with mirror already present.
 
-```bash
-sudo journalctl -u assisted-service -f
-# quand l'install démarre :
-sudo journalctl -u bootkube -f
-```
-
-## Fin d'install et `wait-for`
-
-Durée observée en lab : **~30 min** (mirror déjà en place).
-
-`openshift-install agent wait-for install-complete` peut **échouer en timeout** avec une erreur TLS (`kube-apiserver-lb-signer`) alors que le cluster est **opérationnel**. Vérifier :
+`wait-for` may **timeout on TLS** while the cluster is already up. Confirm:
 
 ```bash
 curl -k https://api.ocp422.lab.local:6443/healthz   # → ok
 ```
 
-Critère de succès : `oc login` + nœud **Ready** + tous les ClusterOperators **Available** (voir ci-dessous).
+Success = `oc login` + node **Ready** + ClusterOperators **Available**.
 
-## Après install
+### Watch from SNO (optional)
 
-### DNS bastion (OAuth / console)
+SSH **from bastion only** — [docs/sno-ssh-convention.md](../../docs/sno-ssh-convention.md):
 
-Le DNS maison (`192.168.1.1`) ne résout pas `*.apps.ocp422.lab.local`. Ajouter sur la **bastion** :
+```bash
+ssh-keygen -R 172.16.10.100   # after each reinstall
+ssh core@172.16.10.100
+sudo journalctl -u assisted-service -f
+# later:
+sudo journalctl -u bootkube -f
+```
+
+## 5. After install — `oc` and console
+
+Home DNS does not resolve `*.apps`. On the **bastion**:
 
 ```bash
 sudo tee -a /etc/hosts << 'EOF'
@@ -169,13 +145,8 @@ sudo tee -a /etc/hosts << 'EOF'
 EOF
 ```
 
-### Connexion `oc`
-
-Le fichier `auth/kubeconfig` peut être obsolète (certs bootstrap). Utiliser `oc login` :
-
 ```bash
 cd ~/lab/4.22-ga
-
 oc login https://api.ocp422.lab.local:6443 \
   -u kubeadmin \
   -p "$(cat auth/kubeadmin-password)" \
@@ -184,53 +155,37 @@ oc login https://api.ocp422.lab.local:6443 \
 oc get nodes
 oc get clusteroperators
 
-cp ~/.kube/config ~/lab/4.22-ga/auth/kubeconfig
-export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig
-```
-
-Pour le day‑2 (API **lb-ext**, certificats stables), préférer **`auth/kubeconfig-admin`** si présent :
-
-```bash
+# Day-2 (stable API certs) when present:
 export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig-admin
 ```
 
-Virt / LVMS : [docs/openshift-virt-lab.md](../../docs/openshift-virt-lab.md).
-
-### Miroirs cluster (air-gap)
-
-```bash
-oc apply -f workspace/working-dir/cluster-resources/idms-oc-mirror.yaml
-oc apply -f workspace/working-dir/cluster-resources/itms-oc-mirror.yaml
-```
-
-### Console web
-
 | | |
 |---|---|
-| URL (depuis bastion / VM sur `vmbr1`) | `https://console-openshift-console.apps.ocp422.lab.local` |
-| User | `kubeadmin` |
-| Password | `cat ~/lab/4.22-ga/auth/kubeadmin-password` |
+| Console | `https://console-openshift-console.apps.ocp422.lab.local` |
+| User / password | `kubeadmin` / `cat ~/lab/4.22-ga/auth/kubeadmin-password` |
 
-Depuis le **Mac** (lab isolé) : tunnel SSH ou VM graphique sur `vmbr1` — voir [proxmox/access.md](../../proxmox/access.md).
+Mac access: SSH tunnel — [proxmox/access.md](../../proxmox/access.md).
 
-SSH SNO : **`core@172.16.10.100` depuis la bastion uniquement** — [docs/sno-ssh-convention.md](../../docs/sno-ssh-convention.md).
-
-Voir aussi [mirror/README.md](../../mirror/README.md) pour les opérateurs air-gap (Virt, ODF).
-
-## Réinstall de contrôle
-
-Sans refaire le mirror registry :
+### Cluster image mirrors (operators / Virt)
 
 ```bash
-cd ~/lab/4.22-ga
-cp config-backup/install-config.yaml config-backup/agent-config.yaml .
-
-rm -f .openshift_install_state.json agent.x86_64.iso
-openshift-install agent create cluster-manifests --dir .
-openshift-install agent create image --dir .
-
-# Proxmox : wipe disque ou remplacer scsi0 — proxmox/sno-vm.md
-openshift-install agent wait-for install-complete --dir . --log-level debug
+oc apply -f ~/lab/4.22-ga/workspace/working-dir/cluster-resources/idms-oc-mirror.yaml
+oc apply -f ~/lab/4.22-ga/workspace/working-dir/cluster-resources/itms-oc-mirror.yaml
 ```
 
-Valider avec `oc login` + `oc get nodes` même si `wait-for` timeout.
+Virt + LVMS day-2: [docs/openshift-virt-lab.md](../../docs/openshift-virt-lab.md).
+
+## Reinstall SNO (keep registry mirror)
+
+Regenerate ISO (Ansible flags or hand commands above), recreate SNO via Terraform if needed, boot, `wait-for`. No need to re-run `oc-mirror` unless the imageset changed.
+
+## Pitfalls
+
+| Problem | Fix |
+|---------|-----|
+| `api.ocp422.ocp422.lab.local` | `baseDomain: lab.local` + `name: ocp422` |
+| `/dev/not-found-by-hints` | VirtIO disk → `rootDeviceHints.deviceName: /dev/vda` |
+| Stale ISO / no error detail | `rm -f .openshift_install_state.json agent.x86_64.iso` then recreate |
+| Bootstrap stuck | Recreate SNO — `terraform apply -replace='proxmox_vm_qemu.sno[0]'` ([lab-airgap README](../../terraform/lab-airgap/README.md)) |
+| Pull from `quay.io` / missing release | Mirror not done or incomplete — verify before boot |
+| Pull from `quay.io` with empty ICS | Re-run `bastion-ocp-install.yml` then new ISO |

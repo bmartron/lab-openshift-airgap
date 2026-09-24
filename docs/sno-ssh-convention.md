@@ -30,7 +30,7 @@ cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/ansible
 ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass
 ```
 
-Then regenerate the ISO / reinstall if the existing cluster does not have this key (or add it once via `oc debug node` — see [proxmox/sno-vm.md](../proxmox/sno-vm.md)).
+Then regenerate the ISO / reinstall if the existing cluster does not have this key (or add it once via `oc debug node`). Recreate the SNO VM with Terraform if needed — [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md).
 
 ## Daily connection
 

@@ -28,7 +28,8 @@ bastion_lab_dir: /home/bernard/lab
 bastion_install_startup_check: true
 
 # Install SNO agent — ansible-playbook playbooks/bastion-ocp-install.yml
-ocp_sno_mac: "BC:24:11:E1:8F:82"   # Proxmox : qm config <VMID> | grep net
+ocp_sno_mac: "BC:24:11:E1:8F:82"   # must match terraform sno_mac
+ocp_sno_root_device: /dev/vda      # VirtIO install disk (virtio0)
 ocp_imageset_profile: virt-lvms   # platform-only | gitops | virtualization | lvms | odf | rook-ceph | virt-lvms
 ocp_agent_generate_iso: false          # true = lancer openshift-install sur la bastion
 ocp_push_iso_to_proxmox: false        # true = scp agent.x86_64.iso vers NFS Proxmox (bastion → root@pve)

@@ -32,6 +32,6 @@ output "next_steps" {
     var.create_dns ? "dns : Ansible playbooks/dns.yml — dns/README.md" : "",
     var.create_registry ? "registry : install RHEL + playbooks/registry.yml — registry/README.md" : "",
     var.create_bastion ? "bastion : playbooks/bastion-preflight.yml — bastion/README.md" : "",
-    var.create_sno ? "sno : attacher/boot agent ISO, agent-config MAC — proxmox/sno-vm.md" : "",
+    var.create_sno ? "sno : boot agent ISO — openshift/4.22-ga/README.md" : "",
   ])))
 }

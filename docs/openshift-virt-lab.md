@@ -9,14 +9,14 @@ Lab notes: operators, local storage, guest ISO import.
 | Mirror | **LVMS**-only or **virt-lvms** profile — [mirror/imageset-config-4.22-lvms.yaml.example](../mirror/imageset-config-4.22-lvms.yaml.example) |
 | Cluster | `oc apply` **IDMS/ITMS** from `workspace-*/working-dir/cluster-resources/` |
 | OLM catalog | After mirror: `oc delete pod -n openshift-marketplace -l olm.catalogSource=cs-redhat-operator-index-v4-22` then `oc get packagemanifest \| grep lvms` |
-| LVMS | 2nd SCSI disk on SNO VM (Proxmox) — `sda` = OCP, **`sdb`** = LVMS |
+| LVMS | 2nd VirtIO disk on SNO VM (Proxmox) — `vda` = OCP, **`vdb`** = LVMS |
 | Nested virt | CPU **host** on SNO VM — [proxmox/network.md](../proxmox/network.md) |
 | `oc` | `KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig-admin` — [sno-ssh-convention.md](sno-ssh-convention.md) |
 
 ## LVMS
 
 1. Install **`lvms-operator`** (Operator Hub or Subscription, channel **`stable-4.22`**).
-2. Create **LVMCluster** (e.g. name **`lvms`**) on device **`/dev/sdb`** (prefer `/dev/disk/by-id/...`).
+2. Create **LVMCluster** (e.g. name **`lvms`**) on device **`/dev/vdb`** (prefer `/dev/disk/by-id/...`).
 3. Typical StorageClass: **`lvms-vg1`** (`topolvm.io`, `WaitForFirstConsumer`).
 
 PVC test:

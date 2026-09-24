@@ -9,18 +9,18 @@ hosts:
 - hostname: ocp-sno-422
   interfaces:
   - name: ens18
-    macAddress: "BC:24:11:XX:XX:XX"
-  # Proxmox SCSI (drive-scsi0) → /dev/sda ; VirtIO Block → /dev/vda
-  # Vérifier sur le SNO : lsblk -o NAME,SIZE,TYPE,TRAN
-  # Valeurs acceptées : /dev/sda ou /dev/disk/by-path/... (pas /dev/disk/by-id/)
+    macAddress: "BC:24:11:E1:8F:82"
+  # Proxmox VirtIO Block (virtio0) → /dev/vda ; LVMS virtio1 → /dev/vdb
+  # Check on SNO: lsblk -o NAME,SIZE,TYPE,TRAN
+  # Accepted values: /dev/vda or /dev/disk/by-path/... (not /dev/disk/by-id/)
   rootDeviceHints:
-    deviceName: /dev/sda
+    deviceName: /dev/vda
   networkConfig:
     interfaces:
     - name: ens18
       type: ethernet
       state: up
-      mac-address: BC:24:11:XX:XX:XX
+      mac-address: BC:24:11:E1:8F:82
       ipv4:
         enabled: true
         dhcp: false

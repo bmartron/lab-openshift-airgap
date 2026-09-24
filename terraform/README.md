@@ -7,7 +7,7 @@ Two **directories = two states** — never mix connected OCP5 with air-gap 4.22 
 | **Lab air-gap 4.22** | [`lab-airgap/`](lab-airgap/) | dns, registry, bastion | `vmbr1` + `vmbr0` (bastion) |
 | **OCP5 Assisted connected** | [`assisted-ocp-bma/`](assisted-ocp-bma/) | `ocp-bma-ai-0..2` | `vmbr0` (LAN + Internet) |
 
-OpenShift / manual Proxmox (SNO agent, etc.): outside Terraform — [proxmox/sno-vm.md](../proxmox/sno-vm.md).
+SNO VM (`create_sno`): [lab-airgap/](lab-airgap/) (`vm-sno.tf`) — boot/install: [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md).
 
 ## Proxmox NFS storage (NUC)
 

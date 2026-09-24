@@ -1,0 +1,9 @@
+---
+dns_interface: eth0
+lab_domain: lab.local
+ocp_cluster_name: ocp422
+ocp_sno_ip: "172.16.10.100"
+ocp5_cluster_name: ocp5
+ocp5_sno_ip: "172.16.10.110"
+dns_include_ocp5_records: true
+dns_deploy_dnsmasq_conf: true

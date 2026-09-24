@@ -1,5 +1,5 @@
-# SNO OpenShift agent — 172.16.10.100 (vmbr1), ISO agent + disque install + disque LVMS optionnel
-# Voir proxmox/sno-vm.md — pas de cloud-init (RHCOS install via ISO)
+# SNO OpenShift agent — 172.16.10.100 (vmbr1), agent ISO + install disk + optional LVMS
+# No cloud-init (RHCOS via agent ISO) — install: openshift/4.22-ga/README.md
 
 resource "proxmox_vm_qemu" "sno" {
   count = var.create_sno ? 1 : 0
@@ -17,9 +17,10 @@ resource "proxmox_vm_qemu" "sno" {
 
   bios    = local.vm_bios
   machine = local.vm_machine
-  # virtio-scsi-single : iothread valide (aligné assisted-ocp-bma) — disques /dev/sda
+  # Disk first, ISO second (same as assisted-ocp-bma): empty disk → fall through to
+  # agent ISO; after RHCOS install → boot from virtio0 without re-entering installer.
   scsihw = "virtio-scsi-single"
-  boot   = var.sno_agent_iso != "" ? "order=ide2;scsi0" : "order=scsi0"
+  boot   = var.sno_agent_iso != "" ? "order=virtio0;ide2" : "order=virtio0"
 
   efidisk {
     storage = var.storage_perf
@@ -27,7 +28,7 @@ resource "proxmox_vm_qemu" "sno" {
   }
 
   disk {
-    slot     = "scsi0"
+    slot     = "virtio0"
     size     = "${var.sno_install_disk_gb}G"
     type     = "disk"
     storage  = var.storage_perf
@@ -37,7 +38,7 @@ resource "proxmox_vm_qemu" "sno" {
   dynamic "disk" {
     for_each = var.sno_lvms_disk_gb > 0 ? [1] : []
     content {
-      slot     = "scsi1"
+      slot     = "virtio1"
       size     = "${var.sno_lvms_disk_gb}G"
       type     = "disk"
       storage  = var.storage_perf
@@ -56,12 +57,14 @@ resource "proxmox_vm_qemu" "sno" {
   }
 
   network {
-    id     = 0
-    model  = "virtio"
-    bridge = var.lab_bridge
+    id      = 0
+    model   = "virtio"
+    bridge  = var.lab_bridge
+    macaddr = var.sno_mac
   }
 
   lifecycle {
-    ignore_changes = [network, disk]
+    # Keep disks stable after first create; MAC is managed via sno_mac
+    ignore_changes = [disk]
   }
 }

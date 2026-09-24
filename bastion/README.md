@@ -282,4 +282,4 @@ dig @172.16.10.11 registry.lab.local
 - [x] `nmstate`, `xorriso`, `bind-utils` installés
 - [x] Install SNO GA 4.22.12 (validée + réinstall ~30 min)
 
-→ Suite : opérateurs air-gap — [mirror](../mirror/README.md) ; VM SNO — [proxmox/sno-vm.md](../proxmox/sno-vm.md)
+→ Suite : opérateurs air-gap — [mirror](../mirror/README.md) ; SNO install — [openshift/4.22-ga](../openshift/4.22-ga/README.md)

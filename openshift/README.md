@@ -1,36 +1,35 @@
-# Installation OpenShift — Agent-based (air-gap)
+# OpenShift installs
 
-Deux pistes de déploiement :
+Index of install tracks. Infra + mirror are already done via Terraform / Ansible / [mirror/README.md](../mirror/README.md).
 
-| Piste | Version | Répertoire |
-|-------|---------|------------|
-| **GA** | OpenShift **4.22.12** | [4.22-ga/](4.22-ga/) |
-| **RC 5** | OpenShift **5.0.0-ec.6** | [5-rc/](5-rc/) — agent air-gap ; **Assisted connecté 3 nœuds** : [5-rc/assisted-connected/](5-rc/assisted-connected/) |
+| Track | Version | Topology | Guide |
+|-------|---------|----------|-------|
+| **GA air-gap** | OpenShift **4.22.12** | SNO agent-based | **[4.22-ga/](4.22-ga/)** ← next after mirror |
+| **RC 5 connected** | OpenShift **5.0.0-ec.x** | 3-node Assisted | [5-rc/assisted-connected/](5-rc/assisted-connected/) |
+| **RC 5 air-gap** | OpenShift **5.0.0-ec.x** | agent (optional) | [5-rc/](5-rc/) |
 
-## Prérequis communs
+## After mirror (GA SNO)
 
-- [ ] DNS opérationnel sur `172.16.10.11` — voir [dns/README.md](../dns/README.md)
-- [ ] Registry miroir sur `registry.lab.local:5000`
-- [ ] Images miroir poussées — voir [mirror/README.md](../mirror/README.md)
-- [ ] Bastion RHEL 10 avec `oc` / `openshift-install` alignés sur la piste — voir [bastion/README.md](../bastion/README.md)
+Configs on bastion (`~/lab/4.22-ga/`) already come from **`bastion-ocp-install.yml`**. Do **not** start from the legacy YAML examples at the root of this folder.
 
-## Versions et variables
+1. Verify: `~/lab/scripts/verify-mirror-before-sno.sh ~/lab/4.22-ga`
+2. Follow **[4.22-ga/README.md](4.22-ga/)** — generate agent ISO → attach on Proxmox → boot SNO → `wait-for` / `oc login`
 
-Voir [docs/versions.md](../docs/versions.md) et `versions.env.example`.
+Regenerate install YAML / ISO via Ansible only if something changed: [docs/ansible-ocp-install.md](../docs/ansible-ocp-install.md).
 
-## Pièges courants (agent-based air-gap)
+## Common agent pitfalls (GA)
 
-| Problème | Solution |
-|----------|----------|
-| `api.ocp422.ocp422.lab.local` | `baseDomain: lab.local` + `name: ocp422` |
-| `/dev/not-found-by-hints` | `rootDeviceHints.deviceName: /dev/sda` (SCSI Proxmox) |
-| `json: unknown field "additionalNtpServers"` | NTP dans `agent-config.yaml` uniquement |
-| `apiVersion: v1` agent-config | Utiliser `v1beta1` |
-| ISO non générée (état partiel) | `rm .openshift_install_state.json` + regénérer |
-| Bootstrap bloqué, pas de bootkube | Vérifier disque d'install + wipe disque SNO |
+| Problem | Fix |
+|---------|-----|
+| `api.ocp422.ocp422.lab.local` | `baseDomain: lab.local` + `metadata.name: ocp422` |
+| `/dev/not-found-by-hints` | `rootDeviceHints.deviceName: /dev/vda` (VirtIO on Proxmox) |
+| `additionalNtpServers` unknown | NTP only in `agent-config.yaml` (`additionalNTPSources`) |
+| `agent-config` `apiVersion: v1` | Use **`v1beta1`** |
+| Partial ISO / stale state | `rm .openshift_install_state.json` then regenerate |
+| Bootstrap stuck, no bootkube | Recreate SNO via Terraform |
 
-Détail complet : [4.22-ga/README.md](4.22-ga/README.md)
+## See also
 
-## Fichiers legacy
-
-Les anciens `install-config.yaml.example` et `agent-config.yaml.example` à la racine de ce dossier sont conservés pour référence — utiliser les répertoires versionnés `4.22-ga/` et `5-rc/`.
+- Versions: [docs/versions.md](../docs/versions.md)
+- Rebuild path: [docs/iac.md](../docs/iac.md)
+- SSH to SNO: [docs/sno-ssh-convention.md](../docs/sno-ssh-convention.md)
