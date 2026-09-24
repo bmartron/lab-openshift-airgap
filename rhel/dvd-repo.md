@@ -4,7 +4,7 @@ Procédure pour installer des paquets sur les VMs **infra** du lab **sans `subsc
 
 Applicable à : `dns`, `registry`, `bastion` (même DVD `ide2` — bastion a Internet `vmbr0` mais **pas** d’abonnement RH dans ce lab).
 
-> **Ansible** : le rôle `rhel_dvd` automatise montage, repo et désactivation RHSM — [docs/ansible-manual-parity.md](../docs/ansible-manual-parity.md).
+> **Ansible** : le rôle `rhel_dvd` automatise montage, repo et désactivation RHSM — [ansible/README.md](../ansible/README.md).
 
 ## Prérequis
 

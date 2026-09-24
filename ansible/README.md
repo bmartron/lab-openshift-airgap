@@ -3,7 +3,7 @@
 Configure **DNS**, **registry** (disque + Podman), **bastion** (DVD repo, NTP, `/etc/hosts`, trust CA, paquets ISO, clients OCP, script preflight).  
 À lancer **depuis le Mac** (ProxyJump Proxmox) ou depuis la bastion pour les hôtes lab uniquement.
 
-> Chaque procédure manuelle des guides **dns**, **registry**, **bastion**, **rhel/dvd-repo**, **lab-power-cycle** indique le playbook équivalent (bloc *Équivalent Ansible*). Vue d’ensemble : [docs/ansible-manual-parity.md](../docs/ansible-manual-parity.md).
+> Chaque procédure manuelle des guides **dns**, **registry**, **bastion**, **rhel/dvd-repo**, **lab-power-cycle** indique le playbook équivalent (bloc *Équivalent Ansible*). Rebuild global : [docs/iac.md](../docs/iac.md).
 
 ## Prérequis
 

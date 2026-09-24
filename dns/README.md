@@ -2,7 +2,7 @@
 
 Serveur DNS interne du lab air-gap. Résolution locale uniquement (pas d'upstream Internet).
 
-> **Ansible** : procédures manuelles ci-dessous + bloc *Équivalent Ansible* ; table globale → [docs/ansible-manual-parity.md](../docs/ansible-manual-parity.md).
+> **Ansible** : procédures manuelles ci-dessous + bloc *Équivalent Ansible* — [ansible/README.md](../ansible/README.md).
 
 ## Spécifications VM (Proxmox)
 

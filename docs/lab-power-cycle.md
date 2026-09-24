@@ -2,7 +2,7 @@
 
 Procédure pour éteindre et rallumer le lab sans casser le SNO (DNS, registry, NTP, certs kubelet).
 
-> **Ansible** : équivalents playbook dans les sections ci-dessous — [docs/ansible-manual-parity.md](ansible-manual-parity.md).
+> **Ansible** : équivalents playbook dans les sections ci-dessous — [ansible/README.md](../ansible/README.md).
 
 ## VMs et IPs (`vmbr1`)
 

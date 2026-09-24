@@ -1,106 +1,133 @@
-# Lab OpenShift Air-Gap — Proxmox / NUC
+# OpenShift Lab on Proxmox (NUC)
 
-Lab personnel pour se former à l'installation **agent-based** d'OpenShift en mode **déconnecté (air-gap)**, sur une plateforme **Proxmox** hébergée sur un NUC 15 Pro.
+Personal training lab for **OpenShift** on **Proxmox** (NUC 15 Pro): air-gap and connected installs, single-node and compact 3-node topologies.
 
-## Plateforme
+**Language:** this README is in **English** so the project is easier to share. Many deeper guides under `docs/`, `bastion/`, etc. are still in French and will be migrated gradually.
 
-| Composant | Détail |
+## How deployments work now
+
+| Layer | Tool | Role |
+|-------|------|------|
+| **VMs** | **Terraform** | Create/recreate Proxmox VMs (separate state per stack) |
+| **OS / lab services** | **Ansible** | DVD repos, DNS, registry, bastion network/TLS/clients, install-config |
+| **Image mirror** | Manual on bastion | `oc-mirror` (long-running; prepared by Ansible) |
+| **Cluster install** | Agent ISO or Assisted UI | Depending on the track below |
+
+Primary entry points:
+
+- Terraform: [terraform/README.md](terraform/README.md)
+- Ansible: [ansible/README.md](ansible/README.md)
+- IaC overview: [docs/iac.md](docs/iac.md)
+
+Manual runbooks remain useful for debugging; prefer Ansible when a playbook exists (see *Ansible equivalent* blocks in each guide).
+
+## Platform
+
+| Component | Detail |
 |-----------|--------|
-| Hôte | NUC 15 Pro — 64 Go RAM |
-| Hyperviseur | Proxmox sur SSD externe 512 Go (USB) |
-| Stockage VMs / ISO | NAS NFS |
-| Mode boot | Proxmox sur SSD externe — Windows préservé sur disque interne 1 To |
+| Host | NUC 15 Pro — 64 GiB RAM |
+| Hypervisor | Proxmox on **internal** 512 GiB SSD |
+| VM / ISO storage | NAS NFS |
+| Disk layout | Proxmox on internal 512 GiB SSD (moved from USB enclosure → better I/O); Windows kept on internal 1 TiB disk |
 
-## Objectifs
+## Validated tracks
 
-- [x] Installation **SNO** (Single Node OpenShift) en air-gap — GA 4.22.12 validée
-- [ ] Installation **3 nœuds** (cluster compact) en air-gap
-- [ ] OpenShift Virtualization + LVMS — [docs/openshift-virt-lab.md](docs/openshift-virt-lab.md)
+| Track | Topology | Method | Network | Status |
+|-------|----------|--------|---------|--------|
+| **OpenShift 4.22 GA** | **SNO** (1 node) | Agent-based air-gap (`oc-mirror` + agent ISO) | Isolated `vmbr1` | Done |
+| **OpenShift 5 RC** | **3 nodes** compact | Assisted Installer (connected) | LAN `vmbr0` + home DNS | Done — [assisted-connected](openshift/5-rc/assisted-connected/README.md) |
+| **OpenShift 4.21** | **3 nodes** compact | Assisted Installer **air-gap** | Lab mirror + Assisted | Done (procedure to document in-repo) |
 
-## Topologies réseau
+Optional / in progress:
 
-| Bridge Proxmox | Rôle | Internet |
+- [ ] OpenShift Virtualization + LVMS on air-gap SNO — [docs/openshift-virt-lab.md](docs/openshift-virt-lab.md)
+- [ ] Document the 4.21 Assisted air-gap 3-node path in this repository
+- [ ] Optional graphical workstation VM
+
+## Network topologies
+
+| Proxmox bridge | Role | Internet |
 |----------------|------|----------|
-| `vmbr0` | Admin / LAN maison | Oui |
-| `vmbr1` | Lab OpenShift isolé | **Non** |
+| `vmbr0` | Admin / home LAN | Yes |
+| `vmbr1` | Isolated OpenShift lab | **No** |
 
-Plan d'adressage lab : `172.16.10.0/24` — voir [docs/network.md](docs/network.md).
+Lab addressing (`172.16.10.0/24`): [docs/network.md](docs/network.md).
 
-## VMs du lab
+## Lab VMs (air-gap stack)
 
-| VM | Rôle | Réseau |
-|----|------|--------|
-| `bastion` | `oc`, `openshift-install`, orchestration | `vmbr0` + `vmbr1` |
-| `dns` | Résolution interne (`dnsmasq`) | `vmbr1` uniquement |
-| `registry` | Mirror registry (images OCP) | `vmbr1` uniquement |
-| `ocp-sno` | Nœud OpenShift | `vmbr1` uniquement |
+| VM | Role | Network |
+|----|------|---------|
+| `bastion` | `oc`, `openshift-install`, `oc-mirror`, orchestration | `vmbr0` + `vmbr1` |
+| `dns` | Internal DNS (`dnsmasq`) + NTP | `vmbr1` only |
+| `registry` | Mirror registry (OCP images) | `vmbr1` only |
+| `ocp-sno` | OpenShift node (agent / SNO) | `vmbr1` only |
 
-## Structure du dépôt
+Connected Assisted (OCP 5): separate Terraform stack — `ocp-bma-ai-0..2` on `vmbr0` only ([terraform/assisted-ocp-bma/](terraform/assisted-ocp-bma/)).
+
+## Repository layout
 
 ```
 .
-├── docs/                  # Architecture, réseau, versions, procédures
-├── proxmox/               # Réseau, accès SSH, templates RHEL (rhel10-tpl / rhel10-nfs)
-├── rhel/                  # Repo DVD local (sans souscription)
-├── bastion/               # VM bastion RHEL 10
+├── docs/                  # Architecture, network, versions, procedures
+├── proxmox/               # Network, SSH, RHEL cloud-init templates
+├── rhel/                  # Local DVD repo (no subscription)
+├── bastion/               # Bastion notes + scripts
 ├── openshift/
-│   ├── 4.22-ga/           # Config install GA (4.22.12)
-│   └── 5-rc/              # Config install RC (5.0.0-ec.6)
-├── dns/                   # Configuration DNS
+│   ├── 4.22-ga/           # Agent-based GA (4.22.12) air-gap
+│   └── 5-rc/              # RC 5 + Assisted connected
+├── dns/                   # DNS service notes
 ├── registry/              # Mirror registry + TLS
-├── mirror/                # Procédures oc-mirror (GA + Beta)
-├── terraform/             # lab-airgap + assisted-ocp-bma (states séparés)
-├── ansible/               # Config DNS, registry, bastion
-└── versions.env.example   # Variables de version (copier → versions.env)
+├── mirror/                # oc-mirror procedures
+├── terraform/             # lab-airgap + assisted-ocp-bma (separate states)
+├── ansible/               # DNS, registry, bastion, OCP install configs
+└── versions.env.example   # Version pins (copy → versions.env)
 ```
 
-## Démarrage rapide
+## Quick start (air-gap 4.22 SNO)
 
-1. Lire [docs/architecture.md](docs/architecture.md)
-2. Configurer le bridge `vmbr1` — [proxmox/network.md](proxmox/network.md)
-2b. Templates RHEL cloud-init + Terraform VMs — [proxmox/rhel-cloudinit-template.md](proxmox/rhel-cloudinit-template.md) + [terraform/lab-airgap/](terraform/lab-airgap/)
-3. Accès SSH aux VMs isolées — [proxmox/access.md](proxmox/access.md)
-4. Configs install SNO (install-config, agent-config, CA) — [docs/ansible-ocp-install.md](docs/ansible-ocp-install.md)
-5. Repo RHEL via DVD (sans souscription) — [rhel/dvd-repo.md](rhel/dvd-repo.md)
-6. Déployer DNS — [dns/README.md](dns/README.md) → registry → bastion
-7. Miroir des images — [mirror/README.md](mirror/README.md)
-8. Générer l'ISO agent et installer — [openshift/4.22-ga/README.md](openshift/4.22-ga/README.md)
-9. VM SNO Proxmox (disque, réinstall) — [proxmox/sno-vm.md](proxmox/sno-vm.md)
-10. **Arrêt / démarrage quotidien** — [docs/lab-power-cycle.md](docs/lab-power-cycle.md) + script `bastion/scripts/lab-startup-check.sh`
-11. **Manuel ↔ Ansible** — [docs/ansible-manual-parity.md](docs/ansible-manual-parity.md)
-12. **SSH SNO (`core`)** — bastion seule — [docs/sno-ssh-convention.md](docs/sno-ssh-convention.md)
-13. **Virt + LVMS air-gap** — [docs/openshift-virt-lab.md](docs/openshift-virt-lab.md)
-14. **Terraform + Ansible** (optionnel) — [docs/iac.md](docs/iac.md)
-15. **Alignement versions / audit** — [docs/lab-alignment.md](docs/lab-alignment.md)
+1. Read [docs/architecture.md](docs/architecture.md)
+2. Configure `vmbr1` — [proxmox/network.md](proxmox/network.md)
+3. Build RHEL cloud-init templates — [proxmox/rhel-cloudinit-template.md](proxmox/rhel-cloudinit-template.md)
+4. **Terraform** VMs — [terraform/lab-airgap/](terraform/lab-airgap/)
+5. **Ansible** infra — `ansible-playbook playbooks/lab-infra.yml` ([ansible/README.md](ansible/README.md))
+6. **Ansible** OCP configs + pull-secret — `playbooks/bastion-ocp-install.yml` ([docs/ansible-ocp-install.md](docs/ansible-ocp-install.md))
+7. Mirror images on bastion — [mirror/README.md](mirror/README.md)
+8. Agent ISO + install — [openshift/4.22-ga/README.md](openshift/4.22-ga/README.md)
+9. SNO VM notes — [proxmox/sno-vm.md](proxmox/sno-vm.md)
+10. Daily power cycle — [docs/lab-power-cycle.md](docs/lab-power-cycle.md)
+11. SSH to SNO (`core@`) **from bastion only** — [docs/sno-ssh-convention.md](docs/sno-ssh-convention.md)
 
-## Progression lab
+### Connected Assisted (OCP 5, 3 nodes)
 
-- [x] Proxmox + NFS + bridge `vmbr1`
-- [x] VM DNS RHEL 10 — réseau `172.16.10.11`
-- [x] Repo DVD local (sans subscription-manager)
-- [x] dnsmasq opérationnel + tests `dig`
-- [x] VM registry — HTTPS actif (`registry:2` amd64)
-- [x] Proxmox `/etc/hosts` pour noms lab (DNS maison conservé)
-- [x] VM bastion — réseau, `oc` / `openshift-install` / `oc-mirror` v2, DNS lab, CA registry
-- [x] NTP lab (chrony sur DNS) + fuseau Europe/Paris
-- [x] Mirror OCP 4.22.12 (`oc-mirror` v2 → ~22 Go)
-- [x] Install SNO GA 4.22.12 (+ réinstall de contrôle ~30 min)
-- [ ] Mirror OCP 5 RC + install SNO RC
-- [ ] **OCP 5 Assisted connecté** — `ocp-bma.home.arpa`, LAN + DNS maison — [openshift/5-rc/assisted-connected/README.md](openshift/5-rc/assisted-connected/README.md)
-- [ ] VM workstation graphique (console web, optionnel)
+Use **only** [terraform/assisted-ocp-bma/](terraform/assisted-ocp-bma/) + [openshift/5-rc/assisted-connected/README.md](openshift/5-rc/assisted-connected/README.md). Do not mix with the air-gap Terraform state.
 
-## Versions cibles
+## Lab progress
 
-| Composant | Version | Statut |
+- [x] Proxmox + NFS + `vmbr1`
+- [x] Infra VMs via **Terraform** (dns / registry / bastion templates)
+- [x] Infra + bastion via **Ansible** (`lab-infra`, DVD repo, CA trust, OCP clients)
+- [x] Mirror OCP 4.22.12 (`oc-mirror` v2)
+- [x] SNO GA **4.22.12** air-gap (agent-based)
+- [x] **3-node Assisted connected** — OpenShift **5 RC** (`ocp-bma.home.arpa`)
+- [x] **3-node Assisted air-gap** — OpenShift **4.21**
+- [ ] Document 4.21 Assisted air-gap path in-repo
+- [ ] Virt + LVMS air-gap day-2
+- [ ] Optional graphical workstation VM
+
+## Target versions
+
+| Component | Version | Status |
 |-----------|---------|--------|
-| VMs infra (dns, registry, bastion) | **RHEL 10.2** | ✅ |
-| OpenShift GA | **4.22.12** (Kubernetes 1.35) | ✅ SNO air-gap |
-| OpenShift RC | **5.0.0-ec.6** (Kubernetes 1.36) | ⬜ |
-| Proxmox | _à documenter_ | ⬜ |
+| Infra VMs (dns, registry, bastion) | **RHEL 10.2** | Done |
+| OpenShift GA (SNO air-gap) | **4.22.12** | Done |
+| OpenShift 5 RC (Assisted connected) | **5.0.0-ec.x** | Done |
+| OpenShift 4.21 (Assisted air-gap, 3 nodes) | **4.21.x** | Done (docs TBD) |
+| Proxmox | **9.2.x** | Done — [docs/versions.md](docs/versions.md) (stack alignment) |
 
-Détail : [docs/versions.md](docs/versions.md)
+Details: [docs/versions.md](docs/versions.md)
 
 ## Notes
 
-- Les secrets (`pull-secret`, clés, kubeconfig) sont exclus par `.gitignore`.
-- Copier les fichiers `.example` vers leurs équivalents locaux avant utilisation.
+- Secrets (`pull-secret`, keys, kubeconfig, `terraform.tfvars`) are gitignored.
+- Copy `*.example` files to local equivalents before use.
+- Prefer **Terraform + Ansible** for repeatable rebuilds; keep manual guides as the source of truth when debugging.

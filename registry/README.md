@@ -11,7 +11,7 @@ Registry local pour l'installation air-gap d'OpenShift.
 
 Ce lab utilise **`registry:2`** dans **Podman** sur RHEL 10.
 
-> **Ansible** : blocs *Équivalent Ansible* + [docs/ansible-manual-parity.md](../docs/ansible-manual-parity.md).
+> **Ansible** : blocs *Équivalent Ansible* — [ansible/README.md](../ansible/README.md) · rebuild [docs/iac.md](../docs/iac.md).
 
 ## Spécifications VM
 

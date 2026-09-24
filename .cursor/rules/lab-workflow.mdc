@@ -7,7 +7,8 @@ alwaysApply: true
 
 ## Langue
 
-Répondre en **français** pour les procédures lab et le dépannage.
+- Chat : répondre en **français** pour les procédures lab et le dépannage.
+- Fichiers du dépôt (Markdown, etc.) : **anglais** quand on les édite — voir [docs-english.mdc](docs-english.mdc).
 
 ## Une étape à la fois
 

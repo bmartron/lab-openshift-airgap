@@ -1,25 +1,25 @@
-# OpenShift Virtualization + LVMS — lab air-gap (SNO)
+# OpenShift Virtualization + LVMS — air-gap lab (SNO)
 
-Retour d’expérience lab : opérateurs, stockage local, import ISO invitée.
+Lab notes: operators, local storage, guest ISO import.
 
-## Prérequis
+## Prerequisites
 
-| Composant | Détail |
+| Component | Detail |
 |-----------|--------|
-| Mirror | Profil **LVMS** seul ou **virt-lvms** — [mirror/imageset-config-4.22-lvms.yaml.example](../mirror/imageset-config-4.22-lvms.yaml.example) |
-| Cluster | `oc apply` **IDMS/ITMS** depuis `workspace-*/working-dir/cluster-resources/` |
-| Catalogue OLM | Après mirror : `oc delete pod -n openshift-marketplace -l olm.catalogSource=cs-redhat-operator-index-v4-22` puis `oc get packagemanifest \| grep lvms` |
-| LVMS | 2ᵉ disque SCSI sur VM SNO (Proxmox) — `sda` = OCP, **`sdb`** = LVMS |
-| Nested virt | CPU **host** sur VM SNO — [proxmox/network.md](../proxmox/network.md) |
-| `oc` | `KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig-admin` — [docs/sno-ssh-convention.md](sno-ssh-convention.md) |
+| Mirror | **LVMS**-only or **virt-lvms** profile — [mirror/imageset-config-4.22-lvms.yaml.example](../mirror/imageset-config-4.22-lvms.yaml.example) |
+| Cluster | `oc apply` **IDMS/ITMS** from `workspace-*/working-dir/cluster-resources/` |
+| OLM catalog | After mirror: `oc delete pod -n openshift-marketplace -l olm.catalogSource=cs-redhat-operator-index-v4-22` then `oc get packagemanifest \| grep lvms` |
+| LVMS | 2nd SCSI disk on SNO VM (Proxmox) — `sda` = OCP, **`sdb`** = LVMS |
+| Nested virt | CPU **host** on SNO VM — [proxmox/network.md](../proxmox/network.md) |
+| `oc` | `KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig-admin` — [sno-ssh-convention.md](sno-ssh-convention.md) |
 
 ## LVMS
 
-1. Installer **`lvms-operator`** (Operator Hub ou Subscription, canal **`stable-4.22`**).
-2. Créer **LVMCluster** (ex. nom **`lvms`**) sur device **`/dev/sdb`** (préférer `/dev/disk/by-id/...`).
-3. StorageClass typique : **`lvms-vg1`** (`topolvm.io`, `WaitForFirstConsumer`).
+1. Install **`lvms-operator`** (Operator Hub or Subscription, channel **`stable-4.22`**).
+2. Create **LVMCluster** (e.g. name **`lvms`**) on device **`/dev/sdb`** (prefer `/dev/disk/by-id/...`).
+3. Typical StorageClass: **`lvms-vg1`** (`topolvm.io`, `WaitForFirstConsumer`).
 
-Test PVC :
+PVC test:
 
 ```bash
 oc apply -f - <<'EOF'
@@ -36,58 +36,58 @@ spec:
 EOF
 ```
 
-Avec `WaitForFirstConsumer`, lier un pod consommateur pour voir **Bound**.
+With `WaitForFirstConsumer`, bind a consumer pod to see **Bound**.
 
 ## Operator Hub vs Software Catalog
 
 | UI | Usage |
 |----|--------|
 | **Operators → Operator Hub** | **`lvms-operator`**, **`kubevirt-hyperconverged`** |
-| **Software Catalog / HostPathProvisioner deployment** | Parcours CDI/HCO, pas un substitut ; erreurs **404** fréquentes en air-gap |
+| **Software Catalog / HostPathProvisioner deployment** | CDI/HCO path, not a substitute; **404** errors are common in air-gap |
 
-Sans **`packagemanifest`** pour le package : catalogue miroir pas rechargé (voir delete pod catalogue ci-dessus).
+If there is no **`packagemanifest`** for the package: mirror catalog not reloaded (see catalog pod delete above).
 
-## Import ISO invitée (RHEL, etc.)
+## Guest ISO import (RHEL, etc.)
 
-Objectif : PVC bootable sur **`lvms-vg1`**, pas un « repo » sur la bastion.
+Goal: bootable PVC on **`lvms-vg1`**, not a “repo” on the bastion.
 
 ### Mac → bastion
 
 ```bash
-scp /chemin/fichier.iso bernard@192.168.1.144:~/lab/isos/
+scp /path/to/file.iso bernard@192.168.1.144:~/lab/isos/
 ```
 
-### IDMS / ITMS (obligatoire)
+### IDMS / ITMS (required)
 
-Les pods CDI (`virt-cdi-uploadserver`, `virt-cdi-importer`) référencent **`registry.redhat.io/...`**. Les images sont sur **`registry.lab.local:5000/ocp4-422/container-native-virtualization/...`** après mirror Virt — sans miroirs cluster → **ImagePullBackOff** / timeout upload.
+CDI pods (`virt-cdi-uploadserver`, `virt-cdi-importer`) reference **`registry.redhat.io/...`**. Images live on **`registry.lab.local:5000/ocp4-422/container-native-virtualization/...`** after a Virt mirror — without cluster mirrors → **ImagePullBackOff** / upload timeout.
 
 ```bash
 export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig-admin
-# Mirror opérateurs (CNV) — ne pas se limiter au workspace LVMS seul
+# Operator (CNV) mirror — do not limit yourself to the LVMS-only workspace
 oc patch imagedigestmirrorset idms-operator-0 --type=json -p='[
   {"op":"add","path":"/spec/imageDigestMirrors/-","value":{"source":"registry.redhat.io/container-native-virtualization","mirrors":["registry.lab.local:5000/ocp4-422/container-native-virtualization"]}}
 ]' 2>/dev/null || true
 oc apply -f ~/lab/4.22-ga/workspace-operators/working-dir/cluster-resources/idms-oc-mirror.yaml
-# Conserver lvms4 si besoin : fusionner les entrées idms-operator-0, ne pas ré-appliquer le fichier LVMS seul après (écrase CNV).
+# Keep lvms4 if needed: merge idms-operator-0 entries; do not re-apply the LVMS-only file afterwards (it overwrites CNV).
 ```
 
 ### `virtctl` (bastion)
 
-Le chemin **`mirror.openshift.com/.../clients/virt/virtctl`** renvoie **404 HTML** — ne pas l’installer tel quel (`syntax error: '<html>'`).
+The path **`mirror.openshift.com/.../clients/virt/virtctl`** returns **404 HTML** — do not install that (`syntax error: '<html>'`).
 
-Aligner la version client sur le cluster :
+Align the client version with the cluster:
 
 ```bash
 oc get kubevirt kubevirt -n openshift-cnv -o jsonpath='{.status.observedKubeVirtVersion}{"\n"}'
-# ex. v1.8.4
+# e.g. v1.8.4
 
 curl -L -o /tmp/virtctl \
   https://github.com/kubevirt/kubevirt/releases/download/v1.8.4/virtctl-v1.8.4-linux-amd64
-file /tmp/virtctl   # ELF, pas HTML
+file /tmp/virtctl   # ELF, not HTML
 chmod +x /tmp/virtctl && sudo mv /tmp/virtctl /usr/local/bin/virtctl
 ```
 
-Upload (syntaxe `virtctl` récente : **`pvc`** ou **`dv`**, puis le nom — pas `namespace/name`) :
+Upload (recent `virtctl` syntax: **`pvc`** or **`dv`**, then the name — not `namespace/name`):
 
 ```bash
 virtctl image-upload pvc rhel-10-2-dvd \
@@ -100,7 +100,7 @@ virtctl image-upload pvc rhel-10-2-dvd \
   --namespace=default
 ```
 
-**Bastion — `/etc/hosts`** (DNS maison ne résout pas `*.apps`) :
+**Bastion — `/etc/hosts`** (home DNS does not resolve `*.apps`):
 
 ```text
 172.16.10.100  cdi-uploadproxy-openshift-cnv.apps.ocp422.lab.local
@@ -108,7 +108,7 @@ virtctl image-upload pvc rhel-10-2-dvd \
 172.16.10.100  oauth-openshift.apps.ocp422.lab.local
 ```
 
-**ISO > ~8 Gio — OOM upload (limite 600M)** : patch **`HyperConverged`**, pas le CR `CDI` seul (HCO réconcilie CDI).
+**ISO > ~8 GiB — upload OOM (600M limit)**: patch **`HyperConverged`**, not the `CDI` CR alone (HCO reconciles CDI).
 
 ```bash
 oc patch hyperconverged kubevirt-hyperconverged -n openshift-cnv --type=merge -p '
@@ -124,15 +124,15 @@ oc patch hyperconverged kubevirt-hyperconverged -n openshift-cnv --type=merge -p
 }'
 ```
 
-Recréer le pod `cdi-upload-*`, vérifier `limits.memory` ≠ `600M`, puis relancer `virtctl --no-create`.
+Recreate the `cdi-upload-*` pod, confirm `limits.memory` ≠ `600M`, then rerun `virtctl --no-create`.
 
-| Symptôme | Cause | Action |
-|----------|--------|--------|
+| Symptom | Cause | Action |
+|---------|-------|--------|
 | Upload pod not ready | ImagePullBackOff `registry.redhat.io` | IDMS **container-native-virtualization** |
 | `no such host` cdi-uploadproxy | Bastion → DNS 192.168.1.1 | `/etc/hosts` → `172.16.10.100` |
-| **502** / connection refused | Pod **OOMKilled** (600M) | `workloadResourceRequirements` HCO ci-dessus |
+| **502** / connection refused | Pod **OOMKilled** (600M) | HCO `workloadResourceRequirements` above |
 
-PVC déjà créé (console ou YAML) :
+PVC already created (console or YAML):
 
 ```bash
 virtctl image-upload pvc rhel-10-2-dvd \
@@ -142,30 +142,30 @@ virtctl image-upload pvc rhel-10-2-dvd \
   --namespace=default
 ```
 
-Suivi : `oc get pvc rhel-10-2-dvd -w`, pods `cdi-upload-*` en **Running**.
+Watch: `oc get pvc rhel-10-2-dvd -w`, `cdi-upload-*` pods **Running**.
 
-Nettoyage upload raté :
+Cleanup failed upload:
 
 ```bash
-oc delete datavolume,pvc -n default --all   # ou noms ciblés
+oc delete datavolume,pvc -n default --all   # or targeted names
 oc delete pod -n default -l cdi.kubevirt.io=uploadserver --force --grace-period=0
 ```
 
-### Alternative HTTP (sans `virtctl`)
+### HTTP alternative (no `virtctl`)
 
-Terminal 1 :
+Terminal 1:
 
 ```bash
 cd ~/lab/isos && python3 -m http.server 8080 --bind 172.16.10.10
 ```
 
-Terminal 2 : DataVolume `spec.source.http.url` → `http://172.16.10.10:8080/fichier.iso`, `storageClassName: lvms-vg1`, taille ≥ ISO.
+Terminal 2: DataVolume `spec.source.http.url` → `http://172.16.10.10:8080/file.iso`, `storageClassName: lvms-vg1`, size ≥ ISO.
 
-### Console Mac + tunnel SSH
+### Mac console + SSH tunnel
 
-Tunnel : `sudo ssh -L 443:172.16.10.100:443 -N bernard@192.168.1.144`
+Tunnel: `sudo ssh -L 443:172.16.10.100:443 -N bernard@192.168.1.144`
 
-`/etc/hosts` sur le **Mac** — FQDN apps en **`127.0.0.1`** (pas `172.16.10.100`) :
+`/etc/hosts` on the **Mac** — apps FQDNs as **`127.0.0.1`** (not `172.16.10.100`):
 
 ```text
 127.0.0.1  console-openshift-console.apps.ocp422.lab.local
@@ -173,25 +173,25 @@ Tunnel : `sudo ssh -L 443:172.16.10.100:443 -N bernard@192.168.1.144`
 127.0.0.1  cdi-uploadproxy-openshift-cnv.apps.ocp422.lab.local
 ```
 
-Certificat : ouvrir  
+Certificate: open  
 `https://cdi-uploadproxy-openshift-cnv.apps.ocp422.lab.local/v1beta1/upload-form-async`  
-(**404** sur `/` seul est normal), puis relancer l’upload console.
+(**404** on `/` alone is normal), then retry the console upload.
 
-Détail tunnel : [proxmox/access.md](../proxmox/access.md) § Console OpenShift.
+Tunnel detail: [proxmox/access.md](../proxmox/access.md) § OpenShift console.
 
-## Complétions bash (`oc`, `virtctl`)
+## Bash completions (`oc`, `virtctl`)
 
-Sur bastion : paquet **`bash-completion`** (repo DVD si pas d’Internet — [rhel/dvd-repo.md](../rhel/dvd-repo.md)), puis :
+On bastion: **`bash-completion`** package (DVD repo if no Internet — [rhel/dvd-repo.md](../rhel/dvd-repo.md)), then:
 
 ```bash
 oc completion bash | sudo tee /etc/bash_completion.d/oc
 virtctl completion bash | sudo tee /etc/bash_completion.d/virtctl
 ```
 
-Charger **`/usr/share/bash-completion/bash_completion`** dans `~/.bashrc` **avant** toute source manuelle de `/etc/bash_completion.d/oc` (évite `_get_comp_words_by_ref: command not found`).
+Load **`/usr/share/bash-completion/bash_completion`** in `~/.bashrc` **before** any manual source of `/etc/bash_completion.d/oc` (avoids `_get_comp_words_by_ref: command not found`).
 
-## Références
+## References
 
 - [mirror/README.md](../mirror/README.md)
-- [docs/sno-ssh-convention.md](sno-ssh-convention.md)
-- [docs/ansible-manual-parity.md](ansible-manual-parity.md)
+- [sno-ssh-convention.md](sno-ssh-convention.md)
+- [docs/iac.md](iac.md)

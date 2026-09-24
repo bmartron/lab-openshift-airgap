@@ -2,7 +2,7 @@
 
 Poste d'orchestration : `oc`, `openshift-install`, `oc-mirror`, génération ISO agent.
 
-> **Ansible** : [docs/ansible-manual-parity.md](../docs/ansible-manual-parity.md) · install OCP → [docs/ansible-ocp-install.md](../docs/ansible-ocp-install.md).
+> **Ansible** : blocs *Équivalent Ansible* ci-dessous · install OCP → [docs/ansible-ocp-install.md](../docs/ansible-ocp-install.md).
 
 **Avantage double NIC** : SSH direct depuis le Mac (`vmbr0`) + accès au lab (`vmbr1`).
 
@@ -187,7 +187,7 @@ curl --cacert ~/lab/ca.crt https://registry.lab.local:5000/v2/_catalog
 | **Playbook** | `lab-infra.yml` (trust CA) ; `bastion-ocp-install.yml` (configs install + re-trust) |
 | **Hôte** | `bastion` (+ lecture CA sur `registry`) |
 | **Commande (Mac)** | `ansible-playbook playbooks/lab-infra.yml --limit bastion` |
-| **Couverture** | `~/lab/ca.crt`, `certs.d`, `update-ca-trust`, test catalog — [docs/ansible-manual-parity.md](../docs/ansible-manual-parity.md) |
+| **Couverture** | `~/lab/ca.crt`, `certs.d`, `update-ca-trust`, test catalog — rôle `bastion` / [ansible/README.md](../ansible/README.md) |
 | **Hors Ansible** | `scp` manuel ci-dessus si playbook non utilisé |
 
 ## 7. Piste RC 5 (optionnel, répertoire séparé)

@@ -53,4 +53,4 @@ terraform init && terraform plan && terraform apply
 
 ## State
 
-`terraform.tfstate` local (gitignoré). Teardown : [docs/lab-airgap-teardown.md](../../docs/lab-airgap-teardown.md).
+`terraform.tfstate` local (gitignoré). Teardown / pause air-gap : [terraform/README.md](../README.md) § Pause / teardown.

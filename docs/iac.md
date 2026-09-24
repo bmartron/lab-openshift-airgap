@@ -1,31 +1,37 @@
 # Infrastructure as Code (Terraform + Ansible)
 
-| Outil | Périmètre |
-|-------|-----------|
-| [Terraform](../terraform/README.md) | VMs Proxmox : dns, registry (+ disque données), bastion (2 NICs), **ocp5-ai-* Assisted** |
-| [Ansible](../ansible/README.md) | OS : DVD repo, NTP, dnsmasq (base), registry (Podman/TLS), bastion (`/etc/hosts`, CA, paquets ISO), **configs install OCP** |
+**This is the default path** for rebuilding the lab (not optional).
 
-OpenShift : `oc-mirror` dans [mirror/](../mirror/README.md) ; install-config / ISO via [ansible-ocp-install.md](ansible-ocp-install.md) et [openshift/4.22-ga/](../openshift/4.22-ga/README.md). **OCP 5 connecté 3 nœuds** : [openshift/5-rc/assisted-connected/README.md](../openshift/5-rc/assisted-connected/README.md).
+| Tool | Scope |
+|------|--------|
+| [Terraform](../terraform/README.md) | Proxmox VMs: air-gap stack (`lab-airgap/`) and Assisted connected (`assisted-ocp-bma/`) — **separate states** |
+| [Ansible](../ansible/README.md) | OS config: DVD repos, NTP, dnsmasq, registry (Podman/TLS), bastion (network, CA, packages, OCP clients), install-config |
 
-## Parcours recommandé
+OpenShift images: [mirror/](../mirror/README.md) (`oc-mirror` on bastion).  
+Install configs / agent ISO: [ansible-ocp-install.md](ansible-ocp-install.md) and [openshift/4.22-ga/](../openshift/4.22-ga/README.md).  
+Connected Assisted 3-node (OCP 5): [openshift/5-rc/assisted-connected/README.md](../openshift/5-rc/assisted-connected/README.md).
 
-### Lab déjà en place (ton cas)
+## Recommended flows
 
-1. **Terraform** : uniquement **registry** (`create_dns` / `create_bastion` = `false`). dns et bastion restent hors state.
-2. Ne pas passer `create_dns` / `create_bastion` à `true` sans `terraform import` — sinon recréation des VMs.
-3. `cp ansible/inventory/hosts.yml.example ansible/inventory/hosts.yml`
-4. `cp ansible/group_vars/all.yml.example ansible/group_vars/all.yml`
-5. `registry_data_device: ""` tant que la registry utilise `/home/registry` ou `/opt` manuel.
-6. `ansible-playbook ansible/playbooks/lab-infra.yml` (depuis le Mac, repo cloné).
+### Full air-gap rebuild (dns + bastion + registry)
 
-### Nouvelle registry propre (clone template)
+1. RHEL templates — [proxmox/rhel-cloudinit-template.md](../proxmox/rhel-cloudinit-template.md)
+2. `cd terraform/lab-airgap` → `terraform apply` (`rhel_dvd_iso`, `bastion_admin_gateway`, SSH key file)
+3. `cd ansible` → `ansible-playbook playbooks/lab-infra.yml`
+4. `ansible-playbook playbooks/bastion-ocp-install.yml` (pull-secret + install YAML)
+5. On bastion: `oc-mirror` — [mirror/README.md](../mirror/README.md)
+6. Agent ISO + SNO — [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md)
 
-1. Token API Proxmox → `terraform/lab-airgap/terraform.tfvars`
-2. Templates `rhel10-tpl` + `rhel10-nfs` — [proxmox/rhel-cloudinit-template.md](../proxmox/rhel-cloudinit-template.md)
-3. `terraform apply` → registry **virtio0** + **virtio1 120G** (`/dev/vda` + `/dev/vdb`)
-4. `registry_data_device: /dev/vdb` dans Ansible
-5. Playbook + certs TLS + mirror
+### Registry only (existing dns/bastion)
 
-## Variables partagées
+1. Token in `terraform/lab-airgap/terraform.tfvars` with `create_dns` / `create_bastion` = `false`
+2. `terraform apply` → registry `virtio0` + `virtio1` (`/dev/vda` + `/dev/vdb`)
+3. Ansible: `registry_data_device: /dev/vdb` → `playbooks/lab-infra.yml --limit registry` (or `registry.yml`)
 
-Aligner avec [versions.env.example](../versions.env.example) (`DNS_IP`, `REGISTRY_IP`, `PROXMOX_HOST`).
+### Assisted connected (OCP 5)
+
+Use **only** [terraform/assisted-ocp-bma/](../terraform/assisted-ocp-bma/) — do not mix with `lab-airgap` state.
+
+## Shared variables
+
+Align with [versions.env.example](../versions.env.example) (`DNS_IP`, `REGISTRY_IP`, `PROXMOX_HOST`).
