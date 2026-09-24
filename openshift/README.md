@@ -22,7 +22,7 @@ Regenerate install YAML / ISO via Ansible only if something changed: [docs/ansib
 | Problem | Fix |
 |---------|-----|
 | `api.ocp422.ocp422.lab.local` | `baseDomain: lab.local` + `metadata.name: ocp422` |
-| `/dev/not-found-by-hints` | `rootDeviceHints.deviceName: /dev/vda` (VirtIO on Proxmox) |
+| `/dev/not-found-by-hints` | `rootDeviceHints.deviceName: "/dev/disk/by-path/…"` (VirtIO; not by-id) |
 | `additionalNtpServers` unknown | NTP only in `agent-config.yaml` (`additionalNTPSources`) |
 | `agent-config` `apiVersion: v1` | Use **`v1beta1`** |
 | Partial ISO / stale state | `rm .openshift_install_state.json` then regenerate |

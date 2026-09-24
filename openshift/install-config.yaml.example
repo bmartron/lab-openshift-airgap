@@ -8,7 +8,7 @@ compute:
 controlPlane:
   name: master
   replicas: 1
-# Coller ici le contenu du certificat CA du registry (registry/certs/ca.crt)
+# Paste registry CA PEM (from bastion ~/lab/ca.crt after bastion-ocp-install)
 additionalTrustBundle: |
   -----BEGIN CERTIFICATE-----
   REMPLACER_PAR_CA_REGISTRY

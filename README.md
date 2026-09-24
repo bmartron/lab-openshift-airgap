@@ -70,13 +70,11 @@ Connected Assisted (OCP 5): separate Terraform stack — `ocp-bma-ai-0..2` on `v
 .
 ├── docs/                  # Architecture, network, versions, procedures
 ├── proxmox/               # Network, SSH, RHEL cloud-init templates
-├── rhel/                  # Local DVD repo (no subscription)
 ├── bastion/               # Bastion notes + scripts
 ├── openshift/
 │   ├── 4.22-ga/           # Agent-based GA (4.22.12) air-gap
 │   └── 5-rc/              # RC 5 + Assisted connected
 ├── dns/                   # DNS service notes
-├── registry/              # Mirror registry + TLS
 ├── mirror/                # oc-mirror procedures
 ├── terraform/             # lab-airgap + assisted-ocp-bma (separate states)
 ├── ansible/               # DNS, registry, bastion, OCP install configs

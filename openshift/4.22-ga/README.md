@@ -73,7 +73,7 @@ Fix any `[FAIL]` before booting.
 
 | Setting | Value |
 |---------|--------|
-| Disk | 120 GiB **VirtIO** → `/dev/vda` in agent-config |
+| Disk | 120 GiB **VirtIO** → `rootDeviceHints` **by-path** (see agent-config) |
 | NIC | `vmbr1`, VirtIO — MAC **`BC:24:11:E1:8F:82`** (`sno_mac` / `ocp_sno_mac`) |
 | CD-ROM | `nfs_iso` → `agent.x86_64.iso` on **ide2** |
 | LVMS (optional) | 2nd VirtIO disk → `/dev/vdb` |
@@ -184,7 +184,7 @@ Regenerate ISO (Ansible flags or hand commands above), recreate SNO via Terrafor
 | Problem | Fix |
 |---------|-----|
 | `api.ocp422.ocp422.lab.local` | `baseDomain: lab.local` + `name: ocp422` |
-| `/dev/not-found-by-hints` | VirtIO disk → `rootDeviceHints.deviceName: /dev/vda` |
+| `/dev/not-found-by-hints` | Use `deviceName: "/dev/disk/by-path/pci-…"` from agent `ls -l /dev/disk/by-path/` (link → `vda`) |
 | Stale ISO / no error detail | `rm -f .openshift_install_state.json agent.x86_64.iso` then recreate |
 | Bootstrap stuck | Recreate SNO — `terraform apply -replace='proxmox_vm_qemu.sno[0]'` ([lab-airgap README](../../terraform/lab-airgap/README.md)) |
 | Pull from `quay.io` / missing release | Mirror not done or incomplete — verify before boot |

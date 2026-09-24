@@ -1,15 +1,16 @@
 ---
-# Déploie install-config, agent-config, imageset, CA et pull-secret sur la bastion.
-# Lance depuis le Mac : cd ansible && ansible-playbook playbooks/bastion-ocp-install.yml
+# Deploys install-config, agent-config, imageset, CA and pull-secret on the bastion.
+# Run from the Mac: cd ansible && ansible-playbook playbooks/bastion-ocp-install.yml
 #
-# Prérequis :
-#   - lab-infra.yml déjà OK (DVD, DNS/gw Internet eth0, clients oc/oc-mirror, /etc/hosts)
-#   - ansible/files/pull-secret.txt          — console.redhat.com
-#   - ansible/files/install_ssh_key.pub     — clé publique **bastion** (pas Mac)
-#     scp bernard@192.168.1.144:~/.ssh/id_ed25519.pub ansible/files/install_ssh_key.pub
-#   - ocp_sno_mac dans inventory/group_vars/all.yml (MAC Proxmox SNO)
+# Prerequisites:
+#   - lab-infra.yml already OK (DVD, DNS/gw eth0, oc/oc-mirror, /etc/hosts)
+#   - ansible/files/pull-secret.txt — console.redhat.com
+#   - ocp_sno_mac in inventory/group_vars/all.yml (Proxmox SNO MAC)
 #
-# CA trust : rejoué ici (idempotent) ; déjà fait par lab-infra rôle bastion.
+# SNO sshKey: taken live from bastion ~/.ssh/id_ed25519.pub (created by lab-infra
+# proxmox_ssh or by this role). No Mac install_ssh_key.pub file.
+#
+# CA trust: replayed here (idempotent); already done by lab-infra bastion role.
 
 - name: Lire CA TLS registry
   hosts: registry
@@ -34,9 +35,7 @@
     - "{{ playbook_dir }}/../inventory/group_vars/all.yml"
   vars:
     ocp_pull_secret_path: "{{ playbook_dir }}/../files/pull-secret.txt"
-    ocp_ssh_pubkey_path: "{{ playbook_dir }}/../files/install_ssh_key.pub"
     ocp_registry_ca_pem: "{{ hostvars['registry'].ocp_registry_ca_pem }}"
-    ocp_ssh_pubkey: "{{ lookup('ansible.builtin.file', ocp_ssh_pubkey_path) | trim }}"
   pre_tasks:
     - name: Fusionner registry mirror dans pull secret (évite warning install)
       ansible.builtin.set_fact:

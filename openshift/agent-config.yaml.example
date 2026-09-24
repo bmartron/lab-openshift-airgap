@@ -29,4 +29,4 @@ hosts:
         next-hop-address: 172.16.10.1
         next-hop-interface: enp6s18
   rootDeviceHints:
-    deviceName: /dev/vda
+    deviceName: "/dev/disk/by-path/pci-0000:06:0a.0"

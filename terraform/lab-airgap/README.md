@@ -15,8 +15,8 @@ OpenShift 5 connecté (`ocp-bma`) → [`../assisted-ocp-bma/`](../assisted-ocp-b
 | `locals.tf` | OVMF + q35, tailles |
 
 **Disques RHEL (clone)** : OS en **`virtio0`** (`/dev/vda`) — aligné sur le template. Registry données : **`virtio1`** (`/dev/vdb`).  
-DVD repo : **`rhel_dvd_iso`** → **`ide2`** (souvent `/dev/sr1` ; `/dev/sr0` = cloud-init) — [rhel/dvd-repo.md](../../rhel/dvd-repo.md).  
-SNO / Assisted: **VirtIO** install disk (`/dev/vda`); LVMS on **virtio1** (`/dev/vdb`).
+DVD repo : **`rhel_dvd_iso`** → **`ide2`** (souvent `/dev/sr1` ; `/dev/sr0` = cloud-init) — [ansible/README.md](../../ansible/README.md) § RHEL DVD.
+SNO / Assisted: prefer **`/dev/disk/by-path/pci-…`** for install disk (VirtIO `virtio0`); LVMS on **virtio1**.
 
 **Templates** : [proxmox/rhel-cloudinit-template.md](../../proxmox/rhel-cloudinit-template.md) — **deux** templates (EFI Telmate + cross-storage).
 

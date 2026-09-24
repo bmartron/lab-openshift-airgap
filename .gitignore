@@ -41,9 +41,8 @@ ansible/files/install_ssh_key.pub
 **/mirror/*.tar.gz
 
 # Certificats générés (garder les .example)
-registry/certs/*.crt
-registry/certs/*.key
-!registry/certs/.gitkeep
+ansible/files/registry-certs/*.crt
+ansible/files/registry-certs/*.key
 
 # OS / éditeur
 .DS_Store

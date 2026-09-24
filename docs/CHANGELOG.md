@@ -1,6 +1,12 @@
 # Changelog
 
-## [Non publié]
+## [Unreleased]
+
+### Changed (SNO rootDeviceHints)
+- Default install disk hint: `/dev/disk/by-path/pci-0000:06:0a.0` (Proxmox virtio0 / 120G) instead of `/dev/vda` — multi-disk agent matching
+
+### Changed (SNO sshKey)
+- `bastion-ocp-install` embeds the **live** bastion `~/.ssh/id_ed25519.pub` into install-config (no Mac `install_ssh_key.pub`) — [docs/sno-ssh-convention.md](sno-ssh-convention.md)
 
 ### Ajouté (Ansible install OCP bastion)
 - Playbook `ansible/playbooks/bastion-ocp-install.yml` + rôle `ocp_bastion_install` (install-config, agent-config, imageset, CA, pull-secret)
@@ -87,6 +93,8 @@
 
 ### Ajouté (install SNO validée + réinstall)
 - Install GA 4.22.12 SNO air-gap validée en lab (~30 min avec mirror existant)
-- SNO VM notes (`proxmox/sno-vm.md`) removed — use Terraform `vm-sno.tf` + [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md)
+- Removed `rhel/` docs folder — DVD repo covered in [ansible/README.md](../ansible/README.md) § RHEL DVD
+- Removed empty `registry/` docs folder — registry VM documented in [ansible/README.md](../ansible/README.md)
+- Slimmed `proxmox/` docs to Terraform+Ansible path (EN)
 - [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) — post-install (`oc login`, OAuth `/etc/hosts`), faux timeout `wait-for`, réinstall
 - Bastion `/etc/hosts` : `oauth-openshift` et `console-openshift-console`

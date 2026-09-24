@@ -16,16 +16,47 @@
     fail_msg: >-
       CA absente — le play « registry » doit réussir (slurp ca.crt sur 172.16.10.20).
 
-- name: Vérifier pull-secret et clé SSH (Mac)
+- name: Vérifier pull-secret (Mac)
   ansible.builtin.assert:
     that:
       - ocp_pull_secret_json is defined
       - ocp_pull_secret_json | length > 10
+    fail_msg: >-
+      Copy ansible/files/pull-secret.txt on the Mac — see ansible/files/README.md
+
+- name: Ensure SSH directory for lab user
+  ansible.builtin.file:
+    path: "/home/{{ lab_user }}/.ssh"
+    state: directory
+    owner: "{{ lab_user }}"
+    group: "{{ lab_user }}"
+    mode: "0700"
+
+- name: Ensure ed25519 key for lab user (SNO sshKey)
+  become: true
+  become_user: "{{ lab_user }}"
+  ansible.builtin.command:
+    cmd: ssh-keygen -t ed25519 -N "" -f /home/{{ lab_user }}/.ssh/id_ed25519
+    creates: "/home/{{ lab_user }}/.ssh/id_ed25519"
+
+- name: Read live bastion public key for install-config sshKey
+  ansible.builtin.slurp:
+    src: "/home/{{ lab_user }}/.ssh/id_ed25519.pub"
+  register: ocp_ssh_pubkey_slurp
+
+- name: Set ocp_ssh_pubkey from bastion
+  ansible.builtin.set_fact:
+    ocp_ssh_pubkey: "{{ ocp_ssh_pubkey_slurp.content | b64decode | trim }}"
+
+- name: Vérifier clé SSH bastion
+  ansible.builtin.assert:
+    that:
       - ocp_ssh_pubkey is defined
       - ocp_ssh_pubkey | length > 20
+      - ocp_ssh_pubkey is match('^ssh-(ed25519|rsa) ')
     fail_msg: >-
-      Copier sur le Mac : ansible/files/pull-secret.txt et ansible/files/install_ssh_key.pub
-      — voir ansible/files/README.md
+      Missing or invalid /home/{{ lab_user }}/.ssh/id_ed25519.pub on bastion.
+      lab-infra proxmox_ssh should create it; regenerate ISO after bastion recreate.
 
 - name: Répertoires lab OCP
   ansible.builtin.file:

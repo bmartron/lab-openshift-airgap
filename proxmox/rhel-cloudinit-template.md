@@ -1,30 +1,30 @@
-# Template RHEL 10 — cloud-init (lab air-gap)
+# RHEL 10 cloud-init templates (lab air-gap)
 
-Objectif : templates Proxmox pour Terraform (`clone` + cloud-init) :
+Build once on Proxmox for Terraform clones:
 
 | Template | Datastore | VMs |
 |----------|-----------|-----|
 | **`rhel10-tpl`** | `local-lvm` | **registry** (`rhel_template`) |
 | **`rhel10-nfs`** | `nfs_vm` | **dns**, **bastion** (`rhel_template_infra`) |
 
-Deux templates sont **nécessaires** pour le mix NFS/SSD : Telmate ne déplace pas l’EFI UEFI en cross-storage.
+Two templates are **required** for the NFS/SSD mix: Telmate does not move UEFI efidisk across storages.
 
-## Prérequis
+## Prerequisites
 
-| Élément | Valeur |
-|---------|--------|
-| ISO RHEL 10 | `nfs_iso:iso/rhel-10.…-dvd.iso` |
+| Item | Value |
+|------|--------|
+| RHEL 10 ISO | `nfs_iso:iso/rhel-10.…-dvd.iso` |
 | Firmware | **OVMF + q35** |
-| Disque OS | **VirtIO Block (`virtio0`)** — Terraform clone en `virtio0` (un `scsi0` créerait un disque vide) |
-| Noms | courts (`rhel10-tpl`, `rhel10-nfs`) — limite longueur Proxmox |
+| OS disk | **VirtIO Block (`virtio0`)** — Terraform clones as `virtio0` |
+| Names | Short (`rhel10-tpl`, `rhel10-nfs`) |
 
-## 1. Créer la VM source → `rhel10-tpl` (local-lvm)
+## 1. Source VM → `rhel10-tpl` (`local-lvm`)
 
-- 1 disque **~32 Go** sur **`local-lvm`** (pas de 2ᵉ disque)
-- CD : ISO RHEL ; NIC `vmbr0` (ou `vmbr1` + repo DVD)
-- Installer RHEL **minimal**, user lab, réseau OK
+- One **~32 GiB** disk on **`local-lvm`** (no data disk)
+- CD: RHEL ISO; NIC `vmbr0` (or `vmbr1` + DVD repo)
+- Install RHEL **minimal**, lab user, network OK
 
-## 2. Dans l’invité (repo DVD ou Internet)
+## 2. Inside the guest (DVD or Internet)
 
 ```bash
 sudo dnf install -y cloud-init cloud-utils-growpart qemu-guest-agent
@@ -32,7 +32,7 @@ sudo systemctl enable --now qemu-guest-agent
 sudo systemctl enable cloud-init cloud-init-local cloud-config cloud-final
 ```
 
-## 3. Nettoyage avant conversion
+## 3. Clean before convert
 
 ```bash
 sudo cloud-init clean --logs --machine-id
@@ -41,24 +41,23 @@ sudo rm -f /etc/ssh/ssh_host_*
 sudo poweroff
 ```
 
-## 4. Proxmox — finaliser `rhel10-tpl`
+## 4. Finalize `rhel10-tpl` on Proxmox
 
-1. Retirer le CD ISO.
-2. **QEMU Guest Agent** = enabled.
-3. Renommer en **`rhel10-tpl`** **avant** conversion.
+1. Remove CD ISO.
+2. Enable **QEMU Guest Agent**.
+3. Rename to **`rhel10-tpl`** **before** convert.
 4. **Convert to template**.
 
-## 5. Créer `rhel10-nfs` (copie sur NAS)
+## 5. Create `rhel10-nfs` (full clone on NAS)
 
-Sur Proxmox (`root@192.168.1.147`) :
+**Host:** `root@192.168.1.147`
 
 ```bash
-# VMID du template local (souvent 100)
 NEXT=$(pvesh get /cluster/nextid)
-qm clone 100 "$NEXT" --name rhel10-nfs --full --storage nfs_vm
+qm clone 100 "$NEXT" --name rhel10-nfs --full --storage nfs_vm   # adapt VMID of rhel10-tpl
 qm template "$NEXT"
 qm config "$NEXT" | egrep '^(name|efidisk|virtio)'
-# attendu : efidisk0 et virtio0 en nfs_vm:...
+# expected: efidisk0 and virtio0 on nfs_vm:...
 ```
 
 ## 6. Terraform
@@ -70,7 +69,8 @@ storage_perf  = "local-lvm"
 rhel_template        = "rhel10-tpl"
 rhel_template_infra  = "rhel10-nfs"
 registry_install_iso = ""
-# ssh_public_key_file = "/Users/VOUS/.ssh/id_ed25519.pub"  # SSH bernard@ depuis le Mac
+# ssh_public_key_file = "/Users/YOU/.ssh/id_ed25519.pub"
+rhel_dvd_iso         = "nfs_iso:iso/rhel-10.2-x86_64-dvd.iso"
 ```
 
 ```bash
@@ -81,15 +81,14 @@ terraform plan && terraform apply
 | VM | Template | OS + EFI + cloud-init | Extra |
 |----|----------|----------------------|-------|
 | dns | `rhel10-nfs` | `nfs_vm` | — |
-| bastion | `rhel10-nfs` | `nfs_vm` | resize possible (lent sur NFS) |
-| registry | `rhel10-tpl` | `local-lvm` | **virtio1** 120 Go → `/dev/vdb` |
-| SNO | — (RHCOS) | `local-lvm` | scsi0 + scsi1 LVMS + ISO agent |
+| bastion | `rhel10-nfs` | `nfs_vm` | dual NIC |
+| registry | `rhel10-tpl` | `local-lvm` | **virtio1** 120 GiB → `/dev/vdb` (`/opt/registry`) |
+| SNO | — (RHCOS) | `local-lvm` | **virtio0** + optional **virtio1** LVMS + agent ISO |
 
-Règle : **cloud-init sur le même datastore que l’OS** (validé aussi sur `nfs_vm` une fois les templates duals en place).
+Rule: **cloud-init on the same datastore as the OS**.
 
 ## Notes
 
-- Ne **pas** convertir la registry en template (elle a `virtio1` données).
-- Après clone, cloud-init applique `ipconfig0` / `ipconfig1`.
-- Guest agent : souvent OK **sans** Serial Port VirtIO sur RHEL 10 + Proxmox récents.
-- En dépannage : après plusieurs changements d’un coup, **revenir en arrière** sur ce qui n’était pas nécessaire une fois le vrai fix identifié (ex. forcer cloud-init en LVM n’était plus requis).
+- Do **not** convert the registry VM to a template (it has data on `virtio1`).
+- After clone, cloud-init applies `ipconfig0` / `ipconfig1`.
+- Next: Ansible — [docs/iac.md](../docs/iac.md) · [ansible/README.md](../ansible/README.md).

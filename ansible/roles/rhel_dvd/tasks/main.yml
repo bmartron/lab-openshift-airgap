@@ -81,7 +81,7 @@
       - item.stat.exists
     fail_msg: >-
       {{ item.item }} absent sous {{ rhel_dvd_mount }} — attacher le DVD RHEL complet
-      dans Proxmox (ide2) puis relancer. Voir rhel/dvd-repo.md
+      dans Proxmox (ide2) puis relancer. Voir ansible/README.md § RHEL DVD
   loop: "{{ rhel_dvd_tree.results }}"
   loop_control:
     label: "{{ item.item }}"

@@ -13,7 +13,7 @@ Deploys install YAML on the **bastion** (`192.168.1.144`): no manual editing of 
 | Mirror OCP images | `oc-mirror` on bastion — [mirror/README.md](../mirror/README.md) — **then** boot SNO |
 | Registry reinstalled (new CA) | Re-run playbook + regenerate ISO |
 | SNO MAC, IP, or imageset change | Edit `inventory/group_vars/all.yml` + re-run (+ new ISO) |
-| Bastion **recreated** (Terraform) | Resync `install_ssh_key.pub` from the new bastion |
+| Bastion **recreated** (Terraform) | Re-run playbook + **new ISO** (live bastion `sshKey`) |
 
 ## Prerequisites (Mac)
 
@@ -31,9 +31,11 @@ See [ansible/files/README.md](../ansible/files/README.md):
 
 ```bash
 cp ~/Downloads/pull-secret.txt ansible/files/pull-secret.txt
-# Bastion public key (lab convention — not the Mac key):
-scp bernard@192.168.1.144:~/.ssh/id_ed25519.pub ansible/files/install_ssh_key.pub
 ```
+
+SNO `sshKey` is **not** a Mac file: the playbook embeds the live bastion
+`~/.ssh/id_ed25519.pub` — [docs/sno-ssh-convention.md](sno-ssh-convention.md).
+
 
 ### Required variables
 

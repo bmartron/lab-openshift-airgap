@@ -104,7 +104,7 @@ Manuel :
 
 ```bash
 sudo mkdir -p /mnt/rhel && sudo mount /dev/sr1 /mnt/rhel
-# repo : voir rhel/dvd-repo.md
+# repo : ansible/README.md § RHEL DVD
 sudo dnf install -y nmstate xorriso bind-utils
 ```
 

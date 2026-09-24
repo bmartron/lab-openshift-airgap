@@ -10,11 +10,11 @@ hosts:
   interfaces:
   - name: ens18
     macAddress: "BC:24:11:E1:8F:82"
-  # Proxmox VirtIO Block (virtio0) → /dev/vda ; LVMS virtio1 → /dev/vdb
-  # Check on SNO: lsblk -o NAME,SIZE,TYPE,TRAN
-  # Accepted values: /dev/vda or /dev/disk/by-path/... (not /dev/disk/by-id/)
+  # Proxmox VirtIO Block: virtio0 (120G install) → by-path (stable); virtio1 = LVMS
+  # On agent live: ls -l /dev/disk/by-path/  → pick the link to ../../vda (not vdb)
+  # Prefer by-path over /dev/vda (multi-disk can ignore/mismatch deviceName)
   rootDeviceHints:
-    deviceName: /dev/vda
+    deviceName: "/dev/disk/by-path/pci-0000:06:0a.0"
   networkConfig:
     interfaces:
     - name: ens18

@@ -5,7 +5,7 @@
       - registry_image_tar | default('') | length > 0
     fail_msg: >-
       Définir registry_image_tar (chemin absolu du .tar amd64 sur le Mac) —
-      registry/README.md §3
+      ansible/README.md
 
 - name: Vérifier fichier image sur le Mac (contrôleur Ansible)
   ansible.builtin.stat:

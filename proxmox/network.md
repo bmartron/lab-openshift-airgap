@@ -1,26 +1,26 @@
-# Configuration réseau Proxmox
+# Proxmox network (lab)
 
-## Noms de bridges
+## Bridge names
 
-Proxmox **n'accepte pas le tiret** (`-`) dans les noms d'interfaces. Utiliser :
+Proxmox does **not** allow `-` in interface names.
 
-| Bridge | Rôle |
+| Bridge | Role |
 |--------|------|
-| `vmbr0` | Admin / LAN maison (existant) |
-| `vmbr1` | Lab OpenShift air-gap (isolé) |
+| `vmbr0` | Admin / home LAN |
+| `vmbr1` | Isolated OpenShift lab |
 
-## Bridge lab isolé (`vmbr1`)
+## Isolated lab bridge (`vmbr1`)
 
-Via l'UI Proxmox → **System → Network → Create → Linux Bridge** :
+UI: **System → Network → Create → Linux Bridge**:
 
-| Champ | Valeur |
+| Field | Value |
 |-------|--------|
 | Name | `vmbr1` |
 | IPv4/CIDR | `172.16.10.1/24` |
-| Gateway | *(vide)* |
-| Bridge ports | *(vide — aucune interface physique)* |
+| Gateway | *(empty)* |
+| Bridge ports | *(empty — no physical NIC)* |
 
-Ou ajouter dans `/etc/network/interfaces` :
+Or `/etc/network/interfaces`:
 
 ```text
 auto vmbr1
@@ -31,27 +31,15 @@ iface vmbr1 inet static
     bridge-fd 0
 ```
 
-Appliquer :
+Apply: `ifreload -a` (on **pve** — `root@192.168.1.147`).
 
-```bash
-ifreload -a
-```
+## Rules
 
-## Règles
+- Do **not** set a gateway on `vmbr1`.
+- Do **not** NAT `172.16.10.0/24` to the Internet.
+- OpenShift / DNS / registry: **one NIC** on `vmbr1` only.
+- Bastion: `eth0` → `vmbr0`, `eth1` → `vmbr1`.
 
-- **Ne pas** ajouter de `gateway` sur `vmbr1`.
-- **Ne pas** configurer NAT depuis `172.16.10.0/24` vers Internet.
-- VMs OpenShift, DNS, registry : **une seule NIC** sur `vmbr1`.
-- Bastion : `eth0` → `vmbr0`, `eth1` → `vmbr1`.
+## Nested virtualization (OpenShift Virtualization)
 
-## Stockage NFS
-
-- ISO et disques VM sur le datastore NFS Proxmox.
-- Cache disque VM recommandé : `none` ou `directsync` (éviter `writeback` sur NFS).
-
-## Nested virtualization (phase OpenShift Virtualization)
-
-Sur chaque VM hôte OpenShift :
-
-- Type CPU : **host**
-- Activer nested virt sur l'hôte Proxmox si nécessaire.
+On the SNO VM: CPU type **`host`** (Terraform `sno_cpu_type`). Enable nested virt on the Proxmox host if required by your CPU.

@@ -4,7 +4,25 @@ Configures **DNS**, **registry** (data disk + Podman), and **bastion** (DVD repo
 
 Run from the **Mac** (Proxmox ProxyJump) or from the bastion for lab hosts only.
 
-Rebuild overview: [docs/iac.md](../docs/iac.md). Manual guides under `dns/`, `registry/`, etc. still include an *Ansible equivalent* block when relevant.
+Rebuild overview: [docs/iac.md](../docs/iac.md).
+
+## Registry VM (Terraform + this role)
+
+| Parameter | Value |
+|-----------|--------|
+| Name / IP | `registry` — `172.16.10.20` on `vmbr1` |
+| Template | `rhel10-tpl` on `local-lvm` |
+| Disks | **virtio0** OS + **virtio1** → `/dev/vdb` → `/opt/registry` |
+| Endpoint | `https://registry.lab.local:5000` (`registry:2` via Podman) |
+
+Check: `curl -s --cacert ~/lab/ca.crt https://registry.lab.local:5000/v2/_catalog` (from bastion).
+
+| Symptom | Action |
+|---------|--------|
+| `platform arm64 vs amd64` | Re-save tar with `--platform linux/amd64` on Mac |
+| HTTP 500 on push | `df -h /opt/registry` |
+| x509 / SAN | Re-run with `registry_tls_mode: generate` |
+| No `podman` | RHEL DVD on `ide2` — see § RHEL DVD below |
 
 ## Prerequisites
 
@@ -54,8 +72,8 @@ After Terraform VMs exist (`terraform/lab-airgap`):
 
 ```bash
 cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/ansible
-ansible-playbook playbooks/lab-infra.yml --ask-become-pass
-ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass
+ansible-playbook playbooks/lab-infra.yml
+ansible-playbook playbooks/bastion-ocp-install.yml
 ```
 
 Then on the **bastion**: `oc-mirror` — [mirror/README.md](../mirror/README.md).
@@ -64,7 +82,28 @@ Then on the **bastion**: `oc-mirror` — [mirror/README.md](../mirror/README.md)
 
 On stock RHEL, `bernard` is in **wheel** but sudo asks for a password — without `-K` / `--ask-become-pass`: `Missing sudo password`. Lab option (once on the VM): `bernard ALL=(ALL) NOPASSWD: ALL` in sudoers (isolated lab only).
 
-Without the RHEL DVD on `ide2`: `No package podman available` — [rhel/dvd-repo.md](../rhel/dvd-repo.md); Terraform: `rhel_dvd_iso`.
+Without the RHEL DVD on `ide2`: `No package podman available` — see § RHEL DVD below; Terraform: `rhel_dvd_iso`.
+
+### RHEL DVD repo (no subscription)
+
+Infra VMs use the full RHEL 10 DVD (BaseOS + AppStream) via role **`rhel_dvd`** (not `subscription-manager`).
+
+Terraform (`terraform.tfvars`):
+
+```hcl
+rhel_dvd_iso = "nfs_iso:iso/rhel-10.2-x86_64-dvd.iso"
+```
+
+Attached as **`ide2`**. With cloud-init on `ide0`: **`/dev/sr0` = cidata**, **`/dev/sr1` = RHEL DVD**.  
+`lifecycle.ignore_changes` on disks: re-attach with `qm set <VMID> --ide2 …` or recreate the VM.
+
+Ansible template: [roles/rhel_dvd/templates/rhel-dvd.repo.j2](roles/rhel_dvd/templates/rhel-dvd.repo.j2).
+
+| Symptom | Action |
+|---------|--------|
+| Empty repos / `No package` | Wrong `sr*` or boot-only ISO — use full DVD |
+| `Unable to read consumer identity` | Expected — RHSM plugin disabled by the role |
+| ISO missing after recreate | Set `rhel_dvd_iso` before `terraform apply` |
 
 ## Playbooks
 
@@ -79,7 +118,7 @@ Without the RHEL DVD on `ide2`: `No package podman available` — [rhel/dvd-repo
 Targeted re-run after a full stack exists:
 
 ```bash
-ansible-playbook playbooks/lab-infra.yml --limit registry --ask-become-pass
+ansible-playbook playbooks/lab-infra.yml --limit registry
 ```
 
 ### OCP install configs on the bastion
@@ -88,9 +127,11 @@ Full guide: **[docs/ansible-ocp-install.md](../docs/ansible-ocp-install.md)**.
 
 Summary:
 
-1. **Mac** — [files/README.md](files/README.md): `files/pull-secret.txt`, `files/install_ssh_key.pub` (gitignored).
+1. **Mac** — [files/README.md](files/README.md): `files/pull-secret.txt` (gitignored).
 2. `ocp_sno_mac` in `group_vars/all.yml` (or `inventory/group_vars/all.yml`).
 3. Inventory: `bastion` + `registry` (Proxmox jump in `hosts.yml`).
+4. SNO `sshKey`: live from bastion `~/.ssh/id_ed25519.pub` (no Mac copy).
+
 
 ```bash
 cd ansible
@@ -114,7 +155,7 @@ Symptom: role **common**, task **base packages** — `Failed to download metadat
 
 Cause: without a RH subscription, **common** runs `dnf` before the **DVD** repo (`file:///mnt/rhel/...`) is mounted.
 
-1. Proxmox: full RHEL 10 ISO on `ide2` (often `/dev/sr1`; `/dev/sr0` = cloud-init cidata) — [rhel/dvd-repo.md](../rhel/dvd-repo.md); Terraform: `rhel_dvd_iso`.
+1. Proxmox: full RHEL 10 ISO on `ide2` (often `/dev/sr1`; `/dev/sr0` = cloud-init cidata) — Terraform `rhel_dvd_iso` (§ RHEL DVD above).
 2. Re-run the playbook (`rhel_dvd` **before** `common` for all three hosts in `lab-infra.yml`).
 
 ```bash

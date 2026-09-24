@@ -17,14 +17,14 @@ ocp_sno_ip: 172.16.10.100
 ocp_sno_mac: ""
 ocp_sno_interface: ens18
 ocp_sno_hostname: ocp-sno-422
-ocp_sno_root_device: /dev/vda
+ocp_sno_root_device: "/dev/disk/by-path/pci-0000:06:0a.0"
 ocp_lab_gateway: 172.16.10.1
 ocp_dns_ip: "{{ dns_ip }}"
 ocp_ntp_ip: "{{ lab_ntp_server }}"
 
-# Fichiers sur la machine qui lance ansible (Mac) — gitignorés
+# Files on the Ansible controller (Mac) — gitignored
 ocp_pull_secret_path: "{{ playbook_dir }}/../files/pull-secret.txt"
-ocp_ssh_pubkey_path: "{{ playbook_dir }}/../files/install_ssh_key.pub"
+# SNO sshKey: live from bastion ~/.ssh/id_ed25519.pub (see tasks)
 ocp_registry_ca_fallback_path: "{{ playbook_dir }}/../files/registry-ca.crt"
 
 # imageset : platform-only | gitops | virtualization | lvms | odf | rook-ceph | virt-lvms

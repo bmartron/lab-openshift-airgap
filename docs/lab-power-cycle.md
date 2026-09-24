@@ -129,7 +129,7 @@ sleep 3
 curl -k https://127.0.0.1:5000/v2/_catalog
 ```
 
-Persistance au boot : `podman-restart.service` + `--restart=always` — voir [registry/README.md](../registry/README.md).
+Persistance au boot : `podman-restart.service` + `--restart=always` — voir [ansible/README.md](../ansible/README.md) § Registry.
 
 ### Équivalent Ansible
 
@@ -188,6 +188,6 @@ scp /tmp/lb-ext.kubeconfig bernard@172.16.10.10:~/lab/4.22-ga/auth/kubeconfig-ad
 ## Références
 
 - [dns/README.md](../dns/README.md) — dnsmasq, NTP, firewall
-- [registry/README.md](../registry/README.md) — Podman registry
+- [ansible/README.md](../ansible/README.md) — registry Podman + lab-infra
 - [proxmox/access.md](../proxmox/access.md) — SSH, console Mac
 - [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) — post-install

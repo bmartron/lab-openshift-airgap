@@ -11,7 +11,7 @@ hosts:
   - name: {{ ocp_sno_interface }}
     macAddress: "{{ ocp_sno_mac }}"
   rootDeviceHints:
-    deviceName: {{ ocp_sno_root_device }}
+    deviceName: "{{ ocp_sno_root_device }}"
   networkConfig:
     interfaces:
     - name: {{ ocp_sno_interface }}

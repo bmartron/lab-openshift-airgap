@@ -181,7 +181,7 @@ Tunnel detail: [proxmox/access.md](../proxmox/access.md) § OpenShift console.
 
 ## Bash completions (`oc`, `virtctl`)
 
-On bastion: **`bash-completion`** package (DVD repo if no Internet — [rhel/dvd-repo.md](../rhel/dvd-repo.md)), then:
+On bastion: **`bash-completion`** package (DVD repo if no Internet — [ansible/README.md](../ansible/README.md) § RHEL DVD), then:
 
 ```bash
 oc completion bash | sudo tee /etc/bash_completion.d/oc

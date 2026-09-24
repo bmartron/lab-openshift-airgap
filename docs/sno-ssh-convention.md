@@ -13,24 +13,18 @@ Ansible / git: Mac → bastion LAN `bernard@192.168.1.144` only.
 
 The **`sshKey`** field must contain **only the bastion public key** (not the Mac key). Cloud-init SSH keys on RHEL VMs (`bernard@`) are separate from this SNO rule.
 
-**Bastion** — generate if needed:
+## How the key is embedded
+
+`bastion-ocp-install` **slurps** `/home/<lab_user>/.ssh/id_ed25519.pub` on the bastion and writes it into `install-config` / the agent ISO. No Mac `install_ssh_key.pub` copy.
+
+`lab-infra` (`proxmox_ssh`) creates that key if missing (also used for ISO scp to Proxmox).
+
+**Bastion recreated** (Terraform): a **new** keypair is generated → re-run `bastion-ocp-install` with `ocp_agent_generate_iso: true` (and push ISO) before reinstalling the SNO. An old ISO keeps the previous pubkey → `Permission denied (publickey)`.
 
 ```bash
-test -f ~/.ssh/id_ed25519.pub || ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
-cat ~/.ssh/id_ed25519.pub
-```
-
-**Mac** — feed Ansible (gitignored file):
-
-```bash
-scp bernard@192.168.1.144:~/.ssh/id_ed25519.pub \
-  /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/ansible/files/install_ssh_key.pub
-
 cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/ansible
 ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass
 ```
-
-Then regenerate the ISO / reinstall if the existing cluster does not have this key (or add it once via `oc debug node`). Recreate the SNO VM with Terraform if needed — [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md).
 
 ## Daily connection
 
@@ -65,8 +59,8 @@ ssh sno
 
 ## SNO reinstall
 
-1. Refresh `install_ssh_key.pub` from the bastion (above) if the bastion key changed.
-2. `ansible-playbook playbooks/bastion-ocp-install.yml` → regenerate ISO / install.
+1. If the bastion was recreated, regenerate the agent ISO via Ansible (live key).
+2. Recreate / wipe the SNO VM if needed — [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md).
 3. On the **bastion** only: `ssh-keygen -R 172.16.10.100` then `ssh sno`.
 
 ## Ansible equivalent
@@ -74,7 +68,8 @@ ssh sno
 | | |
 |---|---|
 | **Playbook** | `ansible/playbooks/bastion-ocp-install.yml` |
-| **File** | `ansible/files/install_ssh_key.pub` (= **bastion** pubkey) |
+| **Key source** | Bastion `~/.ssh/id_ed25519.pub` (live) |
+| **Mac file** | `ansible/files/pull-secret.txt` only |
 | **Command (Mac)** | `cd ansible && ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass` |
 
 See also [ansible/files/README.md](../ansible/files/README.md).

@@ -50,14 +50,14 @@ ping -c 2 172.16.10.11
 
 Sur `vmbr1` isolé, pas d'Internet → utiliser le **DVD RHEL 10 complet** comme repo local.
 
-Voir [rhel/dvd-repo.md](../rhel/dvd-repo.md) pour la procédure complète.
+Voir [ansible/README.md](../ansible/README.md) § RHEL DVD pour le repo DVD.
 
 Résumé :
 
 ```bash
 sudo mount /dev/sr1 /mnt/rhel   # cloud-init = sr0 ; DVD ide2 = souvent sr1 — lsblk -f
 sudo cp rhel-dvd.repo /etc/yum.repos.d/rhel-dvd.repo   # depuis le repo git ou copier le .example
-# Désactiver plugin subscription-manager (voir rhel/dvd-repo.md)
+# Désactiver plugin subscription-manager (rôle Ansible rhel_dvd)
 sudo dnf install -y dnsmasq bind-utils
 ```
 
@@ -248,7 +248,7 @@ Puis `sudo systemctl daemon-reload` et `sudo systemctl restart dnsmasq`.
 
 | Symptôme | Cause probable | Action |
 |----------|----------------|--------|
-| `dnf`: no enabled repositories | Pas de souscription / pas de repo DVD | [rhel/dvd-repo.md](../rhel/dvd-repo.md) |
+| `dnf`: no enabled repositories | Pas de souscription / pas de repo DVD | [ansible/README.md](../ansible/README.md) § RHEL DVD |
 | SSH depuis Mac timeout | Réseau isolé | SSH via Proxmox — [proxmox/access.md](../proxmox/access.md) |
 | `dig` timeout / `host unreachable` depuis bastion | Firewall DNS fermé | `firewall-cmd --add-service=dns` |
 | `DNS service limited to localhost` | `listen-address` manquant | Ajouter `listen-address=172.16.10.11` |
