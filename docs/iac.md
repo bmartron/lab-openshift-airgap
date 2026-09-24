@@ -16,17 +16,16 @@ Connected Assisted 3-node (OCP 5): [openshift/5-rc/assisted-connected/README.md]
 ### Full air-gap rebuild (dns + bastion + registry)
 
 1. RHEL templates — [proxmox/rhel-cloudinit-template.md](../proxmox/rhel-cloudinit-template.md)
-2. `cd terraform/lab-airgap` → `terraform apply` (`rhel_dvd_iso`, `bastion_admin_gateway`, SSH key file)
-3. `cd ansible` → `ansible-playbook playbooks/lab-infra.yml`
-4. `ansible-playbook playbooks/bastion-ocp-install.yml` (pull-secret + install YAML)
-5. On bastion: `oc-mirror` — [mirror/README.md](../mirror/README.md)
-6. Agent ISO + SNO — [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md)
+2. **Mac (once):** `podman pull` + `podman save` → `registry:2` tar; set `registry_image_tar` in Ansible `group_vars` — [ansible/README.md](../ansible/README.md)
+3. `cd terraform/lab-airgap` → `terraform apply` (`rhel_dvd_iso`, `bastion_admin_gateway`, SSH key file)
+4. `cd ansible` → `ansible-playbook playbooks/lab-infra.yml` (copies tar → `podman load` on registry; no Hub pull on the VM)
+5. `ansible-playbook playbooks/bastion-ocp-install.yml` (pull-secret + install YAML)
+6. On bastion: `oc-mirror` — [mirror/README.md](../mirror/README.md)
+7. Agent ISO + SNO — [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md)
 
-### Registry only (existing dns/bastion)
+### Re-run registry only (dns/bastion already up)
 
-1. Token in `terraform/lab-airgap/terraform.tfvars` with `create_dns` / `create_bastion` = `false`
-2. `terraform apply` → registry `virtio0` + `virtio1` (`/dev/vda` + `/dev/vdb`)
-3. Ansible: `registry_data_device: /dev/vdb` → `playbooks/lab-infra.yml --limit registry` (or `registry.yml`)
+`ansible-playbook playbooks/lab-infra.yml --limit registry` (same `registry` role; needs `registry_image_tar` on the Mac). To recreate the VM: Terraform with `create_dns` / `create_bastion` = `false`, then that limit.
 
 ### Assisted connected (OCP 5)
 

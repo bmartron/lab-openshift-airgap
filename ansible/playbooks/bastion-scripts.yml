@@ -1,14 +1,14 @@
 ---
-# Copie les scripts ~/lab/scripts/ sur la bastion — sans dnf / sudo.
-# Mac : cd ansible && ansible-playbook playbooks/bastion-scripts.yml
+# Copy useful lab scripts to ~/lab/scripts/ on bastion — no dnf / sudo.
+# Mac: cd ansible && ansible-playbook playbooks/bastion-scripts.yml
 
-- name: Scripts lab sur bastion
+- name: Lab scripts on bastion
   hosts: bastion
   gather_facts: false
   vars_files:
     - "{{ playbook_dir }}/../group_vars/all.yml"
   tasks:
-    - name: Répertoire scripts
+    - name: Scripts directory
       ansible.builtin.file:
         path: "{{ bastion_lab_dir }}/scripts"
         state: directory
@@ -16,7 +16,7 @@
         group: "{{ lab_user }}"
         mode: "0755"
 
-    - name: Copier scripts bastion
+    - name: Copy bastion scripts
       ansible.builtin.copy:
         src: "{{ playbook_dir }}/../../bastion/scripts/{{ item }}"
         dest: "{{ bastion_lab_dir }}/scripts/{{ item }}"
@@ -26,7 +26,13 @@
       loop:
         - lab-startup-check.sh
         - verify-mirror-before-sno.sh
+        - pull-secret-for-oc-mirror.sh
+
+    - name: Remove obsolete install-config helper scripts
+      ansible.builtin.file:
+        path: "{{ bastion_lab_dir }}/scripts/{{ item }}"
+        state: absent
+      loop:
         - install-config-embed-ca.sh
         - install-config-fix-pullsecret.sh
         - install-config-regenerate.sh
-        - pull-secret-for-oc-mirror.sh

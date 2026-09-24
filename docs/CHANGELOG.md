@@ -5,7 +5,7 @@
 ### Ajouté (Ansible install OCP bastion)
 - Playbook `ansible/playbooks/bastion-ocp-install.yml` + rôle `ocp_bastion_install` (install-config, agent-config, imageset, CA, pull-secret)
 - [docs/ansible-ocp-install.md](ansible-ocp-install.md) — procédure mise à jour configs sans YAML manuel
-- Scripts bastion : `verify-mirror-before-sno.sh`, `install-config-embed-ca.sh`, `install-config-fix-pullsecret.sh`, `install-config-regenerate.sh`
+- Bastion scripts kept: `pull-secret-for-oc-mirror.sh`, `lab-startup-check.sh`, `verify-mirror-before-sno.sh` (install-config helpers removed — use Ansible)
 
 ### Corrigé (alignement doc)
 - Stack alignment (versions provider, commandes obsolètes) fusionné dans [docs/versions.md](versions.md)

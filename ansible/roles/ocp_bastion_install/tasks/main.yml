@@ -84,7 +84,7 @@
     mode: "0600"
   no_log: true
 
-- name: Scripts bastion (install / mirror)
+- name: Lab scripts (checks + oc-mirror auth)
   when: ocp_deploy_lab_scripts | bool
   ansible.builtin.copy:
     src: "{{ playbook_dir }}/../../bastion/scripts/{{ item }}"
@@ -95,12 +95,19 @@
   loop:
     - lab-startup-check.sh
     - verify-mirror-before-sno.sh
+    - pull-secret-for-oc-mirror.sh
+
+- name: Remove obsolete install-config helper scripts
+  when: ocp_deploy_lab_scripts | bool
+  ansible.builtin.file:
+    path: "{{ bastion_lab_dir }}/scripts/{{ item }}"
+    state: absent
+  loop:
     - install-config-embed-ca.sh
     - install-config-fix-pullsecret.sh
     - install-config-regenerate.sh
-    - pull-secret-for-oc-mirror.sh
 
-- name: pull-secret-oc-mirror.txt (auth Red Hat pour oc-mirror)
+- name: pull-secret-oc-mirror.txt (Red Hat auth for oc-mirror)
   ansible.builtin.command:
     cmd: "{{ bastion_lab_dir }}/scripts/pull-secret-for-oc-mirror.sh"
   become: false

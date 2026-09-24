@@ -1,198 +1,185 @@
-# Ansible — configuration lab infra
+# Ansible — lab infra configuration
 
-Configure **DNS**, **registry** (disque + Podman), **bastion** (DVD repo, NTP, `/etc/hosts`, trust CA, paquets ISO, clients OCP, script preflight).  
-À lancer **depuis le Mac** (ProxyJump Proxmox) ou depuis la bastion pour les hôtes lab uniquement.
+Configures **DNS**, **registry** (data disk + Podman), and **bastion** (DVD repo, NTP, `/etc/hosts`, CA trust, ISO packages, OCP clients, preflight scripts).
 
-> Chaque procédure manuelle des guides **dns**, **registry**, **bastion**, **rhel/dvd-repo**, **lab-power-cycle** indique le playbook équivalent (bloc *Équivalent Ansible*). Rebuild global : [docs/iac.md](../docs/iac.md).
+Run from the **Mac** (Proxmox ProxyJump) or from the bastion for lab hosts only.
 
-## Prérequis
+Rebuild overview: [docs/iac.md](../docs/iac.md). Manual guides under `dns/`, `registry/`, etc. still include an *Ansible equivalent* block when relevant.
+
+## Prerequisites
 
 ```bash
-brew install ansible          # Mac (recommandé)
-# ou : dnf install ansible-core  (sur bastion / RHEL)
+brew install ansible          # Mac (recommended)
+# or: dnf install ansible-core  (bastion / RHEL)
 ```
-
-## Inventaire
 
 ```bash
 cd ansible
 cp inventory/hosts.yml.example inventory/hosts.yml
 cp inventory/group_vars/all.yml.example inventory/group_vars/all.yml
-# (équivalent : cp group_vars/all.yml.example group_vars/all.yml)
-# Obligatoire : registry_data_device, registry_image_tar (chemin .tar sur le Mac)
-# Éditer hosts.yml : IP LAN bastion, user SSH ; all.yml : disque + chemin .tar
+# Required: registry_data_device, registry_image_tar (absolute path to .tar on the Mac)
+# Edit hosts.yml: bastion LAN IP, SSH user; all.yml: data disk + tar path
 ```
 
-Connexion typique depuis le **Mac** :
+Typical Mac connectivity:
 
-- `bastion` : SSH direct sur IP LAN (`vmbr0`)
-- `dns`, `registry` : `ansible_host` = IP lab + `ProxyJump` via Proxmox (voir `hosts.yml.example`)
+- `bastion`: direct SSH on LAN IP (`vmbr0`)
+- `dns`, `registry`: `ansible_host` = lab IP + `ProxyJump` via Proxmox (`hosts.yml.example`)
 
-## Registry seule (ton cas actuel)
+### Registry image `registry:2` (once on the Mac)
 
-Après install RHEL + SSH sur **172.16.10.20** :
+The registry VM has **no Internet**. `lab-infra.yml` does **not** pull from Docker Hub. It uses the same `registry` role as `registry.yml`: copy a local tar → `podman load` on the VM.
 
-1. Sur le **Mac**, image amd64 (une fois) :
+**Mac** (once, with Internet):
 
 ```bash
 podman pull --platform linux/amd64 docker.io/library/registry:2
 podman save -o ~/Downloads/registry2-amd64.tar docker.io/library/registry:2
 ```
 
-2. `group_vars/all.yml` :
+Point `registry_image_tar` in `group_vars/all.yml` at that file (see `inventory/group_vars/all.yml.example`).
 
-- `registry_data_device` : clone template → `/dev/vdb` ; install ISO → `/dev/sdb` ou `/dev/sdb1` (`lsblk`)
-- `registry_image_tar` : chemin absolu du `.tar` sur le Mac
-- `registry_tls_mode: generate`
+Flow inside the role (`roles/registry/tasks/image.yml`):
 
-3. Lancer :
+1. Assert `registry_image_tar` exists on the **controller** (Mac)
+2. `copy` → `/tmp/registry2-amd64.tar` on the registry VM
+3. `podman load` + tag → `docker.io/library/registry:2` (default `registry_image`)
+4. Start the Podman container
 
-```bash
-cd ansible
-ansible-playbook playbooks/registry.yml --ask-become-pass   # -K : mot de passe sudo de bernard
-```
+If the tar is missing, `lab-infra.yml` fails on the registry host with a clear assert.
 
-Sur une install RHEL standard, `bernard` est dans **wheel** mais sudo **demande un mot de passe** — sans `-K` : `Missing sudo password`.
+## Default rebuild path
 
-Option lab (sur la VM, une fois) : sudo sans mot de passe pour l’automation — `sudo visudo` → `bernard ALL=(ALL) NOPASSWD: ALL` (à n’utiliser que sur ce lab isolé).
-
-Le playbook : repo **DVD RHEL** (ISO Proxmox `ide2`, souvent `/dev/sr1`) → NTP → disque `/opt/registry` → `podman`/`openssl` → certs → `podman load` → conteneur `oc-registry`.
-
-Sans ISO attachée : `No package podman available` — voir [rhel/dvd-repo.md](../rhel/dvd-repo.md).
-
-4. Copier la CA sur le bastion pour `oc-mirror` — [registry/README.md](../registry/README.md) §5.
-
-Disque seulement (sans Podman) :
+After Terraform VMs exist (`terraform/lab-airgap`):
 
 ```bash
-ansible-playbook playbooks/registry-data-disk.yml
+cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/ansible
+ansible-playbook playbooks/lab-infra.yml --ask-become-pass
+ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass
 ```
+
+Then on the **bastion**: `oc-mirror` — [mirror/README.md](../mirror/README.md).
+
+`lab-infra.yml` order: **dns → registry → bastion** (includes DVD repo, NTP, registry disk/TLS/image/container, bastion packages/CA/clients).
+
+On stock RHEL, `bernard` is in **wheel** but sudo asks for a password — without `-K` / `--ask-become-pass`: `Missing sudo password`. Lab option (once on the VM): `bernard ALL=(ALL) NOPASSWD: ALL` in sudoers (isolated lab only).
+
+Without the RHEL DVD on `ide2`: `No package podman available` — [rhel/dvd-repo.md](../rhel/dvd-repo.md); Terraform: `rhel_dvd_iso`.
 
 ## Playbooks
 
-| Playbook | Rôle |
+| Playbook | Role |
 |----------|------|
-| `playbooks/registry.yml` | **Registry** : disque, TLS, image, conteneur |
-| `playbooks/lab-infra.yml` | DNS → registry → bastion (ordre boot lab) |
-| `playbooks/registry-data-disk.yml` | Seulement disque `/opt/registry` |
-| `playbooks/bastion-ocp-install.yml` | **Bastion** : `install-config`, `agent-config`, `imageset`, CA, pull-secret (sans YAML manuel) |
-| `playbooks/bastion-scripts.yml` | **Bastion** : copie `~/lab/scripts/*.sh` seulement (**pas** de sudo / dnf) |
+| `playbooks/lab-infra.yml` | **Default** — DNS → registry → bastion |
+| `playbooks/registry.yml` | Registry host only (same `registry` role; use if you do not want dns/bastion) |
+| `playbooks/registry-data-disk.yml` | Data disk `/opt/registry` only |
+| `playbooks/bastion-ocp-install.yml` | Bastion: install-config, agent-config, imageset, CA, pull-secret |
+| `playbooks/bastion-scripts.yml` | Bastion: copy `~/lab/scripts/*.sh` only (**no** sudo / dnf) |
 
-### Install OCP sur la bastion (Ansible)
+Targeted re-run after a full stack exists:
 
-Guide détaillé : **[docs/ansible-ocp-install.md](../docs/ansible-ocp-install.md)** (quand relancer, fichiers déployés, ISO, dépannage).
+```bash
+ansible-playbook playbooks/lab-infra.yml --limit registry --ask-become-pass
+```
 
-Résumé :
+### OCP install configs on the bastion
 
-1. **Mac** — [files/README.md](files/README.md) : `files/pull-secret.txt`, `files/install_ssh_key.pub` (gitignorés).
-2. **`ocp_sno_mac`** dans `group_vars/all.yml` (racine `ansible/`, chargé en priorité par le playbook) ou `inventory/group_vars/all.yml`.
-3. Inventaire : `bastion` + `registry` (jump Proxmox dans `hosts.yml`).
+Full guide: **[docs/ansible-ocp-install.md](../docs/ansible-ocp-install.md)**.
+
+Summary:
+
+1. **Mac** — [files/README.md](files/README.md): `files/pull-secret.txt`, `files/install_ssh_key.pub` (gitignored).
+2. `ocp_sno_mac` in `group_vars/all.yml` (or `inventory/group_vars/all.yml`).
+3. Inventory: `bastion` + `registry` (Proxmox jump in `hosts.yml`).
 
 ```bash
 cd ansible
 ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass
 ```
 
-**Effet** : templates Jinja → `~/lab/4.22-ga/config-backup/` + copies dans `~/lab/4.22-ga/`, `~/lab/ca.crt`, trust registry pour `oc`, scripts `~/lab/scripts/`.
+**Effect**: Jinja templates → `~/lab/4.22-ga/config-backup/` + copies under `~/lab/4.22-ga/`, `~/lab/ca.crt`, registry trust for `oc`, scripts in `~/lab/scripts/`.
 
-| Variable | Rôle |
+| Variable | Role |
 |----------|------|
 | `ocp_imageset_profile` | `platform-only` \| `gitops` \| `virtualization` \| `lvms` \| `odf` \| `rook-ceph` \| `virt-lvms` |
-| `ocp_agent_generate_iso` | `true` = `openshift-install agent create image` sur la bastion |
+| `ocp_agent_generate_iso` | `true` = `openshift-install agent create image` on bastion |
 | `ocp_push_iso_to_proxmox` | `true` = `scp` ISO bastion → `root@192.168.1.147:/mnt/pve/nfs_iso/template/iso/` |
-| `ocp_virt_operator_version` | ex. `4.22.9` (canal stable Virt) |
+| `ocp_virt_operator_version` | e.g. `4.22.9` (Virt stable channel) |
 
-Défauts : [roles/ocp_bastion_install/defaults/main.yml](roles/ocp_bastion_install/defaults/main.yml).
+Defaults: [roles/ocp_bastion_install/defaults/main.yml](roles/ocp_bastion_install/defaults/main.yml).
 
-```bash
-ansible-playbook playbooks/lab-infra.yml --limit registry
-```
+### DNF / `rhel10-baseos` (dns, registry, or bastion)
 
-### DNF / `rhel10-baseos` (dns, registry ou bastion, air-gap)
+Symptom: role **common**, task **base packages** — `Failed to download metadata for repo 'rhel10-baseos'`.
 
-Symptôme : échec sur le rôle **common**, tâche **Paquets de base** — `Failed to download metadata for repo 'rhel10-baseos'`.
+Cause: without a RH subscription, **common** runs `dnf` before the **DVD** repo (`file:///mnt/rhel/...`) is mounted.
 
-Cause : sans souscription RH, **common** lance `dnf` avant que le repo **DVD** (`file:///mnt/rhel/...`) soit monté et activé.
-
-Actions :
-
-1. Proxmox : ISO RHEL 10 **complète** en `ide2` (souvent `/dev/sr1` ; `/dev/sr0` = cloud-init cidata) — [rhel/dvd-repo.md](../rhel/dvd-repo.md) ; Terraform : `rhel_dvd_iso`.
-2. Relancer le playbook (`rhel_dvd` **avant** `common` pour **dns**, **registry** et **bastion** dans `lab-infra.yml`).
+1. Proxmox: full RHEL 10 ISO on `ide2` (often `/dev/sr1`; `/dev/sr0` = cloud-init cidata) — [rhel/dvd-repo.md](../rhel/dvd-repo.md); Terraform: `rhel_dvd_iso`.
+2. Re-run the playbook (`rhel_dvd` **before** `common` for all three hosts in `lab-infra.yml`).
 
 ```bash
 cd ansible
-ansible-playbook playbooks/lab-infra.yml --limit dns
+ansible-playbook playbooks/lab-infra.yml --limit dns --ask-become-pass
 ```
 
-Check sans modifier :
+Dry-run:
 
 ```bash
-ansible-playbook playbooks/registry.yml --check --diff
+ansible-playbook playbooks/lab-infra.yml --limit registry --check --diff
 ```
 
-(`--check` peut échouer sur `podman` / `mkfs` — normal.)
+(`--check` may fail on `podman` / `mkfs` — expected.)
 
-### SSH / ProxyJump (erreur « port 65535 »)
+### SSH / ProxyJump (« port 65535 »)
 
-1. Tester comme Ansible :
+1. Test like Ansible:
 
 ```bash
 ssh -o ProxyJump=root@192.168.1.147 bernard@172.16.10.20
 ```
 
-2. Inventaire : `ansible_ssh_common_args` **en dur** (voir `hosts.yml.example`), pas `{{ proxmox_jump }}`.
-3. `ansible.cfg` : `ControlMaster=no` (déjà configuré).
-4. Ping Ansible :
+2. Inventory: hard-code `ansible_ssh_common_args` (`hosts.yml.example`), not `{{ proxmox_jump }}`.
+3. `ansible.cfg`: `ControlMaster=no` (already set).
+4. Ping:
 
 ```bash
 ansible registry -m ping
 ```
 
-Si **`root@192.168.1.147: Permission denied`** : Ansible **ne demande pas** le mot de passe du jump Proxmox (contrairement à ton `ssh` interactif).
+If **`root@192.168.1.147: Permission denied`**: Ansible does **not** prompt for the Proxmox jump password.
 
-**Correctif recommandé (Mac, une fois)** :
+**Recommended fix (Mac, once)**:
 
 ```bash
 ssh-copy-id root@192.168.1.147
-ssh -o ProxyJump=root@192.168.1.147 bernard@172.16.10.20   # plus de password Proxmox
+ssh -o ProxyJump=root@192.168.1.147 bernard@172.16.10.20
 ansible registry -m ping
 ```
 
-Si **`bernard@… : Permission denied (publickey)`** : la clé Mac doit être dans Terraform (`ssh_public_keys`) **avant** le clone, ou injectée une fois :
+If **`bernard@… : Permission denied (publickey)`**: the Mac key must be in Terraform (`ssh_public_key_file` / cloud-init) **before** clone, or injected once via Proxmox. See [proxmox/access.md](../proxmox/access.md).
 
-```bash
-# Dans terraform.tfvars (puis apply — pris en compte aux *prochains* recreates) :
-# ssh_public_keys = file("/Users/…/.ssh/id_ed25519.pub")
+Other options: jump via **bastion** (`hosts.yml.example` method B), `hosts.sshconfig.yml.example`, or run from bastion (`hosts.from-bastion.yml.example`).
 
-# Injection immédiate via Proxmox (VMs déjà up) — root@192.168.1.147 :
-# KEY=$(cat ~/.ssh/id_ed25519.pub)
-# qm guest exec <VMID> -- bash -lc "install -d -m 700 -o bernard -g bernard /home/bernard/.ssh && grep -qxF '$KEY' /home/bernard/.ssh/authorized_keys 2>/dev/null || echo '$KEY' >> /home/bernard/.ssh/authorized_keys && chown bernard:bernard /home/bernard/.ssh/authorized_keys && chmod 600 /home/bernard/.ssh/authorized_keys"
-```
-
-Sinon (si un mot de passe cloud-init existe) : `ssh-copy-id -o ProxyJump=root@192.168.1.147 bernard@172.16.10.11`
-
-**Autres options** : jump **bastion** (`hosts.yml.example` méthode B), `hosts.sshconfig.yml.example`, ou playbook depuis la bastion (`hosts.from-bastion.yml.example`).
-
-Voir [proxmox/access.md](../proxmox/access.md).
-
-## Variables registry (résumé)
+## Registry variables (summary)
 
 | Variable | Description |
 |----------|-------------|
-| `registry_data_device` | Clone : `/dev/vdb` ; ISO : `/dev/sdb` — vide = pas de formatage |
+| `registry_data_device` | Clone: `/dev/vdb`; ISO install: `/dev/sdb` — empty = skip format |
 | `registry_tls_mode` | `generate` \| `copy` \| `skip` |
-| `registry_image_tar` | Tar `podman save` sur le Mac |
-| `registry_recreate_container` | `true` pour `podman rm` + recréer |
+| `registry_image_tar` | Path to `podman save` tar on the Mac (required for container deploy) |
+| `registry_recreate_container` | `true` to `podman rm` + recreate |
 
-## Relation Terraform
+## Relation to Terraform
 
-1. `terraform apply` (nouvelles VMs)  
-2. `ansible-playbook playbooks/registry.yml`  
-3. Mirror / install OCP — docs existantes
+1. `cd terraform/lab-airgap` → `terraform apply` (new VMs + DVD ISO + SSH keys)
+2. Ensure `registry_image_tar` exists on the Mac (section above)
+3. `ansible-playbook playbooks/lab-infra.yml --ask-become-pass`
+4. `ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass`
+5. Bastion: `oc-mirror` → agent ISO / SNO — [docs/iac.md](../docs/iac.md)
 
-Pour le lab **déjà en place** : sauter Terraform, ajuster `inventory/hosts.yml` et lancer Ansible.
+If infra VMs already exist: skip Terraform, fix inventory, run Ansible.
 
 ## Secrets
 
-- `inventory/hosts.yml`, `group_vars/all.yml` : **gitignorés**
-- `files/registry-certs/` : gitignoré (mode `copy`)
+- `inventory/hosts.yml`, `group_vars/all.yml`: **gitignored**
+- `files/registry-certs/`: gitignored (`copy` mode)
