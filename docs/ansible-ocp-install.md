@@ -1,100 +1,121 @@
-# Update OCP install configs via Ansible
+# Bastion OCP install configs (Ansible)
 
-Deploys install YAML on the **bastion** (`192.168.1.144`): no manual editing of `install-config.yaml` (CA, `pullSecret`, `imageContentSources`).
+Playbook: **`ansible/playbooks/bastion-ocp-install.yml`**  
+Runs from the **Mac**. Deploys install YAML + pull-secret + imageset on the bastion, optionally builds the agent ISO and copies it to Proxmox NFS.
 
-**In scope**: install YAML + pull-secret + imageset (+ CA re-trust).  
-**Out of scope** (already `lab-infra.yml`): DVD, eth0 gateway/DNS, packages, `oc`/`oc-mirror` clients, `/etc/hosts`.
+Place in the rebuild: **after** [lab-infra](../ansible/README.md) · **before** [oc-mirror](../mirror/README.md) · **before** booting SNO — full sequence: [iac.md](iac.md).
 
-## When to run the playbook
+---
 
-| Situation | Action |
-|-----------|--------|
-| After `lab-infra`, **before** mirror | `bastion-ocp-install.yml` with `ocp_agent_generate_iso` + `ocp_push_iso_to_proxmox` (preferred) |
-| Mirror OCP images | `oc-mirror` on bastion — [mirror/README.md](../mirror/README.md) — **then** boot SNO |
-| Registry reinstalled (new CA) | Re-run playbook + regenerate ISO |
-| SNO MAC, IP, or imageset change | Edit `inventory/group_vars/all.yml` + re-run (+ new ISO) |
-| Bastion **recreated** (Terraform) | Re-run playbook + **new ISO** (live bastion `sshKey`) |
+## Happy path (mandatory)
 
-## Prerequisites (Mac)
+Do this once after a fresh `lab-infra`, in order.
 
-```bash
-brew install ansible
-cd ansible
-# lab-infra already OK on dns / registry / bastion
-cp inventory/hosts.yml.example inventory/hosts.yml   # once
-# Edit inventory/group_vars/all.yml (source of truth — not ansible/group_vars/)
+### 1. Prerequisites (already done if you followed iac.md)
+
+| Check | Where |
+|-------|--------|
+| `lab-infra.yml` OK | dns + registry + bastion |
+| `ansible/files/pull-secret.txt` | Mac — from [console.redhat.com](https://cloud.redhat.com/openshift/install/pull-secret) |
+| Mac can SSH `bernard@192.168.1.144` and `root@192.168.1.147` | [proxmox/access.md](../proxmox/access.md) |
+
+SNO `sshKey` is **not** a Mac file: the playbook reads the live bastion `~/.ssh/id_ed25519.pub` ([sno-ssh-convention.md](sno-ssh-convention.md)).  
+`lab-ssh.yml` is **imported automatically** by this playbook — do not run it separately.
+
+### 2. Set variables in `inventory/group_vars/all.yml`
+
+Source of truth: **`ansible/inventory/group_vars/all.yml`** (not ad-hoc `-e` flags).
+
+**Required for first ISO + upload:**
+
+```yaml
+ocp_sno_mac: "BC:24:11:E1:8F:82"          # must match Terraform sno_mac
+ocp_sno_root_device: "/dev/disk/by-path/pci-0000:06:0a.0"
+ocp_imageset_profile: virt-lvms             # see profiles below
+ocp_agent_generate_iso: true                # build agent.x86_64.iso on bastion
+ocp_push_iso_to_proxmox: true               # scp ISO to nfs_iso
 ```
 
-### Local secrets (not versioned)
-
-See [ansible/files/README.md](../ansible/files/README.md):
-
-```bash
-cp ~/Downloads/pull-secret.txt ansible/files/pull-secret.txt
-```
-
-SNO `sshKey` is **not** a Mac file: the playbook embeds the live bastion
-`~/.ssh/id_ed25519.pub` — [docs/sno-ssh-convention.md](sno-ssh-convention.md).
-
-
-### Required variables
-
-In **`ansible/inventory/group_vars/all.yml`**:
-
-| Variable | Example | Description |
-|----------|---------|-------------|
-| `ocp_sno_mac` | `BC:24:11:E1:8F:82` | Proxmox SNO VM MAC (`qm config <VMID> \| grep net`) |
-| `ocp_imageset_profile` | `virt-lvms` | `platform-only` \| `gitops` \| `virtualization` \| `lvms` \| `odf` \| `rook-ceph` \| `virt-lvms` |
-| `ocp_agent_generate_iso` | `false` | `true` = run `openshift-install` on bastion |
-
-## Command
+Then run:
 
 ```bash
 cd ansible
-ansible-playbook playbooks/bastion-ocp-install.yml
+ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass
 ```
 
-The **registry** play reads `/opt/registry/certs/ca.crt`; the **bastion** play deploys YAML, pull-secret, and (re)applies TLS trust.
+### 3. After success — set flags back to false
 
-## Files created on bastion
+Avoid rebuilding the ISO on every later run:
 
-| Bastion path | Content |
-|--------------|---------|
-| `~/lab/4.22-ga/config-backup/install-config.yaml` | Platform 4.22.12, mirrors, CA, pullSecret, sshKey |
-| `~/lab/4.22-ga/config-backup/agent-config.yaml` | IP `172.16.10.100`, MAC, DNS, NTP |
-| `~/lab/4.22-ga/install-config.yaml` | Active copy (for `openshift-install`) |
-| `~/lab/4.22-ga/agent-config.yaml` | Same |
-| `~/lab/4.22-ga/imageset-config.yaml` | Chosen profile (e.g. Virt 4.22.9) |
-| `~/lab/ca.crt` | Registry CA |
-| `~/lab/pull-secret.txt` | Red Hat pull secret |
-| `~/lab/pull-secret-oc-mirror.txt` | Filtered auth for `oc-mirror` (via script below) |
-| `~/lab/scripts/pull-secret-for-oc-mirror.sh` | Builds `pull-secret-oc-mirror.txt` (called by Ansible) |
-| `~/lab/scripts/lab-startup-check.sh` | Pre-boot checks (DNS, registry, NTP) |
-| `~/lab/scripts/verify-mirror-before-sno.sh` | Preflight before SNO install |
-
-To change install YAML: re-run **`bastion-ocp-install.yml`** (no separate shell helpers).
-
-## Update install-config + registry pullSecret + ISO
-
-When install shows *Mirror registry not found in pullSecret* or after a CA change:
-
-1. **Mac** — update Red Hat pull secret in `ansible/files/pull-secret.txt` (the playbook **adds** `registry.lab.local:5000` if missing).
-2. **Mac**:
-
-```bash
-cd ansible
-ansible-playbook playbooks/bastion-ocp-install.yml
+```yaml
+ocp_agent_generate_iso: false
+ocp_push_iso_to_proxmox: false
 ```
 
-3. **ISO** — one of:
-   - `ocp_agent_generate_iso: true` in `inventory/group_vars/all.yml`, then re-run the same playbook (long, on bastion);
-   - **or** manually on the **bastion** (below).
+### 4. Next steps (not this playbook)
 
-Install YAML does not require re-running `lab-infra` (already done for OS / clients / network).
+1. **Mirror** on bastion — [mirror/README.md](../mirror/README.md)  
+2. **`~/lab/scripts/lab-startup-check.sh`** on bastion  
+3. **Boot SNO** — [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md)
 
-## Agent ISO (after playbook)
+---
 
-If `ocp_agent_generate_iso: false` (default), on the **bastion**:
+## What the playbook writes (on bastion)
+
+| Path | Purpose |
+|------|---------|
+| `~/lab/4.22-ga/config-backup/*.yaml` | install-config + agent-config (source of truth) |
+| `~/lab/4.22-ga/install-config.yaml` / `agent-config.yaml` | Copies used by `openshift-install` |
+| `~/lab/4.22-ga/imageset-config.yaml` | Input for `oc-mirror` |
+| `~/lab/4.22-ga/agent.x86_64.iso` | Only if `ocp_agent_generate_iso: true` |
+| `~/lab/ca.crt`, `~/lab/pull-secret*.txt` | Trust + auth |
+| `~/lab/scripts/*.sh` | Preflight helpers |
+
+---
+
+## Variables reference
+
+### Required
+
+| Variable | Example | Meaning |
+|----------|---------|---------|
+| `ocp_sno_mac` | `BC:24:11:E1:8F:82` | SNO NIC MAC (Proxmox / Terraform) |
+| `ocp_sno_root_device` | `/dev/disk/by-path/pci-0000:06:0a.0` | Install disk hint (VirtIO 120G) |
+| `ocp_imageset_profile` | `virt-lvms` | What `oc-mirror` will pull |
+
+### Optional (defaults are fine for lab)
+
+| Variable | Default | When to change |
+|----------|---------|----------------|
+| `ocp_agent_generate_iso` | `false` | Set `true` for first ISO (or after config/CA/key change) |
+| `ocp_push_iso_to_proxmox` | `false` | Set `true` with generate, to scp to NFS |
+| `ocp_proxmox_host` / `ocp_proxmox_iso_dir` | lab NUC defaults | Only if Proxmox/NFS paths differ |
+| `ocp_cluster_name` / `ocp_base_domain` | `ocp422` / `lab.local` | Rarely |
+
+**Imageset profiles:** `platform-only` \| `gitops` \| `virtualization` \| `lvms` \| `odf` \| `rook-ceph` \| `virt-lvms`
+
+---
+
+## When to re-run (still the same playbook)
+
+| Situation | What to set / do |
+|-----------|------------------|
+| First install after `lab-infra` | Happy path above (`generate` + `push` = `true`) |
+| Changed MAC, root disk, imageset, pull-secret, or registry CA | Edit `all.yml` → set `generate` (+ `push`) `true` → re-run → mirror if imageset changed |
+| Bastion VM recreated | `lab-infra` / `lab-ssh` already ran → this playbook with **new ISO** (new live `sshKey`) |
+| Only refresh scripts on bastion | Optional: `bastion-scripts.yml` (see below) — **not** required for install |
+
+Do **not** re-run `lab-infra` just to change install YAML.
+
+---
+
+## Optional / workarounds (not the happy path)
+
+Use only if Ansible ISO/push is disabled or blocked.
+
+### Manual ISO on bastion
+
+If `ocp_agent_generate_iso: false`:
 
 ```bash
 cd ~/lab/4.22-ga
@@ -104,47 +125,42 @@ openshift-install agent create image --dir .
 cp config-backup/install-config.yaml config-backup/agent-config.yaml .
 ```
 
-### Copy ISO to Proxmox (NFS)
+### Manual ISO copy to Proxmox
 
-**Ansible** (from Mac, after ISO generation on bastion) — in `inventory/group_vars/all.yml`:
-
-```yaml
-ocp_push_iso_to_proxmox: true
-# optional: ocp_proxmox_host, ocp_proxmox_iso_dir (defaults = lab NUC)
-```
-
-Prerequisite: the **Mac** can `ssh root@192.168.1.147` (ProxyJump). Ansible installs the **bastion** pubkey into Proxmox `authorized_keys` (via `lab-infra` / before ISO push) — no manual `ssh-copy-id` from bastion.
-
-Re-run: `ansible-playbook playbooks/bastion-ocp-install.yml`
-
-**Manual** on bastion:
+If `ocp_push_iso_to_proxmox: false`:
 
 ```bash
 scp ~/lab/4.22-ga/agent.x86_64.iso \
   root@192.168.1.147:/mnt/pve/nfs_iso/template/iso/
 ```
 
-In Proxmox UI: datastore **`nfs_iso`** → ISO **`agent.x86_64.iso`** → attach as **ide2** on the SNO VM (or rely on Terraform `sno_agent_iso`).
+Or attach via Proxmox UI (`nfs_iso` → `agent.x86_64.iso` → SNO `ide2`). Terraform may already set `sno_agent_iso`.
 
-Then boot — [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md).
-
-## Troubleshooting
-
-| Ansible error | Cause |
-|---------------|--------|
-| Invalid `ocp_sno_mac` | Empty MAC or wrong `group_vars` file |
-| Missing CA | Registry play failed or `ca.crt` missing on `172.16.10.20` |
-| pull-secret / ssh key | Missing files under `ansible/files/` on the Mac |
-| `Host key changed` registry | `ssh-keygen -R 172.16.10.20` on bastion after VM reinstall |
-
-Sync scripts to bastion **without** re-running `lab-infra`:
+### Scripts only (no dnf / no ISO)
 
 ```bash
 cd ansible
 ansible-playbook playbooks/bastion-scripts.yml
 ```
 
+---
+
+## Troubleshooting
+
+| Error | Fix |
+|-------|-----|
+| Invalid `ocp_sno_mac` | Set MAC in `inventory/group_vars/all.yml` |
+| Missing CA | Registry must have `/opt/registry/certs/ca.crt` (`lab-infra` registry) |
+| Missing pull-secret | `ansible/files/pull-secret.txt` on the Mac |
+| `Permission denied` Mac → bastion | Terraform `ssh_public_key_file` + [iac.md](iac.md) host-key cleanup |
+| `Host key changed` | `ssh-keygen -R <ip>` on Mac or bastion after VM recreate |
+| *Mirror registry not found in pullSecret* | Re-run this playbook (it merges `registry.lab.local:5000` into the pull secret) then new ISO |
+
+---
+
 ## See also
 
-- [ansible/README.md](../ansible/README.md) — inventory, registry, SSH jump
-- [mirror/README.md](../mirror/README.md) — `oc-mirror` after imageset is deployed
+- [docs/iac.md](iac.md) — full rebuild order  
+- [ansible/README.md](../ansible/README.md) — inventory, `lab-ssh`, registry  
+- [mirror/README.md](../mirror/README.md) — `oc-mirror` after imageset exists  
+- [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) — boot SNO  

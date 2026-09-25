@@ -1,11 +1,10 @@
-# Lab air-gap 4.22 — infra complète (dns + bastion + registry + SNO)
+# Lab air-gap 4.22 — full infra (dns + bastion + registry + SNO)
 # cp terraform.tfvars.airgap.example terraform.tfvars
-# OCP5 connecté : terraform/assisted-ocp-bma/ UNIQUEMENT — rien OCP5 ici.
-# Templates : voir proxmox/rhel-cloudinit-template.md (rhel10-tpl + rhel10-nfs).
+# Templates: proxmox/rhel-cloudinit-template.md (rhel10-tpl + rhel10-nfs).
 
 proxmox_api_url          = "https://192.168.1.147:8006/api2/json"
 proxmox_api_token_id     = "root@pam!terraform"
-proxmox_api_token_secret = "REMPLACER"
+proxmox_api_token_secret = "REPLACE_ME"
 proxmox_tls_insecure     = true
 
 proxmox_node = "pve"
@@ -46,5 +45,5 @@ sno_cpu_type          = "host"
 sno_memory_mb         = 24576
 
 ssh_user = "bernard"
-# Obligatoire pour SSH depuis le Mac (cloud-init → authorized_keys)
-# ssh_public_key_file = "/Users/VOUS/.ssh/id_ed25519.pub"
+# Required for Mac SSH (cloud-init authorized_keys). Uncomment and set YOUR path:
+# ssh_public_key_file = "/Users/YOUR_MAC_USER/.ssh/id_ed25519.pub"

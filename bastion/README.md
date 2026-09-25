@@ -152,25 +152,25 @@ oc version --client && openshift-install version && oc-mirror version --v2
 ## 5. Répertoires de travail
 
 ```bash
-mkdir -p ~/lab/{4.22-ga,5-rc}
+mkdir -p ~/lab/4.22-ga
 mkdir -p ~/.docker
 ```
 
-Copier le **pull-secret** Red Hat → `~/lab/pull-secret.txt` (non versionné).
+Copy the Red Hat **pull-secret** → `~/lab/pull-secret.txt` (not versioned).
 
-## 6. Trust registry lab (CA)
+## 6. Trust lab registry (CA)
 
-**Ansible (recommandé)** — déjà dans `lab-infra.yml` (rôle `bastion`) : `~/lab/ca.crt`, `certs.d` pour oc-mirror, trust store.
+**Ansible (recommended)** — already in `lab-infra.yml` (bastion role): `~/lab/ca.crt`, `certs.d` for oc-mirror, trust store.
 
 ```bash
-cd ansible && ansible-playbook playbooks/lab-infra.yml --limit bastion
+cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/ansible
+ansible-playbook playbooks/lab-infra.yml --limit bastion --ask-become-pass
 ```
 
-**Manuel** (secours) — récupérer la CA puis installer pour `oc-mirror` / `curl` / `oc` :
+**Manual** (fallback):
 
 ```bash
 scp -o ProxyJump=root@192.168.1.147 bernard@172.16.10.20:/opt/registry/certs/ca.crt ~/lab/ca.crt
-# ou depuis la bastion : scp bernard@172.16.10.20:/opt/registry/certs/ca.crt ~/lab/ca.crt
 
 sudo mkdir -p /etc/containers/certs.d/registry.lab.local:5000
 sudo cp ~/lab/ca.crt /etc/containers/certs.d/registry.lab.local:5000/ca.crt
@@ -180,33 +180,20 @@ sudo update-ca-trust
 curl --cacert ~/lab/ca.crt https://registry.lab.local:5000/v2/_catalog
 ```
 
-### Équivalent Ansible
+### Ansible equivalent
 
 | | |
 |---|---|
-| **Playbook** | `lab-infra.yml` (trust CA) ; `bastion-ocp-install.yml` (configs install + re-trust) |
-| **Hôte** | `bastion` (+ lecture CA sur `registry`) |
-| **Commande (Mac)** | `ansible-playbook playbooks/lab-infra.yml --limit bastion` |
-| **Couverture** | `~/lab/ca.crt`, `certs.d`, `update-ca-trust`, test catalog — rôle `bastion` / [ansible/README.md](../ansible/README.md) |
-| **Hors Ansible** | `scp` manuel ci-dessus si playbook non utilisé |
+| **Playbook** | `lab-infra.yml` (CA trust); `bastion-ocp-install.yml` (install configs + re-trust) |
+| **Command (Mac)** | `ansible-playbook playbooks/lab-infra.yml --limit bastion --ask-become-pass` |
 
-## 7. Piste RC 5 (optionnel, répertoire séparé)
+## 7. oc-mirror v2 (GA 4.22.12)
 
-```bash
-mkdir -p ~/ocp-5-rc/bin && cd ~/ocp-5-rc/bin
-oc adm release extract --tools quay.io/openshift-release-dev/ocp-release:5.0.0-ec.6-x86_64
-tar xzf openshift-client-linux-*.tar.gz
-tar xzf openshift-install-linux-*.tar.gz
-export PATH=~/ocp-5-rc/bin:$PATH
-```
+Binary from §4 (Ansible or manual). Mirror procedure: [mirror/README.md](../mirror/README.md).
 
-## 8. oc-mirror v2 (GA 4.22.12)
+## 8. Agent ISO
 
-Binaire installé avec la §4 (Ansible ou manuel). Procédure mirror : [mirror/README.md](../mirror/README.md).
-
-## 9. Génération ISO agent
-
-Voir [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) — workflow complet avec `config-backup/`.
+See [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) — full workflow with `config-backup/`.
 
 ### Équivalent Ansible
 

@@ -30,4 +30,5 @@ rhel_dvd_iso         = "nfs_iso:iso/rhel-10.2-x86_64-dvd.iso" # ide2 — repo dn
 lab_bridge  = "vmbr1"
 registry_ip = "172.16.10.20"
 ssh_user    = "bernard"
-# ssh_public_key_file = "/Users/VOUS/.ssh/id_ed25519.pub"
+# Required for Mac SSH. Uncomment and set YOUR path:
+# ssh_public_key_file = "/Users/YOUR_MAC_USER/.ssh/id_ed25519.pub"

@@ -81,3 +81,29 @@
   retries: 6
   delay: 5
   until: registry_api.status == 200
+  when: registry_run_container | bool
+
+# RHEL/Podman: --restart=always needs podman-restart.service at host boot (lab verified).
+- name: Ensure registry container is running
+  ansible.builtin.command: podman start {{ registry_container_name }}
+  register: registry_ct_start
+  changed_when: "'started' in (registry_ct_start.stdout | default('') | lower)"
+  failed_when: false
+  when: not (registry_run_container | bool)
+
+- name: Enable podman-restart (survive VM reboot)
+  ansible.builtin.systemd:
+    name: podman-restart.service
+    enabled: true
+    state: started
+
+- name: Attendre API registry (idempotent re-run)
+  ansible.builtin.uri:
+    url: "https://localhost:{{ registry_port }}/v2/"
+    validate_certs: false
+    status_code: 200
+  register: registry_api_up
+  retries: 6
+  delay: 5
+  until: registry_api_up.status == 200
+  when: not (registry_run_container | bool)

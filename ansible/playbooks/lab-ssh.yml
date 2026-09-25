@@ -1,0 +1,79 @@
+---
+# Lab SSH trust after (re)deploy — run as often as you recreate VMs.
+#
+# Keys:
+#   Mac     → Terraform cloud-init (ssh_public_key_file) on dns/registry/bastion
+#   Bastion → ~/.ssh/id_ed25519 (this playbook): dns/registry authorized_keys,
+#             Proxmox root (ISO scp), SNO install-config (bastion-ocp-install)
+#
+# Mac:
+#   cd ansible && ansible-playbook playbooks/lab-ssh.yml --ask-become-pass
+#
+# Imported first by lab-infra.yml. Re-run alone after:
+#   - bastion recreate (new keypair)
+#   - dns/registry recreate (cloud-init Mac key only)
+#   - SNO reinstall (stale known_hosts on bastion)
+
+- name: Bastion SSH key bootstrap
+  hosts: bastion
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Ensure bastion ed25519 key
+      ansible.builtin.include_role:
+        name: bastion
+        tasks_from: lab_ssh_key.yml
+
+- name: Authorize bastion key on dns and registry
+  hosts: dns:registry
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Ensure .ssh for lab user
+      ansible.builtin.file:
+        path: "/home/{{ lab_user }}/.ssh"
+        state: directory
+        owner: "{{ lab_user }}"
+        group: "{{ lab_user }}"
+        mode: "0700"
+
+    - name: Install bastion pubkey for {{ lab_user }}
+      ansible.builtin.lineinfile:
+        path: "/home/{{ lab_user }}/.ssh/authorized_keys"
+        line: "{{ hostvars['bastion'].bastion_lab_ssh_pubkey }}"
+        create: true
+        owner: "{{ lab_user }}"
+        group: "{{ lab_user }}"
+        mode: "0600"
+      when: hostvars['bastion'].bastion_lab_ssh_pubkey | default('') | length > 20
+
+- name: Bastion key on Proxmox root (agent ISO scp)
+  hosts: bastion
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Authorize bastion → Proxmox
+      ansible.builtin.include_role:
+        name: bastion
+        tasks_from: proxmox_ssh.yml
+      when: bastion_authorize_proxmox_ssh | default(true) | bool
+
+- name: Drop stale known_hosts on bastion (VM recreate)
+  hosts: bastion
+  gather_facts: false
+  become: true
+  become_user: "{{ lab_user }}"
+  vars:
+    lab_ssh_forget_hosts:
+      - "{{ dns_ip | default('172.16.10.11') }}"
+      - "{{ registry_ip | default('172.16.10.20') }}"
+      - "{{ registry_hostname | default('registry.lab.local') }}"
+      - "{{ ocp_sno_ip | default('172.16.10.100') }}"
+  tasks:
+    - name: ssh-keygen -R for lab hosts
+      ansible.builtin.command:
+        cmd: ssh-keygen -R {{ item }}
+      loop: "{{ lab_ssh_forget_hosts }}"
+      register: lab_ssh_forget
+      changed_when: "'not found' not in (lab_ssh_forget.stderr | default(''))"
+      failed_when: false

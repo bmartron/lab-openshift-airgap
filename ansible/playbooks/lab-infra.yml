@@ -1,4 +1,9 @@
 ---
+# Lab infra: SSH trust first, then dns → registry → bastion.
+# SSH-only re-run: playbooks/lab-ssh.yml
+
+- import_playbook: lab-ssh.yml
+
 - name: DNS
   hosts: dns
   become: true

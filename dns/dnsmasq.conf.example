@@ -1,5 +1,5 @@
-# /etc/dnsmasq.conf — VM dns (172.16.10.11)
-# Prefer Ansible: role dns templates this file (interface eth0 on RHEL cloud-init / Proxmox VirtIO).
+# /etc/dnsmasq.conf — DNS VM (172.16.10.11)
+# Prefer Ansible role `dns` (interface eth0 on RHEL cloud-init / Proxmox VirtIO).
 interface=eth0
 bind-interfaces
 listen-address=172.16.10.11
@@ -7,28 +7,21 @@ listen-address=127.0.0.1
 no-resolv
 no-poll
 
-# Upstream désactivé en air-gap — résolution locale seulement
+# Air-gap: local resolution only (no upstream)
 # server=8.8.8.8
 
-# Domaine lab
 domain=lab.local
 local=/lab.local/
 
-# Enregistrements statiques
 address=/dns.lab.local/172.16.10.11
 address=/bastion.lab.local/172.16.10.10
 address=/registry.lab.local/172.16.10.20
+
 # OpenShift 4.22 GA (SNO)
 address=/ocp-sno-422.lab.local/172.16.10.100
 address=/api.ocp422.lab.local/172.16.10.100
 address=/api-int.ocp422.lab.local/172.16.10.100
 address=/.apps.ocp422.lab.local/172.16.10.100
 
-# OpenShift 5 RC (SNO)
-address=/ocp-sno-5.lab.local/172.16.10.110
-address=/api.ocp5.lab.local/172.16.10.110
-address=/api-int.ocp5.lab.local/172.16.10.110
-address=/.apps.ocp5.lab.local/172.16.10.110
-
-# DHCP optionnel pour le lab (désactivé si IPs statiques partout)
+# Optional DHCP (disabled when all IPs are static)
 # dhcp-range=172.16.10.50,172.16.10.99,255.255.255.0,12h

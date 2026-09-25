@@ -23,11 +23,3 @@ address=/ocp-sno-422.{{ lab_domain }}/{{ ocp_sno_ip }}
 address=/api.{{ ocp_cluster_name }}.{{ lab_domain }}/{{ ocp_sno_ip }}
 address=/api-int.{{ ocp_cluster_name }}.{{ lab_domain }}/{{ ocp_sno_ip }}
 address=/.apps.{{ ocp_cluster_name }}.{{ lab_domain }}/{{ ocp_sno_ip }}
-
-{% if dns_include_ocp5_records | default(true) | bool %}
-# OpenShift 5 RC (optional second SNO)
-address=/ocp-sno-5.{{ lab_domain }}/{{ ocp5_sno_ip }}
-address=/api.{{ ocp5_cluster_name }}.{{ lab_domain }}/{{ ocp5_sno_ip }}
-address=/api-int.{{ ocp5_cluster_name }}.{{ lab_domain }}/{{ ocp5_sno_ip }}
-address=/.apps.{{ ocp5_cluster_name }}.{{ lab_domain }}/{{ ocp5_sno_ip }}
-{% endif %}

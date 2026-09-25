@@ -31,10 +31,6 @@ Default in role defaults: **`virt-lvms`**.
 | `odf` | [imageset-config-4.22-odf.yaml.example](imageset-config-4.22-odf.yaml.example) | Platform + ODF |
 | `rook-ceph` | [imageset-config-4.22-rook-ceph.yaml.example](imageset-config-4.22-rook-ceph.yaml.example) | Platform + Rook-Ceph only (prefer `odf` for ODF) |
 
-| Track | Example | Registry namespace |
-|-------|---------|-------------------|
-| OCP 5 RC (separate) | [imageset-config-5-rc.yaml.example](imageset-config-5-rc.yaml.example) | `ocp5-rc` — not used by the GA SNO path above |
-
 Verify on bastion before mirroring: `head -40 ~/lab/4.22-ga/imageset-config.yaml`
 
 ## Run oc-mirror

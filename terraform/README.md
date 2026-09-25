@@ -1,13 +1,9 @@
-# Terraform — Proxmox stacks (separate labs)
+# Terraform — Proxmox lab air-gap
 
-Two **directories = two states** — never mix connected OCP5 with air-gap 4.22 infra.
+One stack, one state: **[`lab-airgap/`](lab-airgap/)** — dns, registry, bastion, optional SNO on `vmbr1`.
 
-| Stack | Directory | Resources | Typical network |
-|-------|-----------|-----------|-----------------|
-| **Lab air-gap 4.22** | [`lab-airgap/`](lab-airgap/) | dns, registry, bastion | `vmbr1` + `vmbr0` (bastion) |
-| **OCP5 Assisted connected** | [`assisted-ocp-bma/`](assisted-ocp-bma/) | `ocp-bma-ai-0..2` | `vmbr0` (LAN + Internet) |
-
-SNO VM (`create_sno`): [lab-airgap/](lab-airgap/) (`vm-sno.tf`) — boot/install: [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md).
+SNO boot/install: [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md).  
+Full rebuild: [docs/iac.md](../docs/iac.md).
 
 ## Proxmox NFS storage (NUC)
 
@@ -18,7 +14,7 @@ SNO VM (`create_sno`): [lab-airgap/](lab-airgap/) (`vm-sno.tf`) — boot/install
 | **`nfs_iso`** | ISO images | `/mnt/pve/nfs_iso/template/iso/` | `nfs_iso:iso/file.iso` |
 
 Proxmox format: **`nfs_iso:iso/name.iso`** (ISO); disks via `storage_infra` / `storage_perf`.  
-Cloud-init: **same datastore as the OS** (no third variable).  
+Cloud-init: **same datastore as the OS**.  
 RHEL templates: [proxmox/rhel-cloudinit-template.md](../proxmox/rhel-cloudinit-template.md) (**two** templates — EFI + NFS/SSD mix).
 
 Check on **pve** (`root@192.168.1.147`):
@@ -30,46 +26,36 @@ pvesm path nfs_iso:iso
 
 Variables: [versions.env.example](../versions.env.example) (`PROXMOX_STORAGE_INFRA`, `PROXMOX_STORAGE_PERF`, `PROXMOX_STORAGE_ISO`).
 
-## Lab air-gap
+## Apply (Mac)
 
 ```bash
-cd terraform/lab-airgap
-cp terraform.tfvars.airgap.example terraform.tfvars   # or .registry.example
+cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/terraform/lab-airgap
+cp terraform.tfvars.airgap.example terraform.tfvars
+# Edit: Proxmox token + ssh_public_key_file = "/Users/bmartron/.ssh/id_ed25519.pub"
 terraform init && terraform plan && terraform apply
 ```
 
-VM files: `vm-dns.tf`, `vm-registry.tf`, `vm-bastion.tf`, `vm-sno.tf`.  
-Docs: [lab-airgap/README.md](lab-airgap/README.md) · [docs/iac.md](../docs/iac.md).
+Details: [lab-airgap/README.md](lab-airgap/README.md).
 
-## Connected OCP5 (ocp-bma.home.arpa)
+## After destroy/apply (Mac)
 
 ```bash
-cd terraform/assisted-ocp-bma
-cp terraform.tfvars.example terraform.tfvars
-terraform init && terraform plan && terraform apply
+ssh-keygen -R 192.168.1.144
+ssh-keygen -R 172.16.10.11
+ssh-keygen -R 172.16.10.20
+ssh-keygen -R 172.16.10.100
+ssh -o StrictHostKeyChecking=accept-new bernard@192.168.1.144 'hostname'
 ```
 
-Docs: [assisted-ocp-bma/README.md](assisted-ocp-bma/README.md) · [openshift/5-rc/assisted-connected/README.md](../openshift/5-rc/assisted-connected/README.md).
+Then Ansible `lab-infra.yml` — [docs/iac.md](../docs/iac.md).
 
-## Pause / teardown air-gap (keep Assisted connected)
+## Teardown
 
-If you delete dns / registry / bastion / SNO in Proxmox and only keep **ocp-bma**:
+```bash
+cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/terraform/lab-airgap
+terraform destroy -auto-approve
+```
 
-| Stack | Action |
-|-------|--------|
-| **`terraform/lab-airgap/`** | `terraform state list` then `terraform state rm …` for each deleted VM, **or** remove `terraform.tfstate*` and start clean when you rebuild 4.22 |
-| **`terraform/assisted-ocp-bma/`** | **Do not touch** for the connected lab |
+Or delete VMs in Proxmox UI and clean state: `terraform state list` / `terraform state rm …` / remove `terraform.tfstate*`.
 
-Do **not** run `terraform destroy` in `lab-airgap` if connected VMs still share that state (check `state list` first).
-
-### After manual VM deletion
-
-1. Delete VMs in Proxmox (UI).
-2. **`cd terraform/lab-airgap`** → `terraform state list` → `terraform state rm <resource>` per deleted VM, **or** delete `terraform.tfstate` and start from an empty state (then targeted `apply`).
-3. Leave `assisted-ocp-bma/terraform.tfstate` alone for the connected lab.
-
-### Rebuild air-gap later
-
-Prefer the full path in [docs/iac.md](../docs/iac.md): RHEL templates → `terraform apply` → Ansible `lab-infra.yml` / `registry.yml` → `oc-mirror` → agent ISO.
-
-Provider **telmate/proxmox 3.0.2-rc10** (PVE 9) — lock file in each stack.
+Provider **telmate/proxmox 3.0.2-rc10** (PVE 9) — lock file in `lab-airgap/`.

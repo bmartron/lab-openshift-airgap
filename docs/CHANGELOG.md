@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Removed (lab scope)
+- Dropped OpenShift **5 RC** / Assisted connected track: `openshift/5-rc/`, `terraform/assisted-ocp-bma/`, `mirror/imageset-config-5-rc.yaml.example`
+- Removed ocp5 DNS records from Ansible `dns` role and examples
+- READMEs focused on **4.22 GA air-gap SNO** only (English)
+
+### Fixed (registry reboot)
+- Registry role enables `podman-restart.service` (lab-verified: without it, `ocp-registry` stays Exited after VM reboot)
+
+### Docs (rebuild)
+- [docs/iac.md](iac.md) — after Terraform: `ssh_public_key_file`, `ssh-keygen -R` lab IPs, verify bastion SSH before Ansible
+- [docs/ansible-ocp-install.md](ansible-ocp-install.md) — rewritten: happy path (mandatory) vs optional workarounds
+
+### Added (lab SSH trust playbook)
+- `ansible/playbooks/lab-ssh.yml` — bastion key → dns/registry + Proxmox; `ssh-keygen -R` on bastion for lab IPs
+- Imported by `lab-infra.yml` and `bastion-ocp-install.yml` for repeat rebuilds
+
+### Fixed (bastion → dns/registry SSH)
+- `lab-infra.yml` installs bastion `~/.ssh/id_ed25519.pub` into `bernard` authorized_keys on dns/registry (cloud-init only had the Mac key)
+
 ### Changed (SNO rootDeviceHints)
 - Default install disk hint: `/dev/disk/by-path/pci-0000:06:0a.0` (Proxmox virtio0 / 120G) instead of `/dev/vda` — multi-disk agent matching
 

@@ -1,0 +1,27 @@
+---
+# Ensure bernard@bastion can SSH to dns/registry (cloud-init only has Mac keys).
+# Included early in lab-infra.yml so day-2 from bastion works without ProxyJump.
+
+- name: Ensure SSH directory for lab user
+  ansible.builtin.file:
+    path: "/home/{{ lab_user }}/.ssh"
+    state: directory
+    owner: "{{ lab_user }}"
+    group: "{{ lab_user }}"
+    mode: "0700"
+
+- name: Ensure ed25519 key for lab user
+  become: true
+  become_user: "{{ lab_user }}"
+  ansible.builtin.command:
+    cmd: ssh-keygen -t ed25519 -N "" -f /home/{{ lab_user }}/.ssh/id_ed25519
+    creates: "/home/{{ lab_user }}/.ssh/id_ed25519"
+
+- name: Read bastion public key
+  ansible.builtin.slurp:
+    src: "/home/{{ lab_user }}/.ssh/id_ed25519.pub"
+  register: bastion_lab_pubkey_slurp
+
+- name: Publish bastion pubkey for other plays
+  ansible.builtin.set_fact:
+    bastion_lab_ssh_pubkey: "{{ bastion_lab_pubkey_slurp.content | b64decode | trim }}"

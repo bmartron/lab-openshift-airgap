@@ -1,82 +1,51 @@
-# Plan réseau
+# Network plan
 
-## Bridges Proxmox
+## Proxmox bridges
 
-### vmbr0 — Admin / LAN maison
+### vmbr0 — Admin / home LAN
 
-- Connecté au réseau physique du NUC.
-- Proxmox, accès NAS NFS, bastion `eth0` (phase préparation).
+- Physical NIC on the NUC.
+- Proxmox, NFS NAS, bastion `eth0` (prep / Internet).
 
-### vmbr1 — Lab air-gap
+### vmbr1 — Air-gap lab
 
-- Bridge **virtuel** sans interface physique.
-- **Aucune passerelle** vers Internet.
-- Toutes les VMs du cluster OpenShift.
+- Virtual bridge, **no** physical uplink.
+- **No** default route to the Internet.
+- All OpenShift lab VMs.
 
-## Plan d'adressage — `172.16.10.0/24`
+## Addressing — `172.16.10.0/24`
 
-| Hostname | IP | Rôle |
+| Hostname | IP | Role |
 |----------|-----|------|
-| `proxmox.lab.local` | `172.16.10.1` | Gateway lab (optionnel, debug depuis l'hôte) |
-| `bastion.lab.local` | `172.16.10.10` | Bastion — interface lab |
-| `dns.lab.local` | `172.16.10.11` | Serveur DNS |
+| `proxmox.lab.local` | `172.16.10.1` | Lab gateway on Proxmox (`vmbr1`) |
+| `bastion.lab.local` | `172.16.10.10` | Bastion lab NIC |
+| `dns.lab.local` | `172.16.10.11` | dnsmasq + NTP |
 | `registry.lab.local` | `172.16.10.20` | Mirror registry |
-| `ocp-sno-422.lab.local` | `172.16.10.100` | SNO OpenShift 4.22 GA |
-| `ocp-sno-5.lab.local` | `172.16.10.110` | SNO OpenShift 5 RC |
+| `ocp-sno-422.lab.local` | `172.16.10.100` | OpenShift 4.22 GA SNO |
 
-### Enregistrements DNS OpenShift 4.22 GA
-
-| FQDN | IP | Notes |
-|------|-----|-------|
-| `api.ocp422.lab.local` | `172.16.10.100` | API Kubernetes |
-| `api-int.ocp422.lab.local` | `172.16.10.100` | API interne |
-| `*.apps.ocp422.lab.local` | `172.16.10.100` | Wildcard ingress |
-
-### Enregistrements DNS OpenShift 5 RC
+### DNS records — OpenShift 4.22 GA
 
 | FQDN | IP | Notes |
 |------|-----|-------|
-| `api.ocp5.lab.local` | `172.16.10.110` | API Kubernetes |
-| `api-int.ocp5.lab.local` | `172.16.10.110` | API interne |
-| `*.apps.ocp5.lab.local` | `172.16.10.110` | Wildcard ingress |
+| `api.ocp422.lab.local` | `172.16.10.100` | Kubernetes API |
+| `api-int.ocp422.lab.local` | `172.16.10.100` | Internal API |
+| `*.apps.ocp422.lab.local` | `172.16.10.100` | Ingress wildcard |
 
-### Cluster Assisted connecté — maison (`home.arpa`, pas lab air-gap)
+Deployed by Ansible role `dns` — [dns/dnsmasq.conf.example](../dns/dnsmasq.conf.example).
 
-| Élément | Valeur |
-|---------|--------|
-| Cluster / API | `ocp-bma` → `api.ocp-bma.home.arpa` |
-| DNS | Box LAN (ex. `192.168.1.1`) — [openshift/5-rc/assisted-connected/dns-records.example](../openshift/5-rc/assisted-connected/dns-records.example) |
-| VMs Proxmox | `ocp-bma-ai-0..2` sur **`vmbr0`** |
-| API VIP | `192.168.1.49` |
-| Ingress VIP | `192.168.1.48` |
+## Connectivity matrix
 
-Doc : [openshift/5-rc/assisted-connected/README.md](../openshift/5-rc/assisted-connected/README.md).
+| VM | vmbr0 (Internet) | vmbr1 | Talks to |
+|----|------------------|-------|----------|
+| bastion | Yes (`eth0`) | Yes (`eth1`) | entire lab |
+| dns | No | Yes | all lab resolvers |
+| registry | No | Yes | bastion + OCP node |
+| OCP SNO | No | Yes | dns + registry |
 
-### Cluster 3 nœuds — Assisted (ancien plan lab.local / 172.16.10.x)
+## Strict air-gap simulation
 
-Référence historique si retour sur `vmbr1` — **non** utilisé pour **ocp-bma**.
+After prep:
 
-### Cluster 3 nœuds (historique générique)
-
-| Hostname | IP |
-|----------|-----|
-| `master0.ocp.lab.local` | `172.16.10.101` |
-| `master1.ocp.lab.local` | `172.16.10.102` |
-| `master2.ocp.lab.local` | `172.16.10.103` |
-
-## Matrice de connectivité
-
-| VM | vmbr0 (Internet) | vmbr1 | Parle à |
-|----|------------------|----------|---------|
-| bastion | Oui (`eth0`) | Oui (`eth1`) | tout le lab |
-| dns | Non | Oui | résolution pour tout le lab |
-| registry | Non | Oui | bastion + nœuds OCP |
-| nœuds OCP | Non | Oui | dns + registry |
-
-## Simulation air-gap stricte
-
-Après la phase de préparation :
-
-- Désactiver `eth0` sur la bastion, ou
-- Supprimer la route par défaut vers Internet, ou
-- Filtrer au firewall — aucun trafic sortant depuis `172.16.10.0/24`.
+- Disable bastion `eth0`, or
+- Remove the default route to the Internet, or
+- Firewall: no outbound from `172.16.10.0/24`.

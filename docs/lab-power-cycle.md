@@ -129,15 +129,15 @@ sleep 3
 curl -k https://127.0.0.1:5000/v2/_catalog
 ```
 
-Persistance au boot : `podman-restart.service` + `--restart=always` — voir [ansible/README.md](../ansible/README.md) § Registry.
+Persistance au boot : rôle Ansible `registry` active **`podman-restart.service`** + conteneur `--restart=always` (vérifié lab).
 
 ### Équivalent Ansible
 
 | | |
 |---|---|
-| **Playbook** | `ansible/playbooks/registry.yml` (conteneur `--restart=always` à la création) |
-| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/registry.yml --limit registry --ask-become-pass` |
-| **Hors Ansible** | `systemctl enable --now podman-restart.service` sur la VM si le conteneur reste **Exited** au reboot |
+| **Playbook** | `lab-infra.yml` / `registry.yml` |
+| **Commande (Mac)** | `cd ansible && ansible-playbook playbooks/lab-infra.yml --limit registry --ask-become-pass` |
+| **Effet** | `systemctl enable --now podman-restart.service` + start conteneur si Exited |
 
 ---
 

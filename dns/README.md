@@ -119,7 +119,7 @@ Sur la VM DNS :
 
 ```bash
 dig @127.0.0.1 api.ocp422.lab.local +short    # → 172.16.10.100
-dig @127.0.0.1 api.ocp5.lab.local +short      # → 172.16.10.110
+dig @127.0.0.1 api.ocp422.lab.local +short    # → 172.16.10.100
 dig @127.0.0.1 test.apps.ocp422.lab.local +short
 ```
 
@@ -208,8 +208,6 @@ sudo firewall-cmd --reload
 | `registry.lab.local` | `172.16.10.20` |
 | `api.ocp422.lab.local` | `172.16.10.100` |
 | `*.apps.ocp422.lab.local` | `172.16.10.100` |
-| `api.ocp5.lab.local` | `172.16.10.110` |
-| `*.apps.ocp5.lab.local` | `172.16.10.110` |
 
 ## dnsmasq au reboot (recommandé)
 

@@ -23,6 +23,7 @@ Check: `curl -s --cacert ~/lab/ca.crt https://registry.lab.local:5000/v2/_catalo
 | HTTP 500 on push | `df -h /opt/registry` |
 | x509 / SAN | Re-run with `registry_tls_mode: generate` |
 | No `podman` | RHEL DVD on `ide2` — see § RHEL DVD below |
+| Registry Exited after VM reboot | Role enables `podman-restart.service` + `--restart=always` (lab-verified) |
 
 ## Prerequisites
 
@@ -109,11 +110,27 @@ Ansible template: [roles/rhel_dvd/templates/rhel-dvd.repo.j2](roles/rhel_dvd/tem
 
 | Playbook | Role |
 |----------|------|
-| `playbooks/lab-infra.yml` | **Default** — DNS → registry → bastion |
+| `playbooks/lab-ssh.yml` | **SSH trust** — bastion key → dns/registry + Proxmox; clear stale `known_hosts` |
+| `playbooks/lab-infra.yml` | **Default** — `lab-ssh` then DNS → registry → bastion |
 | `playbooks/registry.yml` | Registry host only (same `registry` role; use if you do not want dns/bastion) |
 | `playbooks/registry-data-disk.yml` | Data disk `/opt/registry` only |
-| `playbooks/bastion-ocp-install.yml` | Bastion: install-config, agent-config, imageset, CA, pull-secret |
+| `playbooks/bastion-ocp-install.yml` | `lab-ssh` + install-config, agent-config, imageset, CA, pull-secret |
 | `playbooks/bastion-scripts.yml` | Bastion: copy `~/lab/scripts/*.sh` only (**no** sudo / dnf) |
+
+### SSH keys (redeploy often)
+
+| Key | Where it comes from | Used for |
+|-----|---------------------|----------|
+| **Mac** | Terraform `ssh_public_key_file` (cloud-init) | Mac → bastion/dns/registry (Ansible ProxyJump) |
+| **Bastion** | `lab-ssh.yml` / `~/.ssh/id_ed25519` | bastion → dns/registry ; bastion → Proxmox ISO scp ; SNO `sshKey` |
+
+After **bastion** or **dns/registry** recreate:
+
+```bash
+ansible-playbook playbooks/lab-ssh.yml --ask-become-pass
+```
+
+After **bastion** recreate + new SNO ISO: `lab-ssh` then `bastion-ocp-install` (embeds the new live key).
 
 Targeted re-run after a full stack exists:
 
@@ -197,7 +214,11 @@ ssh -o ProxyJump=root@192.168.1.147 bernard@172.16.10.20
 ansible registry -m ping
 ```
 
-If **`bernard@… : Permission denied (publickey)`**: the Mac key must be in Terraform (`ssh_public_key_file` / cloud-init) **before** clone, or injected once via Proxmox. See [proxmox/access.md](../proxmox/access.md).
+If **`bernard@… : Permission denied (publickey)`** from the **bastion** to dns/registry:
+run `ansible-playbook playbooks/lab-ssh.yml` (bastion key was missing on those VMs).
+
+If from the **Mac**: the Mac key must be in Terraform (`ssh_public_key_file` / cloud-init)
+**before** clone — [proxmox/access.md](../proxmox/access.md).
 
 Other options: jump via **bastion** (`hosts.yml.example` method B), `hosts.sshconfig.yml.example`, or run from bastion (`hosts.from-bastion.yml.example`).
 

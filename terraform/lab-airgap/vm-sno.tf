@@ -17,7 +17,7 @@ resource "proxmox_vm_qemu" "sno" {
 
   bios    = local.vm_bios
   machine = local.vm_machine
-  # Disk first, ISO second (same as assisted-ocp-bma): empty disk → fall through to
+  # Disk first, ISO second: empty disk → fall through to
   # agent ISO; after RHCOS install → boot from virtio0 without re-entering installer.
   scsihw = "virtio-scsi-single"
   boot   = var.sno_agent_iso != "" ? "order=virtio0;ide2" : "order=virtio0"

@@ -34,7 +34,9 @@ Ansible from the Mac needs **passwordless** `root@192.168.1.147` (otherwise `Per
 ssh-copy-id root@192.168.1.147
 ```
 
-Bernard keys on lab VMs come from Terraform `ssh_public_key_file` (cloud-init) — no `ssh-copy-id bernard@…` after a recreate.
+Bernard keys on lab VMs come from Terraform `ssh_public_key_file` (cloud-init) — **Mac** key.
+`lab-ssh.yml` (imported by `lab-infra` / `bastion-ocp-install`) also installs the **bastion**
+pubkey on dns/registry and clears stale `known_hosts` after VM recreate.
 
 Alternative: run playbooks from the bastion — `ansible/inventory/hosts.from-bastion.yml.example`.
 
@@ -68,7 +70,6 @@ sudo tee -a /etc/hosts << 'EOF'
 172.16.10.20  registry.lab.local registry
 172.16.10.10  bastion.lab.local bastion
 172.16.10.100 api.ocp422.lab.local
-172.16.10.110 api.ocp5.lab.local
 EOF
 ```
 
