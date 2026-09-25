@@ -6,14 +6,14 @@ Personal training lab for **OpenShift 4.22 GA SNO** air-gap on **Proxmox** (NUC 
 
 | Layer | Tool | Role |
 |-------|------|------|
-| **VMs** | **[Terraform](terraform/README.md)** | Create/recreate Proxmox VMs (`lab-airgap`) |
+| **VMs** | **[Terraform](terraform/README.md)** | Create/recreate Proxmox VMs (`lab-infra` + `lab-ocp`) |
 | **OS / lab services** | **[Ansible](ansible/README.md)** | DVD repos, DNS, registry, bastion, install-config |
 | **Image mirror** | Manual on bastion | `oc-mirror` |
 | **Cluster install** | Agent ISO | [openshift/4.22-ga/](openshift/4.22-ga/) |
 
 Primary entry points:
 
-- **Terraform**: [terraform/README.md](terraform/README.md) · [terraform/lab-airgap/README.md](terraform/lab-airgap/README.md)
+- **Terraform**: [terraform/README.md](terraform/README.md) · [terraform/lab-infra/README.md](terraform/lab-infra/README.md) · [terraform/lab-ocp/README.md](terraform/lab-ocp/README.md)
 - **Ansible**: [ansible/README.md](ansible/README.md)
 - **IaC rebuild**: [docs/iac.md](docs/iac.md)
 
@@ -65,7 +65,9 @@ Lab addressing (`172.16.10.0/24`): [docs/network.md](docs/network.md).
 ├── openshift/4.22-ga/     # Agent-based GA air-gap
 ├── dns/                   # DNS service notes
 ├── mirror/                # oc-mirror procedures
-├── terraform/lab-airgap/  # → [terraform/README.md](terraform/README.md)
+├── terraform/lab-infra/   # dns, bastion, registry
+├── terraform/lab-ocp/     # SNO or compact3
+
 ├── ansible/               # DNS, registry, bastion, OCP install
 └── versions.env.example
 ```
@@ -76,6 +78,8 @@ Lab addressing (`172.16.10.0/24`): [docs/network.md](docs/network.md).
 2. [proxmox/network.md](proxmox/network.md) — `vmbr1`
 3. [proxmox/rhel-cloudinit-template.md](proxmox/rhel-cloudinit-template.md)
 4. **Terraform** — [terraform/README.md](terraform/README.md) ([docs/iac.md](docs/iac.md): `ssh_public_key_file` + `ssh-keygen -R`)
+   - Infra: `terraform/lab-infra/`
+   - OCP: `terraform/lab-ocp/` (`ocp_topology = sno` or `compact3`)
 5. **Ansible** `lab-infra.yml` — [ansible/README.md](ansible/README.md)
 6. **Ansible** `bastion-ocp-install.yml` — [docs/ansible-ocp-install.md](docs/ansible-ocp-install.md)
 7. **Mirror** — [mirror/README.md](mirror/README.md)

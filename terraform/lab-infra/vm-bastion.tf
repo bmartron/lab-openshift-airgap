@@ -22,8 +22,8 @@ resource "proxmox_vm_qemu" "bastion" {
   scsihw  = "virtio-scsi-single"
   boot    = "order=virtio0"
 
-  ciuser       = var.ssh_user
-  sshkeys      = local.sshkeys != "" ? local.sshkeys : null
+  ciuser  = var.ssh_user
+  sshkeys = local.sshkeys != "" ? local.sshkeys : null
   # eth0 = Internet (gw maison) ; eth1 = lab sans gw — sinon default route = 172.16.10.1 et pas d’Internet
   nameserver   = var.bastion_admin_dns
   searchdomain = "lab.local"

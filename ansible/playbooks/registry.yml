@@ -1,6 +1,6 @@
 ---
 # Registry seule : disque /opt/registry, TLS, image registry:2, conteneur Podman
-# Prérequis : inventory/hosts.yml + group_vars/all.yml (registry_data_device, registry_image_tar)
+# Prerequisites: inventory/hosts.yml + inventory/group_vars/all.yml (registry_data_device, registry_image_tar)
 - name: Registry mirror (lab air-gap)
   hosts: registry
   vars_files:

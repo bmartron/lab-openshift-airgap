@@ -1,11 +1,11 @@
-# OpenShift 4.22 GA — agent-based air-gap (SNO)
+# OpenShift 4.22 GA — agent-based air-gap (SNO or compact3)
 
 | Parameter | Value |
 |-----------|--------|
 | Version | **4.22.12** |
 | Cluster name | `ocp422` |
 | Base domain | `lab.local` → API `api.ocp422.lab.local` |
-| SNO IP | `172.16.10.100` |
+| Topology | `ocp_topology`: **sno** (`.100`) or **compact3** (`.100`–`.102`) |
 | Mirror | `registry.lab.local:5000/ocp4-422` |
 
 **Do not** set `baseDomain: ocp422.lab.local` (double subdomain → `api.ocp422.ocp422.lab.local`).
@@ -26,6 +26,7 @@ Install YAML on bastion: `~/lab/4.22-ga/config-backup/`. Prefer Ansible over han
 **Mac** — in `ansible/inventory/group_vars/all.yml`:
 
 ```yaml
+ocp_topology: compact3   # or sno — match terraform/lab-ocp
 ocp_agent_generate_iso: true
 ocp_push_iso_to_proxmox: true
 ```
@@ -78,23 +79,23 @@ Fix any `[FAIL]` before booting.
 | CD-ROM | `nfs_iso` → `agent.x86_64.iso` on **ide2** |
 | LVMS (optional) | 2nd VirtIO disk → `/dev/vdb` |
 
-In `terraform/lab-airgap/terraform.tfvars`: `create_sno = true`.
+In `terraform/lab-ocp/terraform.tfvars`: `ocp_topology = "sno"` (see `terraform.tfvars.sno.example`).
 
 Create / apply:
 
 ```bash
-cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/terraform/lab-airgap
-terraform apply -target='proxmox_vm_qemu.sno[0]' -auto-approve
+cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/terraform/lab-ocp
+terraform apply -auto-approve
 ```
 
 Retry (recreate VM):
 
 ```bash
-cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/terraform/lab-airgap
-terraform apply -replace='proxmox_vm_qemu.sno[0]' -auto-approve
+cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/terraform/lab-ocp
+terraform apply -replace='proxmox_vm_qemu.node["sno"]' -auto-approve
 ```
 
-Also documented in [terraform/lab-airgap/README.md](../../terraform/lab-airgap/README.md).
+Also documented in [terraform/lab-ocp/README.md](../../terraform/lab-ocp/README.md).
 
 ## 4. Wait for install
 
@@ -186,6 +187,6 @@ Regenerate ISO (Ansible flags or hand commands above), recreate SNO via Terrafor
 | `api.ocp422.ocp422.lab.local` | `baseDomain: lab.local` + `name: ocp422` |
 | `/dev/not-found-by-hints` | Use `deviceName: "/dev/disk/by-path/pci-…"` from agent `ls -l /dev/disk/by-path/` (link → `vda`) |
 | Stale ISO / no error detail | `rm -f .openshift_install_state.json agent.x86_64.iso` then recreate |
-| Bootstrap stuck | Recreate SNO — `terraform apply -replace='proxmox_vm_qemu.sno[0]'` ([lab-airgap README](../../terraform/lab-airgap/README.md)) |
+| Bootstrap stuck | Recreate SNO — `terraform apply -replace='proxmox_vm_qemu.node["sno"]'` ([lab-ocp README](../../terraform/lab-ocp/README.md)) |
 | Pull from `quay.io` / missing release | Mirror not done or incomplete — verify before boot |
 | Pull from `quay.io` with empty ICS | Re-run `bastion-ocp-install.yml` then new ISO |

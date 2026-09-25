@@ -69,6 +69,8 @@
       - "{{ registry_ip | default('172.16.10.20') }}"
       - "{{ registry_hostname | default('registry.lab.local') }}"
       - "{{ ocp_sno_ip | default('172.16.10.100') }}"
+      - "172.16.10.101"
+      - "172.16.10.102"
   tasks:
     - name: ssh-keygen -R for lab hosts
       ansible.builtin.command:

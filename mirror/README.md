@@ -28,8 +28,7 @@ Default in role defaults: **`virt-lvms`**.
 | `virtualization` | [imageset-config-4.22-virtualization.yaml.example](imageset-config-4.22-virtualization.yaml.example) | Platform + OpenShift Virtualization |
 | `lvms` | [imageset-config-4.22-lvms.yaml.example](imageset-config-4.22-lvms.yaml.example) | Platform + LVMS |
 | `virt-lvms` | [imageset-config-4.22-virt-lvms.yaml.example](imageset-config-4.22-virt-lvms.yaml.example) | Platform + Virt + LVMS (**lab default**) |
-| `odf` | [imageset-config-4.22-odf.yaml.example](imageset-config-4.22-odf.yaml.example) | Platform + ODF |
-| `rook-ceph` | [imageset-config-4.22-rook-ceph.yaml.example](imageset-config-4.22-rook-ceph.yaml.example) | Platform + Rook-Ceph only (prefer `odf` for ODF) |
+| `odf` | [imageset-config-4.22-odf.yaml.example](imageset-config-4.22-odf.yaml.example) | Platform + ODF (includes Rook-Ceph) |
 
 Verify on bastion before mirroring: `head -40 ~/lab/4.22-ga/imageset-config.yaml`
 

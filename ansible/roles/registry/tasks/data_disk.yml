@@ -3,7 +3,7 @@
   ansible.builtin.assert:
     that:
       - registry_data_device | length > 0
-    fail_msg: "Définir registry_data_device (ex. /dev/vdb clone ou /dev/sdb ISO) dans group_vars/all.yml"
+    fail_msg: "Set registry_data_device (e.g. /dev/vdb clone or /dev/sdb ISO) in inventory/group_vars/all.yml"
 
 - name: Détecter filesystem existant
   ansible.builtin.command: "blkid {{ registry_data_device }}"

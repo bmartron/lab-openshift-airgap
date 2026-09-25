@@ -39,7 +39,7 @@
 - name: Charger l’image (registry_image_tar) avant le conteneur
   ansible.builtin.fail:
     msg: >-
-      Image {{ registry_image }} absente — vérifier registry_image_tar dans group_vars/all.yml
+      Image {{ registry_image }} missing — set registry_image_tar in inventory/group_vars/all.yml
       et que la tâche « Charger image dans Podman » a réussi.
   when:
     - registry_run_container | bool

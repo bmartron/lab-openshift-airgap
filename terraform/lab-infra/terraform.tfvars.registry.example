@@ -1,31 +1,30 @@
-# Registry seule — copier : cp terraform.tfvars.registry.example terraform.tfvars
-# Clone template (recommandé) OU install ISO Anaconda.
+# Registry only — cp terraform.tfvars.registry.example terraform.tfvars
+# Clone template (recommended) OR Anaconda install ISO.
 
 proxmox_api_url          = "https://192.168.1.147:8006/api2/json"
 proxmox_api_token_id     = "root@pam!terraform"
-proxmox_api_token_secret = "REMPLACER"
+proxmox_api_token_secret = "REPLACE_ME"
 proxmox_tls_insecure     = true
 
 proxmox_node = "pve"
 
-storage_infra = "nfs_vm"      # inutilisé si create_dns/bastion = false
+storage_infra = "nfs_vm"      # unused if create_dns/bastion = false
 storage_perf  = "local-lvm"   # registry OS + cloud-init + virtio1
 
 create_dns      = false
 create_bastion  = false
 create_registry = true
-create_sno      = false
 
 # Option A — clone (virtio0 + virtio1 → /dev/vda + /dev/vdb)
 rhel_template        = "rhel10-tpl"
 rhel_template_infra  = ""
 registry_install_iso = ""
-rhel_dvd_iso         = "nfs_iso:iso/rhel-10.2-x86_64-dvd.iso" # ide2 — repo dnf
+rhel_dvd_iso         = "nfs_iso:iso/rhel-10.2-x86_64-dvd.iso" # ide2 — dnf repo
 
-# Option B — Anaconda (décommenter, vider rhel_template) :
+# Option B — Anaconda (uncomment, clear rhel_template):
 # rhel_template        = ""
 # registry_install_iso = "nfs_iso:iso/rhel-10.x-x86_64-dvd.iso"
-# rhel_dvd_iso         = ""  # ide2 déjà pris par registry_install_iso
+# rhel_dvd_iso         = ""  # ide2 already used by registry_install_iso
 
 lab_bridge  = "vmbr1"
 registry_ip = "172.16.10.20"

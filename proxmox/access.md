@@ -84,7 +84,7 @@ EOF
 ## SNO SSH (`core@`)
 
 **Bastion only** — [docs/sno-ssh-convention.md](../docs/sno-ssh-convention.md).  
-VM: [terraform/lab-airgap/vm-sno.tf](../terraform/lab-airgap/vm-sno.tf).
+VM: [terraform/lab-ocp/vm-nodes.tf](../terraform/lab-ocp/vm-nodes.tf).
 
 ## Related
 

@@ -1,9 +1,9 @@
 locals {
-  # Toutes les VMs lab : aligné Proxmox (q35 + OVMF), template RHEL en UEFI recommandé
+  # All lab VMs: Proxmox-aligned (q35 + OVMF); UEFI RHEL template recommended
   vm_bios    = "ovmf"
   vm_machine = "q35"
 
-  # Clés SSH cloud-init (tfvars ne peut pas appeler file())
+  # SSH keys for cloud-init (tfvars cannot call file())
   sshkeys = trimspace(
     var.ssh_public_keys != "" ? var.ssh_public_keys : (
       var.ssh_public_key_file != "" ? file(pathexpand(var.ssh_public_key_file)) : ""

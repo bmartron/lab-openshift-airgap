@@ -26,15 +26,17 @@ SNO `sshKey` is **not** a Mac file: the playbook reads the live bastion `~/.ssh/
 
 Source of truth: **`ansible/inventory/group_vars/all.yml`** (not ad-hoc `-e` flags).
 
-**Required for first ISO + upload:**
+**Required for first ISO + upload (compact3 example):**
 
 ```yaml
-ocp_sno_mac: "BC:24:11:E1:8F:82"          # must match Terraform sno_mac
+ocp_topology: compact3                  # or sno — must match terraform/lab-ocp
 ocp_sno_root_device: "/dev/disk/by-path/pci-0000:06:0a.0"
 ocp_imageset_profile: virt-lvms             # see profiles below
 ocp_agent_generate_iso: true                # build agent.x86_64.iso on bastion
 ocp_push_iso_to_proxmox: true               # scp ISO to nfs_iso
 ```
+
+For **sno**, also set `ocp_sno_mac` (must match Terraform). For **compact3**, MACs/IPs default to Terraform values (`…:82` / `:83` / `:84` on `.100`–`.102`).
 
 Then run:
 
@@ -56,7 +58,7 @@ ocp_push_iso_to_proxmox: false
 
 1. **Mirror** on bastion — [mirror/README.md](../mirror/README.md)  
 2. **`~/lab/scripts/lab-startup-check.sh`** on bastion  
-3. **Boot SNO** — [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md)
+3. **Boot cluster** — [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) (SNO or compact3 VMs)
 
 ---
 
@@ -79,8 +81,9 @@ ocp_push_iso_to_proxmox: false
 
 | Variable | Example | Meaning |
 |----------|---------|---------|
-| `ocp_sno_mac` | `BC:24:11:E1:8F:82` | SNO NIC MAC (Proxmox / Terraform) |
-| `ocp_sno_root_device` | `/dev/disk/by-path/pci-0000:06:0a.0` | Install disk hint (VirtIO 120G) |
+| `ocp_topology` | `compact3` or `sno` | Must match `terraform/lab-ocp` |
+| `ocp_sno_mac` | `BC:24:11:E1:8F:82` | Required for **sno**; optional node0 override for compact3 |
+| `ocp_sno_root_device` | `/dev/disk/by-path/pci-0000:06:0a.0` | Install disk hint (VirtIO) |
 | `ocp_imageset_profile` | `virt-lvms` | What `oc-mirror` will pull |
 
 ### Optional (defaults are fine for lab)
@@ -91,8 +94,9 @@ ocp_push_iso_to_proxmox: false
 | `ocp_push_iso_to_proxmox` | `false` | Set `true` with generate, to scp to NFS |
 | `ocp_proxmox_host` / `ocp_proxmox_iso_dir` | lab NUC defaults | Only if Proxmox/NFS paths differ |
 | `ocp_cluster_name` / `ocp_base_domain` | `ocp422` / `lab.local` | Rarely |
+| `ocp_compact3_nodes` / `ocp_nodes` | role defaults | Override host list if MACs/IPs differ |
 
-**Imageset profiles:** `platform-only` \| `gitops` \| `virtualization` \| `lvms` \| `odf` \| `rook-ceph` \| `virt-lvms`
+**Imageset profiles:** `platform-only` \| `gitops` \| `virtualization` \| `lvms` \| `odf` \| `virt-lvms`
 
 ---
 
@@ -149,7 +153,7 @@ ansible-playbook playbooks/bastion-scripts.yml
 
 | Error | Fix |
 |-------|-----|
-| Invalid `ocp_sno_mac` | Set MAC in `inventory/group_vars/all.yml` |
+| Invalid node MAC | Set `ocp_sno_mac` (sno) or check `ocp_compact3_nodes` / Terraform MACs |
 | Missing CA | Registry must have `/opt/registry/certs/ca.crt` (`lab-infra` registry) |
 | Missing pull-secret | `ansible/files/pull-secret.txt` on the Mac |
 | `Permission denied` Mac → bastion | Terraform `ssh_public_key_file` + [iac.md](iac.md) host-key cleanup |

@@ -56,7 +56,7 @@ podman pull --platform linux/amd64 docker.io/library/registry:2
 podman save -o ~/Downloads/registry2-amd64.tar docker.io/library/registry:2
 ```
 
-Point `registry_image_tar` in `group_vars/all.yml` at that file (see `inventory/group_vars/all.yml.example`).
+Point `registry_image_tar` in `inventory/group_vars/all.yml` at that file (see `inventory/group_vars/all.yml.example`).
 
 Flow inside the role (`roles/registry/tasks/image.yml`):
 
@@ -69,7 +69,7 @@ If the tar is missing, `lab-infra.yml` fails on the registry host with a clear a
 
 ## Default rebuild path
 
-After Terraform VMs exist (`terraform/lab-airgap`):
+After Terraform VMs exist (`terraform/lab-infra` + `terraform/lab-ocp`):
 
 ```bash
 cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/ansible
@@ -145,7 +145,7 @@ Full guide: **[docs/ansible-ocp-install.md](../docs/ansible-ocp-install.md)**.
 Summary:
 
 1. **Mac** — [files/README.md](files/README.md): `files/pull-secret.txt` (gitignored).
-2. `ocp_sno_mac` in `group_vars/all.yml` (or `inventory/group_vars/all.yml`).
+2. `ocp_topology` (+ `ocp_sno_mac` for sno) in `inventory/group_vars/all.yml`.
 3. Inventory: `bastion` + `registry` (Proxmox jump in `hosts.yml`).
 4. SNO `sshKey`: live from bastion `~/.ssh/id_ed25519.pub` (no Mac copy).
 
@@ -159,7 +159,7 @@ ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass
 
 | Variable | Role |
 |----------|------|
-| `ocp_imageset_profile` | `platform-only` \| `gitops` \| `virtualization` \| `lvms` \| `odf` \| `rook-ceph` \| `virt-lvms` |
+| `ocp_imageset_profile` | `platform-only` \| `gitops` \| `virtualization` \| `lvms` \| `odf` \| `virt-lvms` |
 | `ocp_agent_generate_iso` | `true` = `openshift-install agent create image` on bastion |
 | `ocp_push_iso_to_proxmox` | `true` = `scp` ISO bastion → `root@192.168.1.147:/mnt/pve/nfs_iso/template/iso/` |
 | `ocp_virt_operator_version` | e.g. `4.22.9` (Virt stable channel) |
@@ -233,7 +233,7 @@ Other options: jump via **bastion** (`hosts.yml.example` method B), `hosts.sshco
 
 ## Relation to Terraform
 
-1. `cd terraform/lab-airgap` → `terraform apply` (new VMs + DVD ISO + SSH keys)
+1. `cd terraform/lab-infra` → `terraform apply` (dns/bastion/registry + DVD ISO + SSH keys); then `cd ../lab-ocp` → `terraform apply` (OCP nodes)
 2. Ensure `registry_image_tar` exists on the Mac (section above)
 3. `ansible-playbook playbooks/lab-infra.yml --ask-become-pass`
 4. `ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass`
@@ -243,5 +243,5 @@ If infra VMs already exist: skip Terraform, fix inventory, run Ansible.
 
 ## Secrets
 
-- `inventory/hosts.yml`, `group_vars/all.yml`: **gitignored**
+- `inventory/hosts.yml`, `inventory/group_vars/all.yml`: **gitignored**
 - `files/registry-certs/`: gitignored (`copy` mode)

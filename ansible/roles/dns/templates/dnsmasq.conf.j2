@@ -18,8 +18,16 @@ address=/bastion.{{ lab_domain }}/{{ bastion_lab_ip }}
 address=/{{ registry_hostname }}/{{ registry_ip }}
 address=/registry.{{ lab_domain }}/{{ registry_ip }}
 
-# OpenShift 4.22 GA (SNO)
-address=/ocp-sno-422.{{ lab_domain }}/{{ ocp_sno_ip }}
-address=/api.{{ ocp_cluster_name }}.{{ lab_domain }}/{{ ocp_sno_ip }}
-address=/api-int.{{ ocp_cluster_name }}.{{ lab_domain }}/{{ ocp_sno_ip }}
-address=/.apps.{{ ocp_cluster_name }}.{{ lab_domain }}/{{ ocp_sno_ip }}
+# OpenShift node hostnames
+{% if ocp_topology | default('sno') == 'compact3' %}
+{% for node in ocp_compact3_nodes %}
+address=/{{ node.hostname }}.{{ lab_domain }}/{{ node.ip }}
+{% endfor %}
+{% else %}
+address=/{{ ocp_sno_hostname | default('ocp-sno-422') }}.{{ lab_domain }}/{{ ocp_api_ip }}
+{% endif %}
+
+# API / apps — lab points at rendezvous / first master (no VIP yet)
+address=/api.{{ ocp_cluster_name }}.{{ lab_domain }}/{{ ocp_api_ip }}
+address=/api-int.{{ ocp_cluster_name }}.{{ lab_domain }}/{{ ocp_api_ip }}
+address=/.apps.{{ ocp_cluster_name }}.{{ lab_domain }}/{{ ocp_api_ip }}

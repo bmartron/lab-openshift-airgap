@@ -1,6 +1,7 @@
 ---
 # cp all.yml.example inventory/group_vars/all.yml
-# (ou group_vars/all.yml à la racine ansible — les deux emplacements sont supportés)
+# Single source of truth (ansible.cfg inventory = inventory/hosts.yml).
+# Do not use ansible/group_vars/all.yml (removed).
 
 lab_timezone: Europe/Paris
 lab_ntp_server: 172.16.10.11
@@ -27,9 +28,14 @@ registry_recreate_container: false
 bastion_lab_dir: /home/bernard/lab
 bastion_install_startup_check: true
 
-# Install SNO agent — ansible-playbook playbooks/bastion-ocp-install.yml
-ocp_sno_mac: "BC:24:11:E1:8F:82"   # must match terraform sno_mac
-ocp_sno_root_device: "/dev/disk/by-path/pci-0000:06:0a.0"  # virtio0 120G; not /dev/vda
-ocp_imageset_profile: virt-lvms   # platform-only | gitops | virtualization | lvms | odf | rook-ceph | virt-lvms
-ocp_agent_generate_iso: false          # true = lancer openshift-install sur la bastion
-ocp_push_iso_to_proxmox: false        # true = scp agent.x86_64.iso vers NFS Proxmox (bastion → root@pve)
+# Install agent — ansible-playbook playbooks/bastion-ocp-install.yml
+# Topology must match terraform/lab-ocp (sno | compact3)
+ocp_topology: compact3
+# sno only (ignored for compact3 unless overriding node0 MAC):
+# ocp_sno_mac: "BC:24:11:E1:8F:82"
+# ocp_sno_root_device: "/dev/disk/by-path/pci-0000:06:0a.0"
+# compact3 MACs/IPs: role defaults match terraform/lab-ocp (…:82/:83/:84)
+ocp_sno_root_device: "/dev/disk/by-path/pci-0000:06:0a.0"  # shared rootDeviceHints for all masters
+ocp_imageset_profile: virt-lvms   # platform-only | gitops | virtualization | lvms | odf | virt-lvms
+ocp_agent_generate_iso: false          # true = run openshift-install on bastion
+ocp_push_iso_to_proxmox: false        # true = scp agent.x86_64.iso to Proxmox NFS

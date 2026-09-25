@@ -2,5 +2,17 @@
 dns_interface: eth0
 lab_domain: lab.local
 ocp_cluster_name: ocp422
+ocp_topology: sno
 ocp_sno_ip: "172.16.10.100"
+ocp_sno_hostname: ocp-sno-422
+# api / api-int / *.apps — first master / SNO (no VIP yet)
+ocp_api_ip: "{{ ocp_sno_ip }}"
+# compact3 host records — align with terraform/lab-ocp + ocp_bastion_install
+ocp_compact3_nodes:
+  - hostname: ocp-master-0
+    ip: "172.16.10.100"
+  - hostname: ocp-master-1
+    ip: "172.16.10.101"
+  - hostname: ocp-master-2
+    ip: "172.16.10.102"
 dns_deploy_dnsmasq_conf: true

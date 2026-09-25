@@ -74,7 +74,7 @@ rhel_dvd_iso         = "nfs_iso:iso/rhel-10.2-x86_64-dvd.iso"
 ```
 
 ```bash
-cd terraform/lab-airgap
+cd terraform/lab-infra
 terraform plan && terraform apply
 ```
 

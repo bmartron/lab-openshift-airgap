@@ -16,7 +16,7 @@ Last review: **Proxmox VE 9.2** + **OCP 4.22.12**.
 |-----------|------------------|---------------|
 | Proxmox | **9.2.x** | NUC host |
 | Terraform | ≥ 1.5 | Mac |
-| Proxmox provider | **telmate/proxmox 3.0.2-rc10** | [terraform/lab-airgap/versions.tf](../terraform/lab-airgap/versions.tf) |
+| Proxmox provider | **telmate/proxmox 3.0.2-rc10** | [terraform/lab-infra/versions.tf](../terraform/lab-infra/versions.tf) |
 | API token | `root@pam!terraform`, privilege separation off (lab) | Proxmox UI |
 | Registry VM | virtio0 32G + virtio1 120G, clone `rhel10-tpl` | Terraform + [proxmox/rhel-cloudinit-template.md](../proxmox/rhel-cloudinit-template.md) |
 | Registry data | `/opt/registry` on **virtio1** (`/dev/vdb`) | Ansible `registry_data_device` |
@@ -45,8 +45,10 @@ Last review: **Proxmox VE 9.2** + **OCP 4.22.12**.
 
 | File | Commit? |
 |------|---------|
-| `terraform/lab-airgap/.terraform.lock.hcl` | **Yes** |
-| `terraform/lab-airgap/terraform.tfvars` | **No** |
+| `terraform/lab-infra/.terraform.lock.hcl` | **Yes** |
+| `terraform/lab-ocp/.terraform.lock.hcl` | **Yes** |
+| `terraform/lab-infra/terraform.tfvars` | **No** |
+| `terraform/lab-ocp/terraform.tfvars` | **No** |
 | `versions.env` | **No** |
 
 ## Infra VM OS

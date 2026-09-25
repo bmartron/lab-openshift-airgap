@@ -1,5 +1,6 @@
 # /etc/dnsmasq.conf — DNS VM (172.16.10.11)
 # Prefer Ansible role `dns` (interface eth0 on RHEL cloud-init / Proxmox VirtIO).
+# Live file is rendered from ansible/roles/dns/templates/dnsmasq.conf.j2
 interface=eth0
 bind-interfaces
 listen-address=172.16.10.11
@@ -17,8 +18,10 @@ address=/dns.lab.local/172.16.10.11
 address=/bastion.lab.local/172.16.10.10
 address=/registry.lab.local/172.16.10.20
 
-# OpenShift 4.22 GA (SNO)
-address=/ocp-sno-422.lab.local/172.16.10.100
+# OpenShift — compact3 (ocp_topology: compact3). For sno: ocp-sno-422 → .100 only.
+address=/ocp-master-0.lab.local/172.16.10.100
+address=/ocp-master-1.lab.local/172.16.10.101
+address=/ocp-master-2.lab.local/172.16.10.102
 address=/api.ocp422.lab.local/172.16.10.100
 address=/api-int.ocp422.lab.local/172.16.10.100
 address=/.apps.ocp422.lab.local/172.16.10.100

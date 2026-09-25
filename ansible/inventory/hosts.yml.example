@@ -3,7 +3,7 @@
 #
 # SSH bernard@ (dns / bastion / registry) :
 #   Clé Mac injectée par Terraform cloud-init — ssh_public_key_file dans
-#   terraform/lab-airgap/terraform.tfvars (voir proxmox/rhel-cloudinit-template.md).
+#   terraform/lab-infra/terraform.tfvars (see proxmox/rhel-cloudinit-template.md).
 #   Plus besoin de ssh-copy-id bernard@… après un apply / recreate Terraform.
 #
 # Jump vers le lab (172.16.10.x) — choisir UNE méthode lab_jump_* :

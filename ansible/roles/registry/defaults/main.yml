@@ -7,7 +7,7 @@ registry_data_device: ""
 registry_container_name: ocp-registry
 registry_image: docker.io/library/registry:2
 
-# registry_image_tar : obligatoire dans group_vars/all.yml (pas de défaut vide)
+# registry_image_tar: required in inventory/group_vars/all.yml (no empty default)
 
 registry_tls_mode: generate # generate | copy | skip
 registry_regenerate_certs: false

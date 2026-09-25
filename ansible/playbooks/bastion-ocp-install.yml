@@ -5,9 +5,9 @@
 # Prerequisites:
 #   - lab-infra.yml already OK (DVD, DNS/gw eth0, oc/oc-mirror, /etc/hosts)
 #   - ansible/files/pull-secret.txt — console.redhat.com
-#   - ocp_sno_mac in inventory/group_vars/all.yml (Proxmox SNO MAC)
+#   - ocp_topology + MACs in inventory/group_vars/all.yml (match terraform/lab-ocp)
 #
-# SNO sshKey: taken live from bastion ~/.ssh/id_ed25519.pub (created by lab-ssh /
+# Cluster sshKey: taken live from bastion ~/.ssh/id_ed25519.pub (created by lab-ssh /
 # lab-infra). No Mac install_ssh_key.pub file.
 #
 # Starts with lab-ssh.yml (bastion key → dns/registry/Proxmox + known_hosts cleanup)
@@ -35,7 +35,7 @@
   hosts: bastion
   gather_facts: false
   become: true
-  # Un seul all.yml actif : inventory/group_vars (prioritaire). Éviter un second all.yml divergent.
+  # Single all.yml: inventory/group_vars (loaded by inventory + vars_files).
   vars_files:
     - "{{ playbook_dir }}/../inventory/group_vars/all.yml"
   vars:

@@ -7,7 +7,8 @@ compute:
   replicas: 0
 controlPlane:
   name: master
-  replicas: 1
+  # sno: 1 — compact3: 3 (Ansible ocp_topology)
+  replicas: 3
 networking:
   clusterNetwork:
   - cidr: 10.128.0.0/14
@@ -17,9 +18,9 @@ networking:
   networkType: OVNKubernetes
 additionalTrustBundle: |
   -----BEGIN CERTIFICATE-----
-  REMPLACER_PAR_CA_REGISTRY
+  REPLACE_WITH_REGISTRY_CA
   -----END CERTIFICATE-----
-# Chemins oc-mirror v2 — aligner sur workspace/working-dir/cluster-resources/itms-oc-mirror.yaml
+# oc-mirror v2 paths — align with workspace/working-dir/cluster-resources/itms-oc-mirror.yaml
 imageContentSources:
 - source: quay.io/openshift-release-dev/ocp-release
   mirrors:
@@ -30,4 +31,4 @@ imageContentSources:
 platform:
   none: {}
 pullSecret: '{"auths":{"registry.lab.local:5000":{"auth":"..."}}}'
-sshKey: 'ssh-ed25519 AAAA... remplacer_par_votre_cle'
+sshKey: 'ssh-ed25519 AAAA... replace_with_bastion_pubkey'

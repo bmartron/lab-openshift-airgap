@@ -1,5 +1,5 @@
 ---
-# Répertoire install sur la bastion (openshift-install --dir)
+# Install directory on bastion (openshift-install --dir)
 ocp_install_dir: "{{ bastion_lab_dir }}/4.22-ga"
 ocp_config_backup_dir: "{{ ocp_install_dir }}/config-backup"
 
@@ -12,22 +12,49 @@ ocp_mirror_namespace: ocp4-422
 ocp_registry_fqdn: "{{ registry_hostname }}"
 ocp_registry_port: "{{ registry_port }}"
 
-# SNO — obligatoire : MAC Proxmox net0 (qm config <vmid>)
+# Topology — must match terraform/lab-ocp ocp_topology
+# sno | compact3
+ocp_topology: sno
+
+# SNO knobs (used when ocp_topology=sno, or to override compact3 node0 MAC)
 ocp_sno_ip: 172.16.10.100
 ocp_sno_mac: ""
-ocp_sno_interface: ens18
+ocp_sno_interface: enp6s18
 ocp_sno_hostname: ocp-sno-422
 ocp_sno_root_device: "/dev/disk/by-path/pci-0000:06:0a.0"
+
+# compact3 defaults — align with terraform/lab-ocp variables.tf
+# NIC name on Proxmox VirtIO / RHCOS agent: enp6s18 (not ens18)
+ocp_compact3_nodes:
+  - hostname: ocp-master-0
+    ip: "172.16.10.100"
+    mac: "BC:24:11:E1:8F:82"
+    interface: enp6s18
+    root_device: "/dev/disk/by-path/pci-0000:06:0a.0"
+  - hostname: ocp-master-1
+    ip: "172.16.10.101"
+    mac: "BC:24:11:E1:8F:83"
+    interface: enp6s18
+    root_device: "/dev/disk/by-path/pci-0000:06:0a.0"
+  - hostname: ocp-master-2
+    ip: "172.16.10.102"
+    mac: "BC:24:11:E1:8F:84"
+    interface: enp6s18
+    root_device: "/dev/disk/by-path/pci-0000:06:0a.0"
+
+# Optional full override (list of hostname/ip/mac/interface/root_device). Empty = derive from topology.
+ocp_nodes: []
+
 ocp_lab_gateway: 172.16.10.1
 ocp_dns_ip: "{{ dns_ip }}"
 ocp_ntp_ip: "{{ lab_ntp_server }}"
 
 # Files on the Ansible controller (Mac) — gitignored
 ocp_pull_secret_path: "{{ playbook_dir }}/../files/pull-secret.txt"
-# SNO sshKey: live from bastion ~/.ssh/id_ed25519.pub (see tasks)
+# Cluster sshKey: live from bastion ~/.ssh/id_ed25519.pub (see tasks)
 ocp_registry_ca_fallback_path: "{{ playbook_dir }}/../files/registry-ca.crt"
 
-# imageset : platform-only | gitops | virtualization | lvms | odf | rook-ceph | virt-lvms
+# imageset: platform-only | gitops | virtualization | lvms | odf | virt-lvms
 ocp_imageset_profile: virt-lvms
 ocp_virt_operator_version: "4.22.9"
 ocp_gitops_channel: gitops-1.16
@@ -36,14 +63,12 @@ ocp_lvms_channel: stable-4.22
 ocp_lvms_operator_version: "4.22.0"
 ocp_odf_channel: stable-4.22
 ocp_odf_operator_version: "4.22.3-rhodf"
-ocp_rook_channel: stable-4.22
-ocp_rook_operator_version: "4.22.3-rhodf"
 
 ocp_deploy_lab_scripts: true
 ocp_configure_registry_trust: true
 ocp_agent_generate_iso: false
 
-# Copie bastion → Proxmox NFS (scp en tant que lab_user ; clé SSH root@pve sur la bastion)
+# bastion → Proxmox NFS (scp as lab_user; SSH key root@pve on bastion)
 ocp_push_iso_to_proxmox: false
 ocp_proxmox_host: 192.168.1.147
 ocp_proxmox_iso_dir: /mnt/pve/nfs_iso/template/iso

@@ -7,7 +7,7 @@ compute:
   replicas: 0
 controlPlane:
   name: master
-  replicas: 1
+  replicas: {{ ocp_control_plane_replicas | int }}
 networking:
   clusterNetwork:
   - cidr: 10.128.0.0/14

@@ -1,14 +1,67 @@
 ---
-- name: Vérifier ocp_sno_mac
+- name: Validate ocp_topology
   ansible.builtin.assert:
     that:
-      - ocp_sno_mac | default('') | length >= 17
-      - ocp_sno_mac is match('(?i)^[0-9a-f]{2}(:[0-9a-f]{2}){5}$')
+      - ocp_topology | default('sno') is in ['sno', 'compact3']
     fail_msg: >-
-      ocp_sno_mac invalide (pas de XX dans la MAC) — inventory/group_vars/all.yml
-      ou group_vars/all.yml. Proxmox : qm config <VMID> | grep net
+      ocp_topology must be "sno" or "compact3" (got {{ ocp_topology | default('') }})
 
-- name: Vérifier CA registry
+- name: Build ocp_nodes for sno
+  when:
+    - (ocp_nodes | default([]) | length) == 0
+    - ocp_topology | default('sno') == 'sno'
+  ansible.builtin.set_fact:
+    ocp_nodes:
+      - hostname: "{{ ocp_sno_hostname }}"
+        ip: "{{ ocp_sno_ip }}"
+        mac: "{{ ocp_sno_mac }}"
+        interface: "{{ ocp_sno_interface }}"
+        root_device: "{{ ocp_sno_root_device }}"
+
+- name: Build ocp_nodes for compact3
+  when:
+    - (ocp_nodes | default([]) | length) == 0
+    - ocp_topology | default('sno') == 'compact3'
+  ansible.builtin.set_fact:
+    ocp_nodes: "{{ ocp_compact3_nodes }}"
+
+- name: Override compact3 node0 MAC from ocp_sno_mac when set
+  when:
+    - ocp_topology | default('sno') == 'compact3'
+    - ocp_sno_mac | default('') | length >= 17
+    - (ocp_nodes | length) > 0
+  ansible.builtin.set_fact:
+    ocp_nodes: >-
+      {{ [ocp_nodes[0] | combine({'mac': ocp_sno_mac})] + ocp_nodes[1:] }}
+
+- name: Set control-plane replicas and rendezvous IP
+  ansible.builtin.set_fact:
+    ocp_control_plane_replicas: "{{ 1 if (ocp_topology | default('sno') == 'sno') else 3 }}"
+    ocp_rendezvous_ip: "{{ ocp_nodes[0].ip }}"
+
+- name: Validate each node MAC
+  ansible.builtin.assert:
+    that:
+      - item.mac | default('') | length >= 17
+      - item.mac is match('(?i)^[0-9a-f]{2}(:[0-9a-f]{2}){5}$')
+    fail_msg: >-
+      Invalid MAC for host {{ item.hostname | default('?') }} (got {{ item.mac | default('') }}).
+      Set ocp_sno_mac (sno) or ocp_compact3_nodes / ocp_nodes (compact3) —
+      must match terraform/lab-ocp. Proxmox: qm config <VMID> | grep net
+  loop: "{{ ocp_nodes }}"
+  loop_control:
+    label: "{{ item.hostname | default(item.ip | default('node')) }}"
+
+- name: Validate node count for topology
+  ansible.builtin.assert:
+    that:
+      - (ocp_topology == 'sno' and (ocp_nodes | length) == 1)
+        or (ocp_topology == 'compact3' and (ocp_nodes | length) == 3)
+    fail_msg: >-
+      ocp_topology={{ ocp_topology }} expects {{ 1 if ocp_topology == 'sno' else 3 }}
+      host(s) in ocp_nodes, got {{ ocp_nodes | length }}
+
+- name: Verify registry CA
   ansible.builtin.assert:
     that:
       - ocp_registry_ca_pem is defined

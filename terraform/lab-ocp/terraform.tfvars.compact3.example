@@ -1,0 +1,28 @@
+# OpenShift compact 3-node — cp terraform.tfvars.compact3.example terraform.tfvars
+# Infra VMs: ../lab-infra/
+# Ansible multi-host agent-config + DNS: follow-up (VMs only for now)
+
+proxmox_api_url          = "https://192.168.1.147:8006/api2/json"
+proxmox_api_token_id     = "root@pam!terraform"
+proxmox_api_token_secret = "REPLACE_ME"
+proxmox_tls_insecure     = true
+
+proxmox_node = "pve"
+storage_perf = "local-lvm"
+lab_bridge   = "vmbr1"
+
+ocp_topology = "compact3"
+
+# Defaults in variables.tf — override if needed:
+# compact3_nodes = {
+#   "0" = { name = "ocp-master-0", ip = "172.16.10.100", mac = "BC:24:11:E1:8F:82" }
+#   "1" = { name = "ocp-master-1", ip = "172.16.10.101", mac = "BC:24:11:E1:8F:83" }
+#   "2" = { name = "ocp-master-2", ip = "172.16.10.102", mac = "BC:24:11:E1:8F:84" }
+# }
+compact3_cpu_cores = 4
+compact3_memory_mb = 16384
+
+agent_iso       = "nfs_iso:iso/agent.x86_64.iso"
+install_disk_gb = 120
+lvms_disk_gb    = 100 # per node; 0 to disable
+cpu_type        = "host"
