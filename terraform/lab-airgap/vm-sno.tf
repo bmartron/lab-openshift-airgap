@@ -62,9 +62,4 @@ resource "proxmox_vm_qemu" "sno" {
     bridge  = var.lab_bridge
     macaddr = var.sno_mac
   }
-
-  lifecycle {
-    # Keep disks stable after first create; MAC is managed via sno_mac
-    ignore_changes = [disk]
-  }
 }
