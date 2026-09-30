@@ -57,11 +57,13 @@ ping -c 2 registry.redhat.io
 curl -I https://mirror.openshift.com
 ```
 
-### Résolution DNS lab (double NIC)
+### Lab DNS resolution (dual NIC)
 
-Noms lab → `/etc/hosts` (Ansible). Internet → **gateway + DNS** maison sur **eth0** (`192.168.1.1`).
+Lab names → `/etc/hosts` (Ansible `bastion` role). Internet → home **gateway + DNS** on **eth0** (`192.168.1.1`).
 
-**Piège** : si la gateway par défaut est `172.16.10.1` (eth1), le registry lab répond mais Internet échoue (`Network is unreachable` / timeout). Terraform : `gw` sur `ipconfig0` seulement.
+The role also writes `manage_etc_hosts: false` under `/etc/cloud/cloud.cfg.d/` so cloud-init does **not** wipe the Ansible `/etc/hosts` block on reboot.
+
+**Pitfall**: if the default gateway is `172.16.10.1` (eth1), the lab registry answers but Internet fails (`Network is unreachable` / timeout). Terraform: `gw` only on `ipconfig0`.
 
 **Ansible** : `dns_admin.yml` (route + DNS + `curl` mirror.openshift.com) dans `lab-infra.yml --limit bastion`.
 
@@ -91,8 +93,8 @@ curl -I https://mirror.openshift.com
 |----------|-------|--------|
 | `Insufficient privileges` sur `nmcli` | Pas de `sudo` | Préfixer avec `sudo` |
 | `Name or service not known` / `Network is unreachable` vers mirror.openshift.com | Default route = `172.16.10.1` (eth1) | Ansible `dns_admin` ou recreate TF avec gw sur eth0 |
-| `curl registry.lab.local` échoue | Pas d’entrées `/etc/hosts` | Relancer rôle bastion |
-| `oc login` : *no such host* `oauth-openshift.apps...` | Apps absents de `/etc/hosts` | Relancer rôle bastion |
+| `curl registry.lab.local` fails | Missing `/etc/hosts` (or wiped by cloud-init) | Re-run bastion role (`lab-infra.yml --limit bastion`) |
+| `oc login`: *no such host* `oauth-openshift.apps...` | Apps missing from `/etc/hosts` | Re-run bastion role |
 
 ## 3. Repo DVD + paquets (phase install)
 

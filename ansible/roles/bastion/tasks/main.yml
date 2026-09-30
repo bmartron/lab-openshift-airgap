@@ -15,8 +15,18 @@
     state: present
   when: bastion_install_packages | bool
 
-# Noms lab avant le DNS maison (double NIC) — voir bastion/README.md §2
-- name: Entrées lab dans /etc/hosts
+# Lab FQDNs before home DNS (dual NIC) — bastion/README.md §2
+# Without this, cloud-init update_etc_hosts rewrites /etc/hosts on reboot.
+- name: Disable cloud-init manage_etc_hosts
+  ansible.builtin.copy:
+    dest: /etc/cloud/cloud.cfg.d/99-disable-manage-etc-hosts.cfg
+    mode: "0644"
+    content: |
+      # Written by Ansible bastion role — keep lab /etc/hosts across reboot
+      manage_etc_hosts: false
+  when: bastion_disable_cloudinit_etc_hosts | bool
+
+- name: Lab entries in /etc/hosts
   ansible.builtin.blockinfile:
     path: /etc/hosts
     marker: "# {mark} ANSIBLE MANAGED lab-airgap"

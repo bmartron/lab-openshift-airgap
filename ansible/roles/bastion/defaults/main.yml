@@ -2,6 +2,8 @@
 bastion_lab_dir: /home/bernard/lab
 bastion_install_startup_check: true
 bastion_manage_etc_hosts: true
+# cloud-init rewrite of /etc/hosts on boot would drop the Ansible block
+bastion_disable_cloudinit_etc_hosts: true
 bastion_configure_registry_trust: true
 bastion_verify_registry: true
 bastion_install_packages: true
@@ -27,11 +29,11 @@ bastion_packages:
 bastion_authorize_proxmox_ssh: true
 bastion_proxmox_host: 192.168.1.147
 
-# Entrées /etc/hosts (avant DNS maison) — noms lab + VIP SNO
+# /etc/hosts (before home DNS) — lab names + API VIP (.100 for sno and compact3)
 bastion_etc_hosts_entries: |
   {{ dns_ip }}  dns.lab.local dns
   {{ registry_ip }}  {{ registry_hostname }} registry
   {{ bastion_lab_ip }}  bastion.lab.local bastion
-  {{ ocp_sno_ip | default('172.16.10.100') }}  api.{{ ocp_cluster_name | default('ocp422') }}.{{ ocp_base_domain | default('lab.local') }}
+  {{ ocp_sno_ip | default('172.16.10.100') }}  api.{{ ocp_cluster_name | default('ocp422') }}.{{ ocp_base_domain | default('lab.local') }} api-int.{{ ocp_cluster_name | default('ocp422') }}.{{ ocp_base_domain | default('lab.local') }}
   {{ ocp_sno_ip | default('172.16.10.100') }}  oauth-openshift.apps.{{ ocp_cluster_name | default('ocp422') }}.{{ ocp_base_domain | default('lab.local') }}
   {{ ocp_sno_ip | default('172.16.10.100') }}  console-openshift-console.apps.{{ ocp_cluster_name | default('ocp422') }}.{{ ocp_base_domain | default('lab.local') }}

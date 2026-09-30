@@ -19,7 +19,7 @@ ocp_topology = "compact3"
 #   "1" = { name = "ocp-master-1", ip = "172.16.10.101", mac = "BC:24:11:E1:8F:83" }
 #   "2" = { name = "ocp-master-2", ip = "172.16.10.102", mac = "BC:24:11:E1:8F:84" }
 # }
-compact3_cpu_cores = 4
+compact3_cpu_cores = 8
 compact3_memory_mb = 16384
 
 agent_iso       = "nfs_iso:iso/agent.x86_64.iso"

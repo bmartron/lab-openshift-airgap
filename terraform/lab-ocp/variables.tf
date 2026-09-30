@@ -128,7 +128,7 @@ variable "compact3_nodes" {
 
 variable "compact3_cpu_cores" {
   type    = number
-  default = 4
+  default = 8
 }
 
 variable "compact3_memory_mb" {

@@ -124,6 +124,9 @@ Ansible template: [roles/rhel_dvd/templates/rhel-dvd.repo.j2](roles/rhel_dvd/tem
 | **Mac** | Terraform `ssh_public_key_file` (cloud-init) | Mac → bastion/dns/registry (Ansible ProxyJump) |
 | **Bastion** | `lab-ssh.yml` / `~/.ssh/id_ed25519` | bastion → dns/registry ; bastion → Proxmox ISO scp ; SNO `sshKey` |
 
+After a **Mac reboot**, reload the agent key before Ansible (see troubleshooting below):
+`ssh-add --apple-use-keychain ~/.ssh/id_ed25519`.
+
 After **bastion** or **dns/registry** recreate:
 
 ```bash
@@ -219,6 +222,15 @@ run `ansible-playbook playbooks/lab-ssh.yml` (bastion key was missing on those V
 
 If from the **Mac**: the Mac key must be in Terraform (`ssh_public_key_file` / cloud-init)
 **before** clone — [proxmox/access.md](../proxmox/access.md).
+
+**After a Mac reboot**: `ssh-agent` often has no key loaded → Ansible fails with
+`bernard@192.168.1.144: Permission denied (publickey)` even though cloud-init is fine.
+Reload the key (once per Mac session), then verify:
+
+```bash
+ssh-add --apple-use-keychain ~/.ssh/id_ed25519
+ssh -o BatchMode=yes bernard@192.168.1.144 'echo OK'
+```
 
 Other options: jump via **bastion** (`hosts.yml.example` method B), `hosts.sshconfig.yml.example`, or run from bastion (`hosts.from-bastion.yml.example`).
 

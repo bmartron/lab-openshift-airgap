@@ -12,7 +12,7 @@ RHCOS / agent-based nodes on `vmbr1`. **Separate state** from infra ([../lab-inf
 Sizing (NUC 64 GiB):
 
 - **sno**: 8 cores / 24 GiB (override with `sno_*`)
-- **compact3**: 4 cores / 16 GiB each
+- **compact3**: 8 cores / 16 GiB each
 
 Optional LVMS disk: `lvms_disk_gb` (default 100; `0` to disable).
 
