@@ -1,5 +1,5 @@
-# Registry only — cp terraform.tfvars.registry.example terraform.tfvars
-# Clone template (recommended) OR Anaconda install ISO.
+# Registry-only example — bpg/proxmox linked clone
+# cp terraform.tfvars.registry.example terraform.tfvars
 
 proxmox_api_url          = "https://192.168.1.147:8006/api2/json"
 proxmox_api_token_id     = "root@pam!terraform"
@@ -8,26 +8,18 @@ proxmox_tls_insecure     = true
 
 proxmox_node = "pve"
 
-storage_infra = "nfs_vm"      # unused if create_dns/bastion = false
-storage_perf  = "local-lvm"   # registry OS + cloud-init + virtio1
+storage_perf = "local-lvm"
 
 create_dns      = false
 create_bastion  = false
 create_registry = true
 
-# Option A — clone (virtio0 + virtio1 → /dev/vda + /dev/vdb)
-rhel_template        = "rhel10-tpl"
-rhel_template_infra  = ""
-registry_install_iso = ""
-rhel_dvd_iso         = "nfs_iso:iso/rhel-10.2-x86_64-dvd.iso" # ide2 — dnf repo
-
-# Option B — Anaconda (uncomment, clear rhel_template):
-# rhel_template        = ""
-# registry_install_iso = "nfs_iso:iso/rhel-10.x-x86_64-dvd.iso"
-# rhel_dvd_iso         = ""  # ide2 already used by registry_install_iso
+# rhel_template_id = 100  # rhel10-tpl
+full_clone   = false
+rhel_dvd_iso = "nfs_iso:iso/rhel-10.2-x86_64-dvd.iso"
 
 lab_bridge  = "vmbr1"
 registry_ip = "172.16.10.20"
-ssh_user    = "bernard"
-# Required for Mac SSH. Uncomment and set YOUR path:
+
+ssh_user = "bernard"
 # ssh_public_key_file = "/Users/YOUR_MAC_USER/.ssh/id_ed25519.pub"

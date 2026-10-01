@@ -9,6 +9,7 @@ terraform/lab-airgap/ocp-bma.auto.tfvars
 terraform/**/.terraform/
 terraform/**/*.tfstate
 terraform/**/*.tfstate.*
+terraform/**/.generated/
 # Keep .terraform.lock.hcl under lab-infra/ and lab-ocp/ versioned (pinned provider)
 ansible/terraform.tfstate
 ansible/inventory/hosts.yml

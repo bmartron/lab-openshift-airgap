@@ -21,11 +21,13 @@ ssh_public_key_file = "/Users/bmartron/.ssh/id_ed25519.pub"
 
 1. RHEL templates — [proxmox/rhel-cloudinit-template.md](../proxmox/rhel-cloudinit-template.md)
 2. **Mac (once):** `podman save` → `registry:2` tar; set `registry_image_tar` — [ansible/README.md](../ansible/README.md)
-3. **Mac** — wipe + recreate **infra** VMs:
+3. **Mac** — wipe + recreate **infra** VMs (BPG + linked clone):
 
 ```bash
 cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/terraform/lab-infra
-terraform destroy -auto-approve
+# After Telmate→BPG migration: remove old state or destroy VMs once, then:
+terraform init -upgrade
+terraform destroy -auto-approve   # if old resources still in state
 terraform apply -auto-approve
 ```
 

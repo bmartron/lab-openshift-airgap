@@ -1,124 +1,92 @@
 # Registry — 172.16.10.20 (vmbr1)
-# Clone : OS virtio0 + données virtio1 + cloud-init ide0.
-# Install ISO : scsi0 + scsi1 + efidisk.
+# Linked clone from rhel10-tpl + data disk virtio1.
 
-resource "proxmox_vm_qemu" "registry" {
+resource "proxmox_virtual_environment_vm" "registry" {
   count = var.create_registry ? 1 : 0
 
-  name        = local.vms_registry.name
-  target_node = var.proxmox_node
-  agent       = var.registry_install_iso != "" ? 0 : 1
-  os_type     = var.registry_install_iso != "" ? "l26" : "cloud-init"
-  memory      = local.vms_registry.memory
+  name      = local.vms_registry.name
+  node_name = var.proxmox_node
 
-  define_connection_info = false
+  bios          = local.vm_bios
+  machine       = local.vm_machine
+  scsi_hardware = "virtio-scsi-single"
+  started       = true
+  on_boot       = true
+
+  agent {
+    enabled = true
+  }
+
+  clone {
+    vm_id = local.template_perf_id
+    full  = var.full_clone
+  }
 
   cpu {
     cores = local.vms_registry.cores
+    type  = "host"
   }
-  bios    = local.vm_bios
-  machine = local.vm_machine
-  scsihw  = "virtio-scsi-single"
-  boot    = var.registry_install_iso != "" ? "order=ide2;scsi0" : "order=virtio0"
 
-  ciuser       = var.registry_install_iso != "" ? null : var.ssh_user
-  sshkeys      = var.registry_install_iso != "" || local.sshkeys == "" ? null : local.sshkeys
-  nameserver   = var.registry_install_iso != "" ? null : var.lab_gateway
-  searchdomain = var.registry_install_iso != "" ? null : "lab.local"
-  ipconfig0    = var.registry_install_iso != "" ? null : "ip=${local.vms_registry.ip}/24,gw=${var.lab_gateway}"
+  memory {
+    dedicated = local.vms_registry.memory
+  }
 
-  dynamic "efidisk" {
-    for_each = var.registry_install_iso != "" ? [1] : []
+  efi_disk {
+    datastore_id = var.storage_perf
+    type         = "4m"
+  }
+
+  disk {
+    datastore_id = var.storage_perf
+    interface    = "virtio0"
+    size         = local.vms_registry.sys_disk_gb
+    iothread     = true
+    discard      = "on"
+  }
+
+  disk {
+    datastore_id = var.storage_perf
+    interface    = "virtio1"
+    size         = local.vms_registry.data_disk_gb
+    iothread     = true
+    discard      = "on"
+  }
+
+  dynamic "cdrom" {
+    for_each = local.rhel_dvd_file_id != null ? [1] : []
     content {
-      storage = var.storage_perf
-      efitype = "4m"
+      interface = "ide2"
+      file_id   = local.rhel_dvd_file_id
     }
   }
 
-  clone      = var.registry_install_iso == "" ? var.rhel_template : null
-  full_clone = var.registry_install_iso == "" ? true : false
-
-  dynamic "disk" {
-    for_each = var.registry_install_iso == "" ? [1] : []
-    content {
-      slot     = "virtio0"
-      size     = "${local.vms_registry.sys_disk_gb}G"
-      type     = "disk"
-      storage  = var.storage_perf
-      iothread = true
-    }
-  }
-
-  dynamic "disk" {
-    for_each = var.registry_install_iso == "" ? [1] : []
-    content {
-      slot     = "virtio1"
-      size     = "${local.vms_registry.data_disk_gb}G"
-      type     = "disk"
-      storage  = var.storage_perf
-      iothread = true
-    }
-  }
-
-  dynamic "disk" {
-    for_each = var.registry_install_iso == "" ? [1] : []
-    content {
-      slot    = "ide0"
-      type    = "cloudinit"
-      storage = var.storage_perf # même datastore que l’OS (local-lvm)
-    }
-  }
-
-  # Clone : DVD repo dnf (ide2). Install Anaconda : ide2 = registry_install_iso (ci-dessous).
-  dynamic "disk" {
-    for_each = var.registry_install_iso == "" && var.rhel_dvd_iso != "" ? [1] : []
-    content {
-      slot    = "ide2"
-      type    = "cdrom"
-      iso     = var.rhel_dvd_iso
-      storage = split(":", var.rhel_dvd_iso)[0]
-    }
-  }
-
-  dynamic "disk" {
-    for_each = var.registry_install_iso != "" ? [1] : []
-    content {
-      slot     = "scsi0"
-      size     = "${local.vms_registry.sys_disk_gb}G"
-      type     = "disk"
-      storage  = var.storage_perf
-      iothread = true
-    }
-  }
-
-  dynamic "disk" {
-    for_each = var.registry_install_iso != "" ? [1] : []
-    content {
-      slot     = "scsi1"
-      size     = "${local.vms_registry.data_disk_gb}G"
-      type     = "disk"
-      storage  = var.storage_perf
-      iothread = true
-    }
-  }
-
-  dynamic "disk" {
-    for_each = var.registry_install_iso != "" ? [1] : []
-    content {
-      slot    = "ide2"
-      type    = "cdrom"
-      iso     = var.registry_install_iso
-      storage = split(":", var.registry_install_iso)[0]
-    }
-  }
-
-  network {
-    id     = 0
-    model  = "virtio"
+  network_device {
     bridge = var.lab_bridge
+    model  = "virtio"
   }
 
-  lifecycle {
-    ignore_changes = [network, disk]
+  initialization {
+    datastore_id = var.storage_perf
+
+    dns {
+      servers = [var.lab_gateway]
+      domain  = "lab.local"
+    }
+
+    ip_config {
+      ipv4 {
+        address = "${local.vms_registry.ip}/24"
+        gateway = var.lab_gateway
+      }
+    }
+
+    user_account {
+      username = var.ssh_user
+      keys     = local.ssh_keys_list
+    }
+  }
+
+  operating_system {
+    type = "l26"
   }
 }

@@ -9,6 +9,8 @@ Two stacks, **two states**:
 
 Apply order: **infra first**, then **ocp**. Destroy OCP alone without touching bastion/DNS/registry.
 
+Infra: **linked clones** from RHEL templates (fast). OCP: empty disks + agent ISO.
+
 SNO / agent boot: [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md).  
 Full rebuild: [docs/iac.md](../docs/iac.md).
 
@@ -24,7 +26,9 @@ Legacy monorepo `lab-airgap/` is **deprecated** — see [lab-airgap/README.md](l
 
 Proxmox format: **`nfs_iso:iso/name.iso`** (ISO); disks via `storage_infra` / `storage_perf`.  
 Cloud-init: **same datastore as the OS**.  
-RHEL templates: [proxmox/rhel-cloudinit-template.md](../proxmox/rhel-cloudinit-template.md) (**two** templates — EFI + NFS/SSD mix).
+RHEL templates: [proxmox/rhel-cloudinit-template.md](../proxmox/rhel-cloudinit-template.md) (**two** templates — EFI + NFS/SSD mix).  
+
+Terraform provider: **bpg/proxmox** — infra uses **linked clones** by default (`full_clone = false`).
 
 Check on **pve** (`root@192.168.1.147`):
 
@@ -43,7 +47,8 @@ Variables: [versions.env.example](../versions.env.example) (`PROXMOX_STORAGE_INF
 cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/terraform/lab-infra
 cp terraform.tfvars.example terraform.tfvars
 # Edit: Proxmox token + ssh_public_key_file = "/Users/bmartron/.ssh/id_ed25519.pub"
-terraform init && terraform plan && terraform apply
+# Enable Snippets on Proxmox storage "local"; ssh-add Mac key for snippet upload
+terraform init -upgrade && terraform plan && terraform apply
 ```
 
 Details: [lab-infra/README.md](lab-infra/README.md).
@@ -88,4 +93,5 @@ terraform destroy -auto-approve
 
 Or delete VMs in Proxmox UI and clean state: `terraform state list` / `terraform state rm …` / remove `terraform.tfstate*`.
 
-Provider **telmate/proxmox 3.0.2-rc10** (PVE 9) — lock files in `lab-infra/` and `lab-ocp/`.
+Provider **[bpg/proxmox](https://registry.terraform.io/providers/bpg/proxmox)** — lock files in `lab-infra/` and `lab-ocp/`.  
+Infra VMs default to **linked clone** (`full_clone = false`) for fast rebuilds.

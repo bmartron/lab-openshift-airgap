@@ -1,74 +1,97 @@
 # Bastion — vmbr0 (LAN) + vmbr1 (lab)
-# Clone depuis rhel_template_infra (sur nfs_vm) → EFI+OS sur nfs.
+# Linked clone from rhel10-nfs. Custom user-data: manage_etc_hosts false.
 
-resource "proxmox_vm_qemu" "bastion" {
+resource "proxmox_virtual_environment_vm" "bastion" {
   count = var.create_bastion ? 1 : 0
 
-  name        = local.vms_bastion.name
-  target_node = var.proxmox_node
-  clone       = var.rhel_template_infra != "" ? var.rhel_template_infra : var.rhel_template
-  full_clone  = true
-  agent       = 1
-  os_type     = "cloud-init"
-  memory      = local.vms_bastion.memory
+  name      = local.vms_bastion.name
+  node_name = var.proxmox_node
 
-  define_connection_info = false
+  bios          = local.vm_bios
+  machine       = local.vm_machine
+  scsi_hardware = "virtio-scsi-single"
+  started       = true
+  on_boot       = true
+
+  agent {
+    enabled = true
+  }
+
+  clone {
+    vm_id = local.template_infra_id
+    full  = var.full_clone
+  }
 
   cpu {
     cores = local.vms_bastion.cores
+    type  = "host"
   }
-  bios    = local.vm_bios
-  machine = local.vm_machine
-  scsihw  = "virtio-scsi-single"
-  boot    = "order=virtio0"
 
-  ciuser  = var.ssh_user
-  sshkeys = local.sshkeys != "" ? local.sshkeys : null
-  # eth0 = Internet (gw maison) ; eth1 = lab sans gw — sinon default route = 172.16.10.1 et pas d’Internet
-  nameserver   = var.bastion_admin_dns
-  searchdomain = "lab.local"
-  ipconfig0    = var.bastion_admin_ip != "" ? "ip=${var.bastion_admin_ip}/24,gw=${var.bastion_admin_gateway}" : "ip=dhcp"
-  ipconfig1    = "ip=${local.vms_bastion.ip_lab}/24"
+  memory {
+    dedicated = local.vms_bastion.memory
+  }
 
-  disk {
-    slot     = "virtio0"
-    size     = "${local.vms_bastion.disk_gb}G"
-    type     = "disk"
-    storage  = var.storage_infra
-    format   = "raw"
-    iothread = true
+  efi_disk {
+    datastore_id = var.storage_infra
+    type         = "4m"
   }
 
   disk {
-    slot    = "ide0"
-    type    = "cloudinit"
-    storage = var.storage_infra # même datastore que l’OS (nfs_vm)
+    datastore_id = var.storage_infra
+    interface    = "virtio0"
+    size         = local.vms_bastion.disk_gb
+    iothread     = true
+    discard      = "on"
   }
 
-  # Repo dnf air-gap (rôle Ansible rhel_dvd) — boot reste virtio0
-  dynamic "disk" {
-    for_each = var.rhel_dvd_iso != "" ? [1] : []
+  dynamic "cdrom" {
+    for_each = local.rhel_dvd_file_id != null ? [1] : []
     content {
-      slot    = "ide2"
-      type    = "cdrom"
-      iso     = var.rhel_dvd_iso
-      storage = split(":", var.rhel_dvd_iso)[0]
+      interface = "ide2"
+      file_id   = local.rhel_dvd_file_id
     }
   }
 
-  network {
-    id     = 0
-    model  = "virtio"
+  network_device {
     bridge = var.admin_bridge
-  }
-
-  network {
-    id     = 1
     model  = "virtio"
-    bridge = var.lab_bridge
   }
 
-  lifecycle {
-    ignore_changes = [network, disk]
+  network_device {
+    bridge = var.lab_bridge
+    model  = "virtio"
   }
+
+  initialization {
+    datastore_id = var.storage_infra
+
+    dns {
+      servers = [var.bastion_admin_dns]
+      domain  = "lab.local"
+    }
+
+    # eth0 — Internet (vmbr0)
+    ip_config {
+      ipv4 {
+        address = var.bastion_admin_ip != "" ? "${var.bastion_admin_ip}/24" : "dhcp"
+        gateway = var.bastion_admin_ip != "" ? var.bastion_admin_gateway : null
+      }
+    }
+
+    # eth1 — lab (vmbr1), no default gateway
+    ip_config {
+      ipv4 {
+        address = "${local.vms_bastion.ip_lab}/24"
+      }
+    }
+
+    # Conflicts with user_account — keys/hostname live in the snippet
+    user_data_file_id = length(proxmox_virtual_environment_file.bastion_user_data) > 0 ? proxmox_virtual_environment_file.bastion_user_data[0].id : null
+  }
+
+  operating_system {
+    type = "l26"
+  }
+
+  depends_on = [proxmox_virtual_environment_file.bastion_user_data]
 }

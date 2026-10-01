@@ -5,7 +5,7 @@ output "ocp_topology" {
 
 output "node_vm_ids" {
   value = {
-    for k, vm in proxmox_vm_qemu.node : k => vm.vmid
+    for k, vm in proxmox_virtual_environment_vm.node : k => vm.vm_id
   }
   description = "Proxmox VM ids keyed by node map key"
 }
@@ -24,6 +24,6 @@ output "nodes" {
 output "next_steps" {
   value = trimspace(join("\n", [
     "Boot agent ISO — openshift/4.22-ga/README.md",
-    var.ocp_topology == "compact3" ? "compact3: Ansible agent-config multi-host + DNS is a follow-up" : "sno: match Ansible ocp_sno_mac to nodes.sno.mac",
+    var.ocp_topology == "compact3" ? "compact3: Ansible ocp_topology=compact3 + DNS" : "sno: match Ansible ocp_sno_mac to nodes.sno.mac",
   ]))
 }

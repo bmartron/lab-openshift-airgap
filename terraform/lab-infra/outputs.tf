@@ -1,15 +1,15 @@
 output "dns_vm_id" {
-  value       = var.create_dns ? proxmox_vm_qemu.dns[0].vmid : null
+  value       = var.create_dns ? proxmox_virtual_environment_vm.dns[0].vm_id : null
   description = "Proxmox VM id for dns"
 }
 
 output "bastion_vm_id" {
-  value       = var.create_bastion ? proxmox_vm_qemu.bastion[0].vmid : null
+  value       = var.create_bastion ? proxmox_virtual_environment_vm.bastion[0].vm_id : null
   description = "Proxmox VM id for bastion"
 }
 
 output "registry_vm_id" {
-  value       = var.create_registry ? proxmox_vm_qemu.registry[0].vmid : null
+  value       = var.create_registry ? proxmox_virtual_environment_vm.registry[0].vm_id : null
   description = "Proxmox VM id for registry"
 }
 
@@ -19,6 +19,11 @@ output "lab_ips" {
     bastion  = var.bastion_ip
     registry = var.registry_ip
   }
+}
+
+output "clone_mode" {
+  value       = var.full_clone ? "full" : "linked"
+  description = "Clone mode for RHEL VMs (linked = faster)"
 }
 
 output "next_steps" {

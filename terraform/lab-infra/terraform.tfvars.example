@@ -1,5 +1,6 @@
 # dns + bastion + registry — OCP nodes: ../lab-ocp/
-# Templates: proxmox/rhel-cloudinit-template.md
+# Provider: bpg/proxmox — linked clone by default (full_clone = false)
+# Templates: proxmox/rhel-cloudinit-template.md (VMID 100=rhel10-tpl, 101=rhel10-nfs)
 # cp terraform.tfvars.example terraform.tfvars
 
 proxmox_api_url          = "https://192.168.1.147:8006/api2/json"
@@ -9,22 +10,24 @@ proxmox_tls_insecure     = true
 
 proxmox_node = "pve"
 
-storage_infra = "nfs_vm"
-storage_perf  = "local-lvm"
+storage_infra      = "nfs_vm"
+storage_perf       = "local-lvm"
+snippets_datastore = "local" # enable Snippets on this storage
 
 create_dns      = true
 create_bastion  = true
 create_registry = true
 
-rhel_template        = "rhel10-tpl"
-rhel_template_infra  = "rhel10-nfs"
-registry_install_iso = ""
-rhel_dvd_iso         = "nfs_iso:iso/rhel-10.2-x86_64-dvd.iso" # ide2 — BaseOS+AppStream
+# Template VMIDs (qm list | grep rhel10)
+# rhel_template_infra_id = 101  # rhel10-nfs — default
+# rhel_template_id       = 100  # rhel10-tpl — default
+
+full_clone   = false # linked clone (fast). Set true only if you need independent disks.
+rhel_dvd_iso = "nfs_iso:iso/rhel-10.2-x86_64-dvd.iso"
 
 lab_bridge       = "vmbr1"
 admin_bridge     = "vmbr0"
 bastion_admin_ip = "192.168.1.144"
-# bastion_admin_dns = "192.168.1.1"  # default — Internet DNS (not lab gateway)
 
 dns_ip      = "172.16.10.11"
 bastion_ip  = "172.16.10.10"

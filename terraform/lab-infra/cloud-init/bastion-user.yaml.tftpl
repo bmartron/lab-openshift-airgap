@@ -1,0 +1,16 @@
+#cloud-config
+# Managed by Terraform (proxmox_virtual_environment_file) — bastion only.
+# manage_etc_hosts must be false: Proxmox default true rewrites /etc/hosts each boot
+# and drops Ansible lab FQDN entries (registry.lab.local, api.*, …).
+hostname: ${hostname}
+fqdn: ${fqdn}
+manage_etc_hosts: false
+user: ${user}
+ssh_authorized_keys:
+%{ for key in ssh_keys ~}
+  - ${key}
+%{ endfor ~}
+chpasswd:
+  expire: false
+users:
+  - default

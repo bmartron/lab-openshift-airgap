@@ -1,65 +1,75 @@
 # OpenShift agent VMs — topology sno (1) or compact3 (3)
-# No cloud-init (RHCOS via agent ISO) — install: openshift/4.22-ga/README.md
+# No cloud-init / no RHEL clone — empty disks + agent ISO.
+# Doc: openshift/4.22-ga/README.md
 
-resource "proxmox_vm_qemu" "node" {
+resource "proxmox_virtual_environment_vm" "node" {
   for_each = local.nodes
 
-  name        = each.value.name
-  target_node = var.proxmox_node
-  agent       = 0
-  os_type     = "l26"
-  memory      = each.value.memory_mb
+  name      = each.value.name
+  node_name = var.proxmox_node
+
+  bios          = local.vm_bios
+  machine       = local.vm_machine
+  scsi_hardware = "virtio-scsi-single"
+  started       = true
+  on_boot       = true
+
+  # Disk first, ISO second: empty disk → fall through to agent ISO;
+  # after RHCOS install → boot from virtio0.
+  boot_order = var.agent_iso != "" ? ["virtio0", "ide2"] : ["virtio0"]
+
+  agent {
+    enabled = false
+  }
 
   cpu {
     cores = each.value.cpu_cores
     type  = var.cpu_type
   }
 
-  bios    = local.vm_bios
-  machine = local.vm_machine
-  # Disk first, ISO second: empty disk → fall through to
-  # agent ISO; after RHCOS install → boot from virtio0 without re-entering installer.
-  scsihw = "virtio-scsi-single"
-  boot   = var.agent_iso != "" ? "order=virtio0;ide2" : "order=virtio0"
+  memory {
+    dedicated = each.value.memory_mb
+  }
 
-  efidisk {
-    storage = var.storage_perf
-    efitype = "4m"
+  efi_disk {
+    datastore_id = var.storage_perf
+    type         = "4m"
   }
 
   disk {
-    slot     = "virtio0"
-    size     = "${var.install_disk_gb}G"
-    type     = "disk"
-    storage  = var.storage_perf
-    iothread = true
+    datastore_id = var.storage_perf
+    interface    = "virtio0"
+    size         = var.install_disk_gb
+    iothread     = true
+    discard      = "on"
   }
 
   dynamic "disk" {
     for_each = var.lvms_disk_gb > 0 ? [1] : []
     content {
-      slot     = "virtio1"
-      size     = "${var.lvms_disk_gb}G"
-      type     = "disk"
-      storage  = var.storage_perf
-      iothread = true
+      datastore_id = var.storage_perf
+      interface    = "virtio1"
+      size         = var.lvms_disk_gb
+      iothread     = true
+      discard      = "on"
     }
   }
 
-  dynamic "disk" {
+  dynamic "cdrom" {
     for_each = var.agent_iso != "" ? [1] : []
     content {
-      slot    = "ide2"
-      type    = "cdrom"
-      iso     = var.agent_iso
-      storage = split(":", var.agent_iso)[0]
+      interface = "ide2"
+      file_id   = var.agent_iso
     }
   }
 
-  network {
-    id      = 0
-    model   = "virtio"
-    bridge  = var.lab_bridge
-    macaddr = each.value.mac
+  network_device {
+    bridge      = var.lab_bridge
+    model       = "virtio"
+    mac_address = each.value.mac
+  }
+
+  operating_system {
+    type = "l26"
   }
 }

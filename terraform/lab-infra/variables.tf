@@ -1,6 +1,6 @@
 variable "proxmox_api_url" {
   type        = string
-  description = "Ex. https://192.168.1.147:8006/api2/json"
+  description = "Ex. https://192.168.1.147:8006/api2/json ( /api2/json stripped for BPG endpoint )"
 }
 
 variable "proxmox_api_token_id" {
@@ -25,6 +25,12 @@ variable "proxmox_node" {
   description = "Proxmox node name (pve)"
 }
 
+variable "proxmox_ssh_user" {
+  type        = string
+  default     = "root"
+  description = "SSH user for snippet uploads (BPG ssh agent)"
+}
+
 variable "storage_infra" {
   type        = string
   default     = "nfs_vm"
@@ -37,28 +43,47 @@ variable "storage_perf" {
   description = "OS + EFI + cloud-init + registry data (same datastore as rhel10-tpl)"
 }
 
+variable "snippets_datastore" {
+  type        = string
+  default     = "local"
+  description = "Datastore with Snippets enabled (bastion user-data)"
+}
+
+variable "rhel_template_id" {
+  type        = number
+  default     = null
+  description = "VMID of rhel10-tpl (registry). Default 100."
+}
+
+variable "rhel_template_infra_id" {
+  type        = number
+  default     = null
+  description = "VMID of rhel10-nfs (dns/bastion). Default 101."
+}
+
+# Kept for docs / examples compatibility (names); clone uses *_id
 variable "rhel_template" {
   type        = string
-  default     = ""
-  description = "Template on storage_perf (local-lvm) — registry. Ex. rhel10-tpl"
+  default     = "rhel10-tpl"
+  description = "Template name on storage_perf (documentation / legacy)"
 }
 
 variable "rhel_template_infra" {
   type        = string
-  default     = ""
-  description = "Template on storage_infra (nfs_vm) — dns/bastion. Ex. rhel10-nfs. Empty = rhel_template"
+  default     = "rhel10-nfs"
+  description = "Template name on storage_infra (documentation / legacy)"
 }
 
-variable "registry_install_iso" {
-  type        = string
-  default     = ""
-  description = "RHEL ISO on Proxmox, ex. nfs_iso:iso/rhel-10.iso — registry without clone (Anaconda)"
+variable "full_clone" {
+  type        = bool
+  default     = false
+  description = "false = linked clone (fast). true = full clone. Template must stay on same datastore."
 }
 
 variable "rhel_dvd_iso" {
   type        = string
   default     = ""
-  description = "Full RHEL DVD (BaseOS+AppStream) on ide2 after clone — air-gap dnf repo. Ex. nfs_iso:iso/rhel-10.2-x86_64-dvd.iso. Empty = no CD."
+  description = "Full RHEL DVD as Proxmox file_id, ex. nfs_iso:iso/rhel-10.2-x86_64-dvd.iso. Empty = no CD."
 }
 
 variable "create_dns" {
@@ -91,11 +116,6 @@ variable "lab_gateway" {
   default = "172.16.10.1"
 }
 
-variable "lab_dns" {
-  type    = string
-  default = "172.16.10.11"
-}
-
 variable "dns_ip" {
   type    = string
   default = "172.16.10.11"
@@ -120,13 +140,13 @@ variable "bastion_admin_ip" {
 variable "bastion_admin_dns" {
   type        = string
   default     = "192.168.1.1"
-  description = "Internet DNS (home LAN) for bastion cloud-init — not lab gateway 172.16.10.1"
+  description = "Internet DNS (home LAN) for bastion — not lab gateway 172.16.10.1"
 }
 
 variable "bastion_admin_gateway" {
   type        = string
   default     = "192.168.1.1"
-  description = "Internet gateway (home LAN) on eth0/vmbr0 — lab NIC must NOT have a default gateway"
+  description = "Internet gateway (home LAN) on eth0/vmbr0"
 }
 
 variable "ssh_user" {
@@ -143,5 +163,5 @@ variable "ssh_public_keys" {
 variable "ssh_public_key_file" {
   type        = string
   default     = ""
-  description = "Path to a .pub file (ex. /Users/…/.ssh/id_ed25519.pub) — read via file() in locals"
+  description = "Path to a .pub file — read via file() in locals"
 }
