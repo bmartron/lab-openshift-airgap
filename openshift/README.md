@@ -2,7 +2,9 @@
 
 | Track | Version | Topology | Guide |
 |-------|---------|----------|--------|
-| **GA air-gap** | OpenShift **4.22.12** | SNO agent-based | [4.22-ga/](4.22-ga/) |
+| **GA air-gap** | OpenShift **4.22.12** | SNO / compact3 agent-based | [4.22-ga/](4.22-ga/) |
+
+One install directory (`~/lab/4.22-ga`). For upgrades, the **mirror** spans two z-streams via `ocp_platform_min_version` / `ocp_platform_max_version` — see [mirror/README.md](../mirror/README.md).
 
 Root `install-config.yaml.example` / `agent-config.yaml.example` are thin copies of the GA examples.
 

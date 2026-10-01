@@ -4,7 +4,7 @@
 
 | Track | OpenShift version | Use | Config |
 |-------|-------------------|-----|--------|
-| **GA** | **4.22.12** (Kubernetes 1.35) | Air-gap SNO lab | [openshift/4.22-ga/](../openshift/4.22-ga/) |
+| **GA** | **4.22.12** (Kubernetes 1.35) | Air-gap SNO / compact3; upgrades via mirror min/max | [openshift/4.22-ga/](../openshift/4.22-ga/) |
 
 Check z-streams on [console.redhat.com](https://console.redhat.com/openshift/downloads).
 

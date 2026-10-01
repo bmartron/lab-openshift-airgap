@@ -91,6 +91,7 @@ That builds `agent.x86_64.iso` on the bastion and copies it to Proxmox `nfs_iso`
 | `ocp_push_iso_to_proxmox` | `false` | Set `true` with generate, to scp to NFS |
 | `ocp_proxmox_host` / `ocp_proxmox_iso_dir` | lab NUC defaults | Only if Proxmox/NFS paths differ |
 | `ocp_cluster_name` / `ocp_base_domain` | `ocp422` / `lab.local` | Rarely |
+| `ocp_platform_min_version` / `ocp_platform_max_version` | = `ocp_platform_version` | Set min≠max to mirror two z-streams for upgrades |
 | `ocp_compact3_nodes` / `ocp_nodes` | role defaults | Override host list if MACs/IPs differ |
 
 **Imageset profiles:** `platform-only` \| `gitops` \| `virt-lvms`

@@ -6,8 +6,8 @@ mirror:
       - amd64
     channels:
       - name: {{ ocp_platform_channel }}
-        minVersion: {{ ocp_platform_version }}
-        maxVersion: {{ ocp_platform_version }}
+        minVersion: {{ ocp_platform_min_version }}
+        maxVersion: {{ ocp_platform_max_version }}
     # OSUS update graph (fixes api.openshift.com/.../graph in air-gap)
     graph: {{ ocp_mirror_update_graph | default(true) | bool | lower }}
 {% if ocp_imageset_profile != 'platform-only' %}
@@ -24,13 +24,13 @@ mirror:
         - name: kubevirt-hyperconverged
           channels:
             - name: stable
-              minVersion: {{ ocp_virt_operator_version }}
-              maxVersion: {{ ocp_virt_operator_version }}
+              minVersion: {{ ocp_virt_operator_min_version }}
+              maxVersion: {{ ocp_virt_operator_max_version }}
         - name: lvms-operator
           channels:
             - name: {{ ocp_lvms_channel }}
-              minVersion: {{ ocp_lvms_operator_version }}
-              maxVersion: {{ ocp_lvms_operator_version }}
+              minVersion: {{ ocp_lvms_operator_min_version }}
+              maxVersion: {{ ocp_lvms_operator_max_version }}
 {% endif %}
 {% if ocp_mirror_update_service | default(true) | bool %}
         # OpenShift Update Service (OSUS) — local Cincinnati graph for air-gap upgrades

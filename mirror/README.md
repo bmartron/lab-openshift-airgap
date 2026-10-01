@@ -27,6 +27,22 @@ Default in role defaults: **`virt-lvms`**.
 | `gitops` | [imageset-config-4.22.yaml.example](imageset-config-4.22.yaml.example) | Platform + OpenShift GitOps |
 | `virt-lvms` | [imageset-config-4.22-virt-lvms.yaml.example](imageset-config-4.22-virt-lvms.yaml.example) | Platform + Virt + LVMS + update **graph** / OSUS (**lab default**) |
 
+### Two platform versions (upgrade)
+
+One OpenShift install dir (`~/lab/4.22-ga`). The **imageset** can span z-streams so the registry holds both releases + Cincinnati graph:
+
+```yaml
+# ansible/inventory/group_vars/all.yml
+ocp_platform_version: "4.22.0"          # installer / clients (install at this version)
+ocp_platform_min_version: "4.22.0"      # oc-mirror channel span
+ocp_platform_max_version: "4.22.12"
+# optional operator ranges for day-2 upgrades:
+# ocp_virt_operator_min_version: "4.22.0"
+# ocp_virt_operator_max_version: "4.22.9"
+```
+
+Defaults keep `min == max == ocp_platform_version` (single release). Example file already shows a `4.22.0`→`4.22.12` span.
+
 Verify on bastion before mirroring: `head -40 ~/lab/4.22-ga/imageset-config.yaml`
 
 ## Run oc-mirror

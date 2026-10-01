@@ -6,7 +6,11 @@ ocp_config_backup_dir: "{{ ocp_install_dir }}/config-backup"
 ocp_cluster_name: ocp422
 ocp_base_domain: lab.local
 ocp_platform_channel: stable-4.22
+# Installer / clients pin (what the cluster is installed at)
 ocp_platform_version: "4.22.12"
+# Imageset platform channel span (upgrade lab: min < max so oc-mirror pulls both)
+ocp_platform_min_version: "{{ ocp_platform_version }}"
+ocp_platform_max_version: "{{ ocp_platform_version }}"
 
 ocp_mirror_namespace: ocp4-422
 ocp_registry_fqdn: "{{ registry_hostname }}"
@@ -61,11 +65,16 @@ ocp_registry_ca_fallback_path: "{{ playbook_dir }}/../files/registry-ca.crt"
 
 # imageset: platform-only | gitops | virt-lvms
 ocp_imageset_profile: virt-lvms
+# Operator pins — set min≠max to mirror a version range for day-2 upgrades
 ocp_virt_operator_version: "4.22.9"
+ocp_virt_operator_min_version: "{{ ocp_virt_operator_version }}"
+ocp_virt_operator_max_version: "{{ ocp_virt_operator_version }}"
 ocp_gitops_channel: gitops-1.16
 ocp_gitops_version: "1.16.5"
 ocp_lvms_channel: stable-4.22
 ocp_lvms_operator_version: "4.22.0"
+ocp_lvms_operator_min_version: "{{ ocp_lvms_operator_version }}"
+ocp_lvms_operator_max_version: "{{ ocp_lvms_operator_version }}"
 
 # Air-gap OpenShift updates (Cincinnati graph + OSUS operator)
 ocp_mirror_update_graph: true

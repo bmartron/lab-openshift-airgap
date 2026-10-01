@@ -1,5 +1,7 @@
-# Plateforme 4.22.12 + Virtualization + LVMS + update graph (OSUS).
-# graph: true → graph-data image + UpdateService manifest (air-gap upgrades).
+# Platform + Virtualization + LVMS + update graph (OSUS).
+# Default: single version. For upgrade lab, set min≠max (e.g. 4.22.0 → 4.22.12)
+# so oc-mirror pulls both releases + Cincinnati graph into ocp4-422.
+# Ansible: ocp_platform_min_version / ocp_platform_max_version (and operator min/max).
 apiVersion: mirror.openshift.io/v1alpha2
 kind: ImageSetConfiguration
 mirror:
@@ -8,7 +10,7 @@ mirror:
       - amd64
     channels:
       - name: stable-4.22
-        minVersion: 4.22.12
+        minVersion: 4.22.0
         maxVersion: 4.22.12
     graph: true
   operators:
@@ -17,7 +19,7 @@ mirror:
         - name: kubevirt-hyperconverged
           channels:
             - name: stable
-              minVersion: 4.22.9
+              minVersion: 4.22.0
               maxVersion: 4.22.9
         - name: lvms-operator
           channels:
