@@ -12,7 +12,7 @@ cp ~/Downloads/pull-secret.txt ansible/files/pull-secret.txt
 
 **SNO `sshKey`**: not a Mac file. `bastion-ocp-install` reads the live bastion pubkey
 `/home/<lab_user>/.ssh/id_ed25519.pub` (created by `lab-infra` / this role).
-See [docs/sno-ssh-convention.md](../../docs/sno-ssh-convention.md).
+See [proxmox/access.md](../../proxmox/access.md) § OpenShift node SSH.
 
 Optional if the inventory does not include host `registry`:
 

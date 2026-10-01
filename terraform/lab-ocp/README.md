@@ -70,6 +70,6 @@ ssh-keygen -R 172.16.10.100
 # ssh-keygen -R 172.16.10.102
 ```
 
-SSH to nodes: from bastion only — [docs/sno-ssh-convention.md](../../docs/sno-ssh-convention.md).
+SSH to nodes: from bastion only — [proxmox/access.md](../../proxmox/access.md) § OpenShift node SSH.
 
 Overview: [terraform/README.md](../README.md).

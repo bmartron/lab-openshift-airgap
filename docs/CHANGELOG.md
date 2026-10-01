@@ -25,7 +25,7 @@
 - Default install disk hint: `/dev/disk/by-path/pci-0000:06:0a.0` (Proxmox virtio0 / 120G) instead of `/dev/vda` — multi-disk agent matching
 
 ### Changed (SNO sshKey)
-- `bastion-ocp-install` embeds the **live** bastion `~/.ssh/id_ed25519.pub` into install-config (no Mac `install_ssh_key.pub`) — [docs/sno-ssh-convention.md](sno-ssh-convention.md)
+- `bastion-ocp-install` embeds the **live** bastion `~/.ssh/id_ed25519.pub` into install-config (no Mac `install_ssh_key.pub`) — [proxmox/access.md](../proxmox/access.md)
 
 ### Ajouté (Ansible install OCP bastion)
 - Playbook `ansible/playbooks/bastion-ocp-install.yml` + rôle `ocp_bastion_install` (install-config, agent-config, imageset, CA, pull-secret)

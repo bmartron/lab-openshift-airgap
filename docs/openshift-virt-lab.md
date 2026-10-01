@@ -11,7 +11,7 @@ Lab notes: operators, local storage, guest ISO import.
 | OLM catalog | After mirror: `oc delete pod -n openshift-marketplace -l olm.catalogSource=cs-redhat-operator-index-v4-22` then `oc get packagemanifest \| grep lvms` |
 | LVMS | 2nd VirtIO disk on SNO VM (Proxmox) — `vda` = OCP, **`vdb`** = LVMS |
 | Nested virt | CPU **host** on SNO VM — [proxmox/network.md](../proxmox/network.md) |
-| `oc` | `KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig-admin` — [sno-ssh-convention.md](sno-ssh-convention.md) |
+| `oc` | `KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig-admin` — [proxmox/access.md](../proxmox/access.md) |
 
 ## LVMS
 
@@ -193,5 +193,5 @@ Load **`/usr/share/bash-completion/bash_completion`** in `~/.bashrc` **before** 
 ## References
 
 - [mirror/README.md](../mirror/README.md)
-- [sno-ssh-convention.md](sno-ssh-convention.md)
+- [proxmox/access.md](../proxmox/access.md)
 - [docs/iac.md](iac.md)

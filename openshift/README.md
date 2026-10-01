@@ -10,6 +10,6 @@ Root `install-config.yaml.example` / `agent-config.yaml.example` are thin copies
 |---------|--------|
 | `/dev/not-found-by-hints` | `rootDeviceHints.deviceName: "/dev/disk/by-path/…"` (VirtIO; not by-id) |
 | Mirror pull fail | Mirror finished? CA + `imageContentSources` in install-config |
-| Permission denied `core@` | Bastion live key in ISO — [docs/sno-ssh-convention.md](../docs/sno-ssh-convention.md) |
+| Permission denied `core@` | Bastion live key in ISO — [proxmox/access.md](../proxmox/access.md) § OpenShift node SSH |
 
 Full rebuild: [docs/iac.md](../docs/iac.md).

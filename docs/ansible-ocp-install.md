@@ -19,7 +19,7 @@ Do this once after a fresh `lab-infra`, in order.
 | `ansible/files/pull-secret.txt` | Mac — from [console.redhat.com](https://cloud.redhat.com/openshift/install/pull-secret) |
 | Mac can SSH `bernard@192.168.1.144` and `root@192.168.1.147` | [proxmox/access.md](../proxmox/access.md) |
 
-SNO `sshKey` is **not** a Mac file: the playbook reads the live bastion `~/.ssh/id_ed25519.pub` ([sno-ssh-convention.md](sno-ssh-convention.md)).  
+SNO `sshKey` is **not** a Mac file: the playbook reads the live bastion `~/.ssh/id_ed25519.pub` ([proxmox/access.md](../proxmox/access.md) § OpenShift node SSH).
 `lab-ssh.yml` is **imported automatically** by this playbook — do not run it separately.
 
 ### 2. Topology / imageset / VIPs in `inventory/group_vars/all.yml`

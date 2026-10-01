@@ -81,10 +81,18 @@ EOF
 | SOCKS | `ssh -D 1080 -N bernard@192.168.1.144` |
 | Bastion | Prefer `oc` / console from bastion — [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) |
 
-## SNO SSH (`core@`)
+## OpenShift node SSH (`core@`)
 
-**Bastion only** — [docs/sno-ssh-convention.md](../docs/sno-ssh-convention.md).  
-VM: [terraform/lab-ocp/vm-nodes.tf](../terraform/lab-ocp/vm-nodes.tf).
+**Bastion only** — never `ssh core@…` from the Mac (install `sshKey` is the bastion pubkey from `bastion-ocp-install`).
+
+```bash
+# bastion → compact3 / SNO (.100–.102)
+ssh-keygen -R 172.16.10.100   # after each reinstall
+ssh core@172.16.10.100
+# or: ssh core@ocp-master-0.lab.local
+```
+
+VMs: [terraform/lab-ocp/vm-nodes.tf](../terraform/lab-ocp/vm-nodes.tf).
 
 ## Related
 

@@ -123,7 +123,7 @@ Success = `oc login` + node **Ready** + ClusterOperators **Available**.
 
 ### Watch from SNO (optional)
 
-SSH **from bastion only** — [docs/sno-ssh-convention.md](../../docs/sno-ssh-convention.md):
+SSH **from bastion only** — [proxmox/access.md](../../proxmox/access.md) § OpenShift node SSH:
 
 ```bash
 ssh-keygen -R 172.16.10.100   # after each reinstall
@@ -135,58 +135,37 @@ sudo journalctl -u bootkube -f
 
 ## 5. After install — `oc` and console
 
-Home DNS does not resolve `*.apps`. On the **bastion**:
+**Bastion:**
 
 ```bash
-sudo tee -a /etc/hosts << 'EOF'
-
-172.16.10.100  oauth-openshift.apps.ocp422.lab.local
-172.16.10.100  console-openshift-console.apps.ocp422.lab.local
-172.16.10.100  cdi-uploadproxy-openshift-cnv.apps.ocp422.lab.local
-EOF
-```
-
-```bash
-cd ~/lab/4.22-ga
-oc login https://api.ocp422.lab.local:6443 \
-  -u kubeadmin \
-  -p "$(cat auth/kubeadmin-password)" \
-  --insecure-skip-tls-verify=true
-
+export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig
 oc get nodes
 oc get clusteroperators
-
-# Day-2 (stable API certs) when present:
-export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig-admin
+oc get co
 ```
 
-| | |
-|---|---|
-| Console | `https://console-openshift-console.apps.ocp422.lab.local` |
-| User / password | `kubeadmin` / `cat ~/lab/4.22-ga/auth/kubeadmin-password` |
+Password (if needed): `cat ~/lab/4.22-ga/auth/kubeadmin-password`  
+Console URL: `https://console-openshift-console.apps.ocp422.lab.local`
 
-Mac access: SSH tunnel — [proxmox/access.md](../../proxmox/access.md).
+### Web console from the Mac
 
-### Cluster image mirrors (operators / Virt)
+Forward ingress (`.49`) and API (`.50`) through the bastion, then open the console in the browser:
 
 ```bash
+sudo ssh -L 443:172.16.10.49:443 -L 6443:172.16.10.50:6443 -N bernard@192.168.1.144
+```
+
+## Day-2 — ICSP replacements (IDMS / ITMS)
+
+The agent ISO embeds **ImageContentSources** for the **platform** release only.  
+After `oc-mirror`, apply the generated **ImageDigestMirrorSet** / **ImageTagMirrorSet** so OperatorHub / Virt / LVMS pull from `registry.lab.local:5000` instead of `registry.redhat.io` / `quay.io`:
+
+```bash
+export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig
+# Path may be workspace/ or workspace-*/ — use the dir from your last oc-mirror run
 oc apply -f ~/lab/4.22-ga/workspace/working-dir/cluster-resources/idms-oc-mirror.yaml
 oc apply -f ~/lab/4.22-ga/workspace/working-dir/cluster-resources/itms-oc-mirror.yaml
 ```
 
-Virt + LVMS day-2: [docs/openshift-virt-lab.md](../../docs/openshift-virt-lab.md).
-
-## Reinstall SNO (keep registry mirror)
-
-Regenerate ISO (Ansible flags or hand commands above), recreate SNO via Terraform if needed, boot, `wait-for`. No need to re-run `oc-mirror` unless the imageset changed.
-
-## Pitfalls
-
-| Problem | Fix |
-|---------|-----|
-| `api.ocp422.ocp422.lab.local` | `baseDomain: lab.local` + `name: ocp422` |
-| `/dev/not-found-by-hints` | Use `deviceName: "/dev/disk/by-path/pci-…"` from agent `ls -l /dev/disk/by-path/` (link → `vda`) |
-| Stale ISO / no error detail | `rm -f .openshift_install_state.json agent.x86_64.iso` then recreate |
-| Bootstrap stuck | Recreate SNO — `terraform apply -replace='proxmox_vm_qemu.node["sno"]'` ([lab-ocp README](../../terraform/lab-ocp/README.md)) |
-| Pull from `quay.io` / missing release | Mirror not done or incomplete — verify before boot |
-| Pull from `quay.io` with empty ICS | Re-run `bastion-ocp-install.yml` then new ISO |
+Do this **once the cluster is Ready**, **before** installing operators from the catalog.  
+Then follow Virt + LVMS: [docs/openshift-virt-lab.md](../../docs/openshift-virt-lab.md).
