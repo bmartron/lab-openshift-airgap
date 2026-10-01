@@ -19,7 +19,7 @@ OpenShift node VMs: **[../lab-ocp/](../lab-ocp/)** (separate state).
 | `variables.tf` / `locals.tf` | IDs, storage, clone mode |
 
 **RHEL disks (clone):** OS on **`virtio0`**. Registry data: **`virtio1`**.  
-DVD repo: **`rhel_dvd_iso`** → **`ide2`**.
+DVD repo: **`rhel_dvd_iso`** → **`ide0`** (cloud-init keeps **`ide2`**; q35 has no `ide3`).
 
 **Templates:** [proxmox/rhel-cloudinit-template.md](../../proxmox/rhel-cloudinit-template.md).
 

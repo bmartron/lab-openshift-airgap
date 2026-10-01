@@ -5,7 +5,7 @@
 | Version | **4.22.12** |
 | Cluster name | `ocp422` |
 | Base domain | `lab.local` → API `api.ocp422.lab.local` |
-| Topology | `ocp_topology`: **sno** (`.100`) or **compact3** (`.100`–`.102`) |
+| Topology | `ocp_topology`: **sno** (`.100`, `platform: none`) or **compact3** (`.100`–`.102`, `platform: baremetal`, API VIP `.50`, ingress VIP `.49`) |
 | Mirror | `registry.lab.local:5000/ocp4-422` |
 
 **Do not** set `baseDomain: ocp422.lab.local` (double subdomain → `api.ocp422.ocp422.lab.local`).
@@ -75,7 +75,7 @@ Fix any `[FAIL]` before booting.
 | Setting | Value |
 |---------|--------|
 | Disk | 120 GiB **VirtIO** → `rootDeviceHints` **by-path** (see agent-config) |
-| NIC | `vmbr1`, VirtIO — MAC **`BC:24:11:E1:8F:82`** (`sno_mac` / `ocp_sno_mac`) |
+| NIC | `vmbr1`, VirtIO — MAC **`bc:24:11:e1:8f:82`** (`sno_mac` / `ocp_sno_mac`) |
 | CD-ROM | `nfs_iso` → `agent.x86_64.iso` on **ide2** |
 | LVMS (optional) | 2nd VirtIO disk → `/dev/vdb` |
 

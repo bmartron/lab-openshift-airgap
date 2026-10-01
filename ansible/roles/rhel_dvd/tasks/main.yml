@@ -5,8 +5,8 @@
     state: directory
     mode: "0755"
 
-# cloud-init (ide0) = souvent /dev/sr0 (cidata) ; DVD repo (ide2) = /dev/sr1
-- name: Résoudre le lecteur DVD RHEL (BaseOS+AppStream, pas cidata)
+# BPG: cloud-init = ide2 (cidata); RHEL DVD = ide0 — probe all /dev/sr* for BaseOS+AppStream
+- name: Resolve RHEL DVD drive (BaseOS+AppStream, not cidata)
   ansible.builtin.shell: |
     set -euo pipefail
     probe() {
@@ -36,7 +36,7 @@
         exit 0
       fi
     done
-    echo "Aucun /dev/sr* avec BaseOS+AppStream — attacher rhel_dvd_iso (ide2) dans Proxmox" >&2
+    echo "Aucun /dev/sr* avec BaseOS+AppStream — attach rhel_dvd_iso (ide0) in Proxmox" >&2
     exit 1
   args:
     executable: /bin/bash
@@ -80,8 +80,8 @@
     that:
       - item.stat.exists
     fail_msg: >-
-      {{ item.item }} absent sous {{ rhel_dvd_mount }} — attacher le DVD RHEL complet
-      dans Proxmox (ide2) puis relancer. Voir ansible/README.md § RHEL DVD
+      {{ item.item }} missing under {{ rhel_dvd_mount }} — attach full RHEL DVD
+      in Proxmox (ide0) then re-run. See ansible/README.md § RHEL DVD
   loop: "{{ rhel_dvd_tree.results }}"
   loop_control:
     label: "{{ item.item }}"

@@ -26,7 +26,17 @@ imageContentSources:
 - source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
   mirrors:
   - {{ ocp_registry_fqdn }}:{{ ocp_registry_port }}/{{ ocp_mirror_namespace }}/openshift/release
+{% if ocp_topology == 'compact3' %}
+# Multi-node agent: baremetal + VIPs (API/ingress). SNO must use platform none.
+platform:
+  baremetal:
+    apiVIPs:
+    - {{ ocp_api_vip }}
+    ingressVIPs:
+    - {{ ocp_ingress_vip }}
+{% else %}
 platform:
   none: {}
+{% endif %}
 pullSecret: '{{ ocp_pull_secret_json | replace("'", "''") }}'
 sshKey: '{{ ocp_ssh_pubkey | replace("'", "''") }}'

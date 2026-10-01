@@ -8,7 +8,7 @@ lab_ntp_server: 172.16.10.11
 
 rhel_dvd_repo_enable: true
 rhel_dvd_mount: /mnt/rhel
-rhel_dvd_device: /dev/sr1   # ide2 DVD ; sr0 = souvent cloud-init — rôle auto-détecte sinon
+rhel_dvd_device: /dev/sr0   # ide0 DVD (BPG); ide2 = cloud-init — role probes all /dev/sr* if wrong
 
 dns_ip: 172.16.10.11
 registry_ip: 172.16.10.20
@@ -31,8 +31,11 @@ bastion_install_startup_check: true
 # Install agent — ansible-playbook playbooks/bastion-ocp-install.yml
 # Topology must match terraform/lab-ocp (sno | compact3)
 ocp_topology: compact3
+# compact3 → install-config platform baremetal + VIPs (free on 172.16.10.0/24)
+ocp_api_vip: "172.16.10.50"
+ocp_ingress_vip: "172.16.10.49"
 # sno only (ignored for compact3 unless overriding node0 MAC):
-# ocp_sno_mac: "BC:24:11:E1:8F:82"
+# ocp_sno_mac: "bc:24:11:e1:8f:82"
 # ocp_sno_root_device: "/dev/disk/by-path/pci-0000:06:0a.0"
 # compact3 MACs/IPs: role defaults match terraform/lab-ocp (…:82/:83/:84)
 ocp_sno_root_device: "/dev/disk/by-path/pci-0000:06:0a.0"  # shared rootDeviceHints for all masters

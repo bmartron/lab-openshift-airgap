@@ -8,7 +8,7 @@ Provider: **bpg/proxmox** (same as lab-infra). No RHEL linked clone — empty di
 
 | `ocp_topology` | VMs | IPs | Default MAC (node0) |
 |----------------|-----|-----|---------------------|
-| `sno` | `ocp-sno` | `172.16.10.100` | `BC:24:11:E1:8F:82` |
+| `sno` | `ocp-sno` | `172.16.10.100` | `bc:24:11:e1:8f:82` |
 | `compact3` | `ocp-master-0..2` | `.100` / `.101` / `.102` | node0 same; `.83` / `.84` for 1/2 |
 
 Sizing (NUC 64 GiB):

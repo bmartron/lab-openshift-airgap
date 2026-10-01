@@ -22,7 +22,7 @@ Check: `curl -s --cacert ~/lab/ca.crt https://registry.lab.local:5000/v2/_catalo
 | `platform arm64 vs amd64` | Re-save tar with `--platform linux/amd64` on Mac |
 | HTTP 500 on push | `df -h /opt/registry` |
 | x509 / SAN | Re-run with `registry_tls_mode: generate` |
-| No `podman` | RHEL DVD on `ide2` — see § RHEL DVD below |
+| No `podman` | RHEL DVD on `ide0` — see § RHEL DVD below |
 | Registry Exited after VM reboot | Role enables `podman-restart.service` + `--restart=always` (lab-verified) |
 
 ## Prerequisites
@@ -83,7 +83,7 @@ Then on the **bastion**: `oc-mirror` — [mirror/README.md](../mirror/README.md)
 
 On stock RHEL, `bernard` is in **wheel** but sudo asks for a password — without `-K` / `--ask-become-pass`: `Missing sudo password`. Lab option (once on the VM): `bernard ALL=(ALL) NOPASSWD: ALL` in sudoers (isolated lab only).
 
-Without the RHEL DVD on `ide2`: `No package podman available` — see § RHEL DVD below; Terraform: `rhel_dvd_iso`.
+Without the RHEL DVD on `ide0`: `No package podman available` — see § RHEL DVD below; Terraform: `rhel_dvd_iso`.
 
 ### RHEL DVD repo (no subscription)
 
@@ -95,8 +95,8 @@ Terraform (`terraform.tfvars`):
 rhel_dvd_iso = "nfs_iso:iso/rhel-10.2-x86_64-dvd.iso"
 ```
 
-Attached as **`ide2`**. With cloud-init on `ide0`: **`/dev/sr0` = cidata**, **`/dev/sr1` = RHEL DVD**.  
-`lifecycle.ignore_changes` on disks: re-attach with `qm set <VMID> --ide2 …` or recreate the VM.
+Attached as **`ide0`** (BPG cloud-init uses **`ide2`**). Probe finds BaseOS on whichever `/dev/sr*` has the DVD.
+Re-attach with `qm set <VMID> --ide0 nfs_iso:iso/….iso,media=cdrom` or `terraform apply`.
 
 Ansible template: [roles/rhel_dvd/templates/rhel-dvd.repo.j2](roles/rhel_dvd/templates/rhel-dvd.repo.j2).
 
@@ -175,7 +175,7 @@ Symptom: role **common**, task **base packages** — `Failed to download metadat
 
 Cause: without a RH subscription, **common** runs `dnf` before the **DVD** repo (`file:///mnt/rhel/...`) is mounted.
 
-1. Proxmox: full RHEL 10 ISO on `ide2` (often `/dev/sr1`; `/dev/sr0` = cloud-init cidata) — Terraform `rhel_dvd_iso` (§ RHEL DVD above).
+1. Proxmox: full RHEL 10 ISO on `ide0` (cloud-init = `ide2`) — Terraform `rhel_dvd_iso` (§ RHEL DVD above).
 2. Re-run the playbook (`rhel_dvd` **before** `common` for all three hosts in `lab-infra.yml`).
 
 ```bash

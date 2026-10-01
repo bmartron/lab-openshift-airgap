@@ -26,7 +26,7 @@
   hosts: bastion
   become: true
   roles:
-    # Pas de souscription RH : même repo DVD que dns/registry (ide2 → /dev/sr1)
+    # No RH subscription: same DVD repo as dns/registry (ide0)
     - role: rhel_dvd
       when: rhel_dvd_repo_enable | default(true) | bool
     - role: common

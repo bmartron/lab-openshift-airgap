@@ -52,10 +52,11 @@ resource "proxmox_virtual_environment_vm" "registry" {
     discard      = "on"
   }
 
+  # q35: only ide0/ide2; BPG cloud-init uses ide2 → RHEL DVD on ide0
   dynamic "cdrom" {
     for_each = local.rhel_dvd_file_id != null ? [1] : []
     content {
-      interface = "ide2"
+      interface = "ide0"
       file_id   = local.rhel_dvd_file_id
     }
   }

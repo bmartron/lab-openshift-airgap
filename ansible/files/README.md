@@ -21,5 +21,5 @@ Optional if the inventory does not include host `registry`:
 In **`ansible/inventory/group_vars/all.yml`** (not `ansible/group_vars/`):
 
 ```yaml
-ocp_sno_mac: "BC:24:11:aa:bb:cc"   # qm config <VMID> | grep net on Proxmox
+ocp_sno_mac: "bc:24:11:aa:bb:cc"   # qm config <VMID> | grep net on Proxmox
 ```

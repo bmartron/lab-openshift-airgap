@@ -28,17 +28,17 @@ ocp_sno_root_device: "/dev/disk/by-path/pci-0000:06:0a.0"
 ocp_compact3_nodes:
   - hostname: ocp-master-0
     ip: "172.16.10.100"
-    mac: "BC:24:11:E1:8F:82"
+    mac: "bc:24:11:e1:8f:82"
     interface: enp6s18
     root_device: "/dev/disk/by-path/pci-0000:06:0a.0"
   - hostname: ocp-master-1
     ip: "172.16.10.101"
-    mac: "BC:24:11:E1:8F:83"
+    mac: "bc:24:11:e1:8f:83"
     interface: enp6s18
     root_device: "/dev/disk/by-path/pci-0000:06:0a.0"
   - hostname: ocp-master-2
     ip: "172.16.10.102"
-    mac: "BC:24:11:E1:8F:84"
+    mac: "bc:24:11:e1:8f:84"
     interface: enp6s18
     root_device: "/dev/disk/by-path/pci-0000:06:0a.0"
 
@@ -48,6 +48,11 @@ ocp_nodes: []
 ocp_lab_gateway: 172.16.10.1
 ocp_dns_ip: "{{ dns_ip }}"
 ocp_ntp_ip: "{{ lab_ntp_server }}"
+
+# compact3 + platform baremetal (agent) — VIPs must be free on lab L2 (vmbr1)
+# SNO must stay platform none (no VIPs) — Red Hat agent-based requirement
+ocp_api_vip: "172.16.10.50"
+ocp_ingress_vip: "172.16.10.49"
 
 # Files on the Ansible controller (Mac) — gitignored
 ocp_pull_secret_path: "{{ playbook_dir }}/../files/pull-secret.txt"

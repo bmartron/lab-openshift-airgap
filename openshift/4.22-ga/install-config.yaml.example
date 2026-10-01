@@ -28,7 +28,12 @@ imageContentSources:
 - source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
   mirrors:
   - registry.lab.local:5000/ocp4-422/openshift/release
+# compact3 (agent): baremetal + VIPs. SNO: use platform.none only (required).
 platform:
-  none: {}
+  baremetal:
+    apiVIPs:
+    - 172.16.10.50
+    ingressVIPs:
+    - 172.16.10.49
 pullSecret: '{"auths":{"registry.lab.local:5000":{"auth":"..."}}}'
 sshKey: 'ssh-ed25519 AAAA... replace_with_bastion_pubkey'

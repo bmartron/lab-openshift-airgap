@@ -84,7 +84,7 @@ variable "sno_ip" {
 
 variable "sno_mac" {
   type        = string
-  default     = "BC:24:11:E1:8F:82"
+  default     = "bc:24:11:e1:8f:82"
   description = "Fixed VirtIO NIC MAC — must match Ansible ocp_sno_mac / agent-config"
 }
 
@@ -110,17 +110,17 @@ variable "compact3_nodes" {
     "0" = {
       name = "ocp-master-0"
       ip   = "172.16.10.100"
-      mac  = "BC:24:11:E1:8F:82"
+      mac  = "bc:24:11:e1:8f:82"
     }
     "1" = {
       name = "ocp-master-1"
       ip   = "172.16.10.101"
-      mac  = "BC:24:11:E1:8F:83"
+      mac  = "bc:24:11:e1:8f:83"
     }
     "2" = {
       name = "ocp-master-2"
       ip   = "172.16.10.102"
-      mac  = "BC:24:11:E1:8F:84"
+      mac  = "bc:24:11:e1:8f:84"
     }
   }
   description = "Three control-plane nodes — IPs/MACs for agent-config (Ansible follow-up)"

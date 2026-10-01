@@ -12,7 +12,7 @@ hosts:
 - hostname: ocp-master-0
   interfaces:
   - name: enp6s18
-    macAddress: "BC:24:11:E1:8F:82"
+    macAddress: "bc:24:11:e1:8f:82"
   rootDeviceHints:
     deviceName: "/dev/disk/by-path/pci-0000:06:0a.0"
   networkConfig:
@@ -20,7 +20,7 @@ hosts:
     - name: enp6s18
       type: ethernet
       state: up
-      mac-address: BC:24:11:E1:8F:82
+      mac-address: bc:24:11:e1:8f:82
       ipv4:
         enabled: true
         dhcp: false
@@ -40,7 +40,7 @@ hosts:
 - hostname: ocp-master-1
   interfaces:
   - name: enp6s18
-    macAddress: "BC:24:11:E1:8F:83"
+    macAddress: "bc:24:11:e1:8f:83"
   rootDeviceHints:
     deviceName: "/dev/disk/by-path/pci-0000:06:0a.0"
   networkConfig:
@@ -48,7 +48,7 @@ hosts:
     - name: enp6s18
       type: ethernet
       state: up
-      mac-address: BC:24:11:E1:8F:83
+      mac-address: bc:24:11:e1:8f:83
       ipv4:
         enabled: true
         dhcp: false
@@ -68,7 +68,7 @@ hosts:
 - hostname: ocp-master-2
   interfaces:
   - name: enp6s18
-    macAddress: "BC:24:11:E1:8F:84"
+    macAddress: "bc:24:11:e1:8f:84"
   rootDeviceHints:
     deviceName: "/dev/disk/by-path/pci-0000:06:0a.0"
   networkConfig:
@@ -76,7 +76,7 @@ hosts:
     - name: enp6s18
       type: ethernet
       state: up
-      mac-address: BC:24:11:E1:8F:84
+      mac-address: bc:24:11:e1:8f:84
       ipv4:
         enabled: true
         dhcp: false

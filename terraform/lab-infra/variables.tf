@@ -83,7 +83,7 @@ variable "full_clone" {
 variable "rhel_dvd_iso" {
   type        = string
   default     = ""
-  description = "Full RHEL DVD as Proxmox file_id, ex. nfs_iso:iso/rhel-10.2-x86_64-dvd.iso. Empty = no CD."
+  description = "Full RHEL DVD as Proxmox file_id, ex. nfs_iso:iso/rhel-10.2-x86_64-dvd.iso. Attached on ide0 (ide2 is cloud-init). Empty = no CD."
 }
 
 variable "create_dns" {

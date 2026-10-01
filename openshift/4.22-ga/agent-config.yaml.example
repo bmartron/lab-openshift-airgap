@@ -11,7 +11,7 @@ hosts:
 - hostname: ocp-sno-422
   interfaces:
   - name: enp6s18
-    macAddress: "BC:24:11:E1:8F:82"
+    macAddress: "bc:24:11:e1:8f:82"
   # Proxmox VirtIO Block: virtio0 (120G install) → by-path (stable); virtio1 = LVMS
   # On agent live: ls -l /dev/disk/by-path/  → pick the link to ../../vda (not vdb)
   # Prefer by-path over /dev/vda (multi-disk can ignore/mismatch deviceName)
@@ -22,7 +22,7 @@ hosts:
     - name: enp6s18
       type: ethernet
       state: up
-      mac-address: BC:24:11:E1:8F:82
+      mac-address: bc:24:11:e1:8f:82
       ipv4:
         enabled: true
         dhcp: false

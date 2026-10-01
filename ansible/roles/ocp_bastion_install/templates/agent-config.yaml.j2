@@ -10,7 +10,7 @@ hosts:
 - hostname: {{ node.hostname }}
   interfaces:
   - name: {{ node.interface | default(ocp_sno_interface) }}
-    macAddress: "{{ node.mac }}"
+    macAddress: "{{ node.mac | lower }}"
   rootDeviceHints:
     deviceName: "{{ node.root_device | default(ocp_sno_root_device) }}"
   networkConfig:
@@ -18,7 +18,7 @@ hosts:
     - name: {{ node.interface | default(ocp_sno_interface) }}
       type: ethernet
       state: up
-      mac-address: {{ node.mac }}
+      mac-address: {{ node.mac | lower }}
       ipv4:
         enabled: true
         dhcp: false

@@ -7,7 +7,7 @@ hosts:
   role: master
   interfaces:
   - name: enp6s18
-    macAddress: "BC:24:11:XX:XX:XX"  # MAC Proxmox de la VM ocp-sno
+    macAddress: "bc:24:11:xx:xx:xx"  # MAC Proxmox de la VM ocp-sno
   networkConfig:
     interfaces:
     - name: enp6s18

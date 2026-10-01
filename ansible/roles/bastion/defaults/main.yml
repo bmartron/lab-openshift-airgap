@@ -29,11 +29,13 @@ bastion_packages:
 bastion_authorize_proxmox_ssh: true
 bastion_proxmox_host: 192.168.1.147
 
-# /etc/hosts (before home DNS) — lab names + API VIP (.100 for sno and compact3)
+# /etc/hosts — compact3: API .50 / apps .49 (baremetal VIPs); SNO: node .100
+bastion_ocp_api_ip: "{{ ocp_api_vip | default(ocp_sno_ip | default('172.16.10.100')) if (ocp_topology | default('sno')) == 'compact3' else (ocp_sno_ip | default('172.16.10.100')) }}"
+bastion_ocp_apps_ip: "{{ ocp_ingress_vip | default(ocp_sno_ip | default('172.16.10.100')) if (ocp_topology | default('sno')) == 'compact3' else (ocp_sno_ip | default('172.16.10.100')) }}"
 bastion_etc_hosts_entries: |
   {{ dns_ip }}  dns.lab.local dns
   {{ registry_ip }}  {{ registry_hostname }} registry
   {{ bastion_lab_ip }}  bastion.lab.local bastion
-  {{ ocp_sno_ip | default('172.16.10.100') }}  api.{{ ocp_cluster_name | default('ocp422') }}.{{ ocp_base_domain | default('lab.local') }} api-int.{{ ocp_cluster_name | default('ocp422') }}.{{ ocp_base_domain | default('lab.local') }}
-  {{ ocp_sno_ip | default('172.16.10.100') }}  oauth-openshift.apps.{{ ocp_cluster_name | default('ocp422') }}.{{ ocp_base_domain | default('lab.local') }}
-  {{ ocp_sno_ip | default('172.16.10.100') }}  console-openshift-console.apps.{{ ocp_cluster_name | default('ocp422') }}.{{ ocp_base_domain | default('lab.local') }}
+  {{ bastion_ocp_api_ip }}  api.{{ ocp_cluster_name | default('ocp422') }}.{{ ocp_base_domain | default('lab.local') }} api-int.{{ ocp_cluster_name | default('ocp422') }}.{{ ocp_base_domain | default('lab.local') }}
+  {{ bastion_ocp_apps_ip }}  oauth-openshift.apps.{{ ocp_cluster_name | default('ocp422') }}.{{ ocp_base_domain | default('lab.local') }}
+  {{ bastion_ocp_apps_ip }}  console-openshift-console.apps.{{ ocp_cluster_name | default('ocp422') }}.{{ ocp_base_domain | default('lab.local') }}

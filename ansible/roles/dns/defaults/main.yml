@@ -5,8 +5,11 @@ ocp_cluster_name: ocp422
 ocp_topology: sno
 ocp_sno_ip: "172.16.10.100"
 ocp_sno_hostname: ocp-sno-422
-# api / api-int / *.apps — first master / SNO (no VIP yet)
-ocp_api_ip: "{{ ocp_sno_ip }}"
+# compact3 baremetal VIPs (must match ocp_bastion_install); SNO uses node IP
+ocp_api_vip: "172.16.10.50"
+ocp_ingress_vip: "172.16.10.49"
+ocp_api_ip: "{{ ocp_api_vip if (ocp_topology | default('sno')) == 'compact3' else ocp_sno_ip }}"
+ocp_apps_ip: "{{ ocp_ingress_vip if (ocp_topology | default('sno')) == 'compact3' else ocp_sno_ip }}"
 # compact3 host records — align with terraform/lab-ocp + ocp_bastion_install
 ocp_compact3_nodes:
   - hostname: ocp-master-0

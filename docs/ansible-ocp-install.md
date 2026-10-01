@@ -22,37 +22,34 @@ Do this once after a fresh `lab-infra`, in order.
 SNO `sshKey` is **not** a Mac file: the playbook reads the live bastion `~/.ssh/id_ed25519.pub` ([sno-ssh-convention.md](sno-ssh-convention.md)).  
 `lab-ssh.yml` is **imported automatically** by this playbook — do not run it separately.
 
-### 2. Set variables in `inventory/group_vars/all.yml`
+### 2. Topology / imageset / VIPs in `inventory/group_vars/all.yml`
 
-Source of truth: **`ansible/inventory/group_vars/all.yml`** (not ad-hoc `-e` flags).
-
-**Required for first ISO + upload (compact3 example):**
+Keep durable settings in **`ansible/inventory/group_vars/all.yml`** (example):
 
 ```yaml
 ocp_topology: compact3                  # or sno — must match terraform/lab-ocp
+ocp_api_vip: "172.16.10.50"             # compact3 baremetal API VIP (free on lab L2)
+ocp_ingress_vip: "172.16.10.49"         # compact3 ingress VIP
 ocp_sno_root_device: "/dev/disk/by-path/pci-0000:06:0a.0"
 ocp_imageset_profile: virt-lvms             # see profiles below
-ocp_agent_generate_iso: true                # build agent.x86_64.iso on bastion
-ocp_push_iso_to_proxmox: true               # scp ISO to nfs_iso
 ```
+
+**compact3** uses `platform: baremetal` + those VIPs in `install-config`. **sno** stays `platform: none` (no VIPs). DNS / bastion `/etc/hosts`: `api`→API VIP, `*.apps`→ingress VIP.
 
 For **sno**, also set `ocp_sno_mac` (must match Terraform). For **compact3**, MACs/IPs default to Terraform values (`…:82` / `:83` / `:84` on `.100`–`.102`).
 
-Then run:
+### 3. Run with ISO generate + push (one-shot)
+
+On the **Mac** — leave `ocp_agent_generate_iso` / `ocp_push_iso_to_proxmox` at `false` in `all.yml` and pass them on the command line:
 
 ```bash
-cd ansible
-ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass
+cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/ansible && \
+ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass \
+  -e ocp_agent_generate_iso=true \
+  -e ocp_push_iso_to_proxmox=true
 ```
 
-### 3. After success — set flags back to false
-
-Avoid rebuilding the ISO on every later run:
-
-```yaml
-ocp_agent_generate_iso: false
-ocp_push_iso_to_proxmox: false
-```
+That builds `agent.x86_64.iso` on the bastion and copies it to Proxmox `nfs_iso`. No need to flip flags in `all.yml` afterward.
 
 ### 4. Next steps (not this playbook)
 
@@ -82,7 +79,7 @@ ocp_push_iso_to_proxmox: false
 | Variable | Example | Meaning |
 |----------|---------|---------|
 | `ocp_topology` | `compact3` or `sno` | Must match `terraform/lab-ocp` |
-| `ocp_sno_mac` | `BC:24:11:E1:8F:82` | Required for **sno**; optional node0 override for compact3 |
+| `ocp_sno_mac` | `bc:24:11:e1:8f:82` | Required for **sno**; optional node0 override for compact3 |
 | `ocp_sno_root_device` | `/dev/disk/by-path/pci-0000:06:0a.0` | Install disk hint (VirtIO) |
 | `ocp_imageset_profile` | `virt-lvms` | What `oc-mirror` will pull |
 
@@ -104,7 +101,7 @@ ocp_push_iso_to_proxmox: false
 
 | Situation | What to set / do |
 |-----------|------------------|
-| First install after `lab-infra` | Happy path above (`generate` + `push` = `true`) |
+| First install after `lab-infra` | Happy path §3 (`-e ocp_agent_generate_iso=true` + `-e ocp_push_iso_to_proxmox=true`) |
 | Changed MAC, root disk, imageset, pull-secret, or registry CA | Edit `all.yml` → set `generate` (+ `push`) `true` → re-run → mirror if imageset changed |
 | Bastion VM recreated | `lab-infra` / `lab-ssh` already ran → this playbook with **new ISO** (new live `sshKey`) |
 | Only refresh scripts on bastion | Optional: `bastion-scripts.yml` (see below) — **not** required for install |

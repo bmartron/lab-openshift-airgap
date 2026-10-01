@@ -27,7 +27,7 @@ address=/{{ node.hostname }}.{{ lab_domain }}/{{ node.ip }}
 address=/{{ ocp_sno_hostname | default('ocp-sno-422') }}.{{ lab_domain }}/{{ ocp_api_ip }}
 {% endif %}
 
-# API / apps — lab points at rendezvous / first master (no VIP yet)
+# API → api VIP (compact3 baremetal) or SNO node IP; apps → ingress VIP or SNO IP
 address=/api.{{ ocp_cluster_name }}.{{ lab_domain }}/{{ ocp_api_ip }}
 address=/api-int.{{ ocp_cluster_name }}.{{ lab_domain }}/{{ ocp_api_ip }}
-address=/.apps.{{ ocp_cluster_name }}.{{ lab_domain }}/{{ ocp_api_ip }}
+address=/.apps.{{ ocp_cluster_name }}.{{ lab_domain }}/{{ ocp_apps_ip | default(ocp_api_ip) }}

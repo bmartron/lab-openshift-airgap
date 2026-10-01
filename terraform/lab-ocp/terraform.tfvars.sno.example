@@ -14,7 +14,7 @@ ocp_topology = "sno"
 
 sno_vm_name   = "ocp-sno"
 sno_ip        = "172.16.10.100"
-sno_mac       = "BC:24:11:E1:8F:82" # must match ansible ocp_sno_mac
+sno_mac       = "bc:24:11:e1:8f:82" # must match ansible ocp_sno_mac
 sno_cpu_cores = 8
 sno_memory_mb = 24576
 
