@@ -25,10 +25,7 @@ Default in role defaults: **`virt-lvms`**.
 |------------------------|-----------------|----------|
 | `platform-only` | [imageset-config-4.22-platform-only.yaml.example](imageset-config-4.22-platform-only.yaml.example) | OCP platform only (smallest / fastest) |
 | `gitops` | [imageset-config-4.22.yaml.example](imageset-config-4.22.yaml.example) | Platform + OpenShift GitOps |
-| `virtualization` | [imageset-config-4.22-virtualization.yaml.example](imageset-config-4.22-virtualization.yaml.example) | Platform + OpenShift Virtualization |
-| `lvms` | [imageset-config-4.22-lvms.yaml.example](imageset-config-4.22-lvms.yaml.example) | Platform + LVMS |
-| `virt-lvms` | [imageset-config-4.22-virt-lvms.yaml.example](imageset-config-4.22-virt-lvms.yaml.example) | Platform + Virt + LVMS (**lab default**) |
-| `odf` | [imageset-config-4.22-odf.yaml.example](imageset-config-4.22-odf.yaml.example) | Platform + ODF (includes Rook-Ceph) |
+| `virt-lvms` | [imageset-config-4.22-virt-lvms.yaml.example](imageset-config-4.22-virt-lvms.yaml.example) | Platform + Virt + LVMS + update **graph** / OSUS (**lab default**) |
 
 Verify on bastion before mirroring: `head -40 ~/lab/4.22-ga/imageset-config.yaml`
 

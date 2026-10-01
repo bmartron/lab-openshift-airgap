@@ -39,6 +39,7 @@ ocp_ingress_vip: "172.16.10.49"
 # ocp_sno_root_device: "/dev/disk/by-path/pci-0000:06:0a.0"
 # compact3 MACs/IPs: role defaults match terraform/lab-ocp (…:82/:83/:84)
 ocp_sno_root_device: "/dev/disk/by-path/pci-0000:06:0a.0"  # shared rootDeviceHints for all masters
-ocp_imageset_profile: virt-lvms   # platform-only | gitops | virtualization | lvms | odf | virt-lvms
+ocp_imageset_profile: virt-lvms   # platform-only | gitops | virt-lvms
+
 ocp_agent_generate_iso: false          # true = run openshift-install on bastion
 ocp_push_iso_to_proxmox: false        # true = scp agent.x86_64.iso to Proxmox NFS

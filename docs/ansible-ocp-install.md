@@ -93,7 +93,7 @@ That builds `agent.x86_64.iso` on the bastion and copies it to Proxmox `nfs_iso`
 | `ocp_cluster_name` / `ocp_base_domain` | `ocp422` / `lab.local` | Rarely |
 | `ocp_compact3_nodes` / `ocp_nodes` | role defaults | Override host list if MACs/IPs differ |
 
-**Imageset profiles:** `platform-only` \| `gitops` \| `virtualization` \| `lvms` \| `odf` \| `virt-lvms`
+**Imageset profiles:** `platform-only` \| `gitops` \| `virt-lvms`
 
 ---
 

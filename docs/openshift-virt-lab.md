@@ -6,7 +6,7 @@ Lab notes: operators, local storage, guest ISO import.
 
 | Component | Detail |
 |-----------|--------|
-| Mirror | **LVMS**-only or **virt-lvms** profile — [mirror/imageset-config-4.22-lvms.yaml.example](../mirror/imageset-config-4.22-lvms.yaml.example) |
+| Mirror | **virt-lvms** profile — [mirror/imageset-config-4.22-virt-lvms.yaml.example](../mirror/imageset-config-4.22-virt-lvms.yaml.example) |
 | Cluster | `oc apply` **IDMS/ITMS** from `workspace-*/working-dir/cluster-resources/` |
 | OLM catalog | After mirror: `oc delete pod -n openshift-marketplace -l olm.catalogSource=cs-redhat-operator-index-v4-22` then `oc get packagemanifest \| grep lvms` |
 | LVMS | 2nd VirtIO disk on SNO VM (Proxmox) — `vda` = OCP, **`vdb`** = LVMS |

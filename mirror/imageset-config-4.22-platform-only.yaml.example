@@ -1,5 +1,5 @@
-# Plateforme OCP 4.22.12 seule — pas d'opérateurs (SNO air-gap minimal).
-# Bastion 192.168.1.144 : cp vers ~/lab/4.22-ga/imageset-config.yaml
+# Plateforme OCP 4.22.12 seule — pas d'opérateurs (minimal).
+# graph: true → graph-data for OpenShift Update Service (air-gap upgrades).
 apiVersion: mirror.openshift.io/v1alpha2
 kind: ImageSetConfiguration
 mirror:
@@ -10,3 +10,4 @@ mirror:
       - name: stable-4.22
         minVersion: 4.22.12
         maxVersion: 4.22.12
+    graph: true

@@ -8,34 +8,18 @@ mirror:
       - name: {{ ocp_platform_channel }}
         minVersion: {{ ocp_platform_version }}
         maxVersion: {{ ocp_platform_version }}
+    # OSUS update graph (fixes api.openshift.com/.../graph in air-gap)
+    graph: {{ ocp_mirror_update_graph | default(true) | bool | lower }}
 {% if ocp_imageset_profile != 'platform-only' %}
   operators:
     - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.22
       packages:
-{% if ocp_imageset_profile == 'virtualization' %}
-        - name: kubevirt-hyperconverged
-          channels:
-            - name: stable
-              minVersion: {{ ocp_virt_operator_version }}
-              maxVersion: {{ ocp_virt_operator_version }}
-{% elif ocp_imageset_profile == 'gitops' %}
+{% if ocp_imageset_profile == 'gitops' %}
         - name: openshift-gitops-operator
           channels:
             - name: {{ ocp_gitops_channel }}
               minVersion: {{ ocp_gitops_version }}
               maxVersion: {{ ocp_gitops_version }}
-{% elif ocp_imageset_profile == 'lvms' %}
-        - name: lvms-operator
-          channels:
-            - name: {{ ocp_lvms_channel }}
-              minVersion: {{ ocp_lvms_operator_version }}
-              maxVersion: {{ ocp_lvms_operator_version }}
-{% elif ocp_imageset_profile == 'odf' %}
-        - name: odf-operator
-          channels:
-            - name: {{ ocp_odf_channel }}
-              minVersion: {{ ocp_odf_operator_version }}
-              maxVersion: {{ ocp_odf_operator_version }}
 {% elif ocp_imageset_profile == 'virt-lvms' %}
         - name: kubevirt-hyperconverged
           channels:
@@ -47,5 +31,11 @@ mirror:
             - name: {{ ocp_lvms_channel }}
               minVersion: {{ ocp_lvms_operator_version }}
               maxVersion: {{ ocp_lvms_operator_version }}
+{% endif %}
+{% if ocp_mirror_update_service | default(true) | bool %}
+        # OpenShift Update Service (OSUS) — local Cincinnati graph for air-gap upgrades
+        - name: cincinnati-operator
+          channels:
+            - name: {{ ocp_osus_channel }}
 {% endif %}
 {% endif %}

@@ -1,9 +1,6 @@
-# Plateforme 4.22.12 + GitOps (channel épinglé).
+# Platform 4.22.12 + GitOps (pinned channel).
 # Alternatives: imageset-config-4.22-platform-only.yaml.example,
-#               imageset-config-4.22-virtualization.yaml.example,
-#               imageset-config-4.22-virt-lvms.yaml.example,
-#               imageset-config-4.22-lvms.yaml.example,
-#               imageset-config-4.22-odf.yaml.example
+#               imageset-config-4.22-virt-lvms.yaml.example
 # Copy on bastion 192.168.1.144: ~/lab/4.22-ga/imageset-config.yaml
 apiVersion: mirror.openshift.io/v1alpha2
 kind: ImageSetConfiguration
@@ -18,11 +15,11 @@ mirror:
   operators:
     - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.22
       packages:
-        # Sans "channels" : oc-mirror tire TOUTES les versions du package dans l'index
-        # (souvent ~100+ images opérateur pour GitOps seul) → disque registry + durée.
+        # Without "channels", oc-mirror pulls ALL package versions from the index
+        # (often 100+ operator images for GitOps alone) → registry disk + duration.
         - name: openshift-gitops-operator
           channels:
             - name: gitops-1.16
               minVersion: 1.16.5
               maxVersion: 1.16.5
-        # Autres opérateurs : un bloc par package, toujours épingler channel + version.
+        # Other operators: one block per package; always pin channel + version.

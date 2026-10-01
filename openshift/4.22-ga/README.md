@@ -1,20 +1,22 @@
 # OpenShift 4.22 GA — agent-based air-gap (SNO or compact3)
 
-| Parameter | Value |
-|-----------|--------|
-| Version | **4.22.12** |
-| Cluster name | `ocp422` |
-| Base domain | `lab.local` → API `api.ocp422.lab.local` |
-| Topology | `ocp_topology`: **sno** (`.100`, `platform: none`) or **compact3** (`.100`–`.102`, `platform: baremetal`, API VIP `.50`, ingress VIP `.49`) |
-| Mirror | `registry.lab.local:5000/ocp4-422` |
+
+| Parameter    | Value                                                                                                                                       |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Version      | **4.22.12**                                                                                                                                 |
+| Cluster name | `ocp422`                                                                                                                                    |
+| Base domain  | `lab.local` → API `api.ocp422.lab.local`                                                                                                    |
+| Topology     | `ocp_topology`: **sno** (`.100`, `platform: none`) or **compact3** (`.100`–`.102`, `platform: baremetal`, API VIP `.50`, ingress VIP `.49`) |
+| Mirror       | `registry.lab.local:5000/ocp4-422`                                                                                                          |
+
 
 **Do not** set `baseDomain: ocp422.lab.local` (double subdomain → `api.ocp422.ocp422.lab.local`).
 
 ## Recommended order
 
 1. Terraform + `lab-infra.yml`
-2. **`bastion-ocp-install.yml`** with ISO generate + upload to Proxmox (configs do not need the mirror yet)
-3. **`oc-mirror`** — [mirror/README.md](../../mirror/README.md)
+2. `**bastion-ocp-install.yml**` with ISO generate + upload to Proxmox (configs do not need the mirror yet)
+3. `**oc-mirror**` — [mirror/README.md](../../mirror/README.md)
 4. Verify mirror, **then** boot the SNO (this doc from §3)
 
 Do **not** start the SNO until the mirror is OK — the ISO only embeds URLs/CA; image blobs come from `oc-mirror`.
@@ -72,12 +74,14 @@ Fix any `[FAIL]` before booting.
 
 **Host:** Mac — Terraform; then Proxmox UI / console if needed.
 
-| Setting | Value |
-|---------|--------|
-| Disk | 120 GiB **VirtIO** → `rootDeviceHints` **by-path** (see agent-config) |
-| NIC | `vmbr1`, VirtIO — MAC **`bc:24:11:e1:8f:82`** (`sno_mac` / `ocp_sno_mac`) |
-| CD-ROM | `nfs_iso` → `agent.x86_64.iso` on **ide2** |
-| LVMS (optional) | 2nd VirtIO disk → `/dev/vdb` |
+
+| Setting         | Value                                                                     |
+| --------------- | ------------------------------------------------------------------------- |
+| Disk            | 120 GiB **VirtIO** → `rootDeviceHints` **by-path** (see agent-config)     |
+| NIC             | `vmbr1`, VirtIO — MAC `**bc:24:11:e1:8f:82**` (`sno_mac` / `ocp_sno_mac`) |
+| CD-ROM          | `nfs_iso` → `agent.x86_64.iso` on **ide2**                                |
+| LVMS (optional) | 2nd VirtIO disk → `/dev/vdb`                                              |
+
 
 In `terraform/lab-ocp/terraform.tfvars`: `ocp_topology = "sno"` (see `terraform.tfvars.sno.example`).
 
@@ -155,17 +159,42 @@ Forward ingress (`.49`) and API (`.50`) through the bastion, then open the conso
 sudo ssh -L 443:172.16.10.49:443 -L 6443:172.16.10.50:6443 -N bernard@192.168.1.144
 ```
 
-## Day-2 — ICSP replacements (IDMS / ITMS)
+## Day-2 — local Operator catalog (Virt / LVMS)
 
-The agent ISO embeds **ImageContentSources** for the **platform** release only.  
-After `oc-mirror`, apply the generated **ImageDigestMirrorSet** / **ImageTagMirrorSet** so OperatorHub / Virt / LVMS pull from `registry.lab.local:5000` instead of `registry.redhat.io` / `quay.io`:
+After the cluster is **Ready** and `oc-mirror` has populated `~/lab/4.22-ga/workspace/`:
+
+1. **Image mirrors** (platform ICS in the ISO is not enough for operators):
 
 ```bash
 export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig
-# Path may be workspace/ or workspace-*/ — use the dir from your last oc-mirror run
 oc apply -f ~/lab/4.22-ga/workspace/working-dir/cluster-resources/idms-oc-mirror.yaml
 oc apply -f ~/lab/4.22-ga/workspace/working-dir/cluster-resources/itms-oc-mirror.yaml
 ```
 
-Do this **once the cluster is Ready**, **before** installing operators from the catalog.  
-Then follow Virt + LVMS: [docs/openshift-virt-lab.md](../../docs/openshift-virt-lab.md).
+2. **CatalogSource from the mirror** (default `redhat-operators` pulls from the Internet → `ImagePullBackOff` in air-gap):
+
+```bash
+oc apply -f ~/lab/4.22-ga/workspace/working-dir/cluster-resources/cs-redhat-operator-index-v4-22.yaml
+oc apply -f ~/lab/4.22-ga/workspace/working-dir/cluster-resources/cc-redhat-operator-index-v4-22.yaml
+```
+
+Check:
+
+```bash
+oc get catalogsource -n openshift-marketplace
+oc get packagemanifest -n openshift-marketplace | grep -iE 'lvms|kubevirt|hyperconverged|cincinnati|update'
+```
+
+3. Install from OperatorHub: **`kubevirt-hyperconverged`**, **`lvms-operator`**.  
+   Virt/LVMS details: [docs/openshift-virt-lab.md](../../docs/openshift-virt-lab.md).
+
+4. **Air-gap updates (Cincinnati graph)** — imageset must have `platform.graph: true` (and ideally `cincinnati-operator`). After remirror:
+
+```bash
+# Generated by oc-mirror when graph: true
+ls ~/lab/4.22-ga/workspace/working-dir/cluster-resources/ | grep -i update
+# Install OpenShift Update Service from OperatorHub (cincinnati-operator), then apply UpdateService CR
+# and point ClusterVersion upstream at the local OSUS — see Red Hat:
+# https://docs.redhat.com/en/documentation/openshift_container_platform/4.22/html/disconnected_environments/updating-a-cluster-in-a-disconnected-environment
+```
+

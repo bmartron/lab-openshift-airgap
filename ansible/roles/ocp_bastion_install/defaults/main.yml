@@ -59,15 +59,18 @@ ocp_pull_secret_path: "{{ playbook_dir }}/../files/pull-secret.txt"
 # Cluster sshKey: live from bastion ~/.ssh/id_ed25519.pub (see tasks)
 ocp_registry_ca_fallback_path: "{{ playbook_dir }}/../files/registry-ca.crt"
 
-# imageset: platform-only | gitops | virtualization | lvms | odf | virt-lvms
+# imageset: platform-only | gitops | virt-lvms
 ocp_imageset_profile: virt-lvms
 ocp_virt_operator_version: "4.22.9"
 ocp_gitops_channel: gitops-1.16
 ocp_gitops_version: "1.16.5"
 ocp_lvms_channel: stable-4.22
 ocp_lvms_operator_version: "4.22.0"
-ocp_odf_channel: stable-4.22
-ocp_odf_operator_version: "4.22.3-rhodf"
+
+# Air-gap OpenShift updates (Cincinnati graph + OSUS operator)
+ocp_mirror_update_graph: true
+ocp_mirror_update_service: true
+ocp_osus_channel: v1
 
 ocp_deploy_lab_scripts: true
 ocp_configure_registry_trust: true
