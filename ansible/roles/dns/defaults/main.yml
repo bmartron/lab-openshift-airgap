@@ -19,3 +19,4 @@ ocp_compact3_nodes:
   - hostname: ocp-master-2
     ip: "172.16.10.102"
 dns_deploy_dnsmasq_conf: true
+# Node/API records use host-record (A+PTR). Wildcard *.apps stays address= (no PTR).

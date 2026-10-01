@@ -13,21 +13,25 @@ no-poll
 domain={{ lab_domain }}
 local=/{{ lab_domain }}/
 
-address=/dns.{{ lab_domain }}/{{ dns_ip }}
-address=/bastion.{{ lab_domain }}/{{ bastion_lab_ip }}
-address=/{{ registry_hostname }}/{{ registry_ip }}
-address=/registry.{{ lab_domain }}/{{ registry_ip }}
-
-# OpenShift node hostnames
-{% if ocp_topology | default('sno') == 'compact3' %}
-{% for node in ocp_compact3_nodes %}
-address=/{{ node.hostname }}.{{ lab_domain }}/{{ node.ip }}
-{% endfor %}
-{% else %}
-address=/{{ ocp_sno_hostname | default('ocp-sno-422') }}.{{ lab_domain }}/{{ ocp_api_ip }}
+# host-record = A + PTR (reverse). address=/…/ alone does not create PTR.
+host-record=dns.{{ lab_domain }},{{ dns_ip }}
+host-record=bastion.{{ lab_domain }},{{ bastion_lab_ip }}
+host-record={{ registry_hostname }},{{ registry_ip }}
+{% if registry_hostname != 'registry.' ~ lab_domain %}
+host-record=registry.{{ lab_domain }},{{ registry_ip }}
 {% endif %}
 
-# API → api VIP (compact3 baremetal) or SNO node IP; apps → ingress VIP or SNO IP
-address=/api.{{ ocp_cluster_name }}.{{ lab_domain }}/{{ ocp_api_ip }}
-address=/api-int.{{ ocp_cluster_name }}.{{ lab_domain }}/{{ ocp_api_ip }}
+# OpenShift node hostnames (forward + reverse)
+{% if ocp_topology | default('sno') == 'compact3' %}
+{% for node in ocp_compact3_nodes %}
+host-record={{ node.hostname }}.{{ lab_domain }},{{ node.ip }}
+{% endfor %}
+{% else %}
+host-record={{ ocp_sno_hostname | default('ocp-sno-422') }}.{{ lab_domain }},{{ ocp_sno_ip | default(ocp_api_ip) }}
+{% endif %}
+
+# API / api-int → VIP (compact3) or SNO IP; both names share one PTR target
+host-record=api.{{ ocp_cluster_name }}.{{ lab_domain }},api-int.{{ ocp_cluster_name }}.{{ lab_domain }},{{ ocp_api_ip }}
+
+# Wildcard apps — address= only (no PTR for every app name)
 address=/.apps.{{ ocp_cluster_name }}.{{ lab_domain }}/{{ ocp_apps_ip | default(ocp_api_ip) }}
