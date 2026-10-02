@@ -1,19 +1,22 @@
 ---
 # Day-2 air-gap on an already Ready cluster (OperatorHub, IDMS/ITMS, CatalogSource,
-# registry CA, optional OSUS / ClusterVersion upstream).
+# registry CA, optional OSUS / ClusterVersion upstream, optional Virt guest boots).
 #
 # Prerequisites:
 #   - compact3/SNO install complete
 #   - oc-mirror done → ~/lab/4.22-ga/workspace/working-dir/cluster-resources/
 #   - valid auth/kubeconfig on bastion
+#   - guest boots: Virt + LVMS StorageClass with free capacity (2nd disk /dev/vdb)
 #
 # Mac:
 #   cd ansible
 #   ansible-playbook playbooks/bastion-ocp-day2.yml
 #
-# Tags: marketplace, mirrors, catalog, registry_ca, osus, lvms
-# Skip OSUS: -e ocp_day2_osus=false
-# Also install LVMS: -e ocp_day2_install_lvms=true
+# Tags: marketplace, mirrors, catalog, registry_ca, osus, lvms, guest_boots
+# Skip OSUS:              -e ocp_day2_osus=false
+# Also install LVMS:      -e ocp_day2_install_lvms=true
+# Guest boot sources:     -e ocp_day2_guest_boots=true
+#   (patches HyperConverged v1beta1; CA ConfigMap in os-images + openshift-cnv)
 #
 # Does NOT start oc adm upgrade --to=… (manual / console).
 

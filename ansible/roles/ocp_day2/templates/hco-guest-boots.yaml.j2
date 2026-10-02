@@ -1,0 +1,37 @@
+# Custom golden-image DataImportCronTemplates (air-gap).
+# Applied with: oc patch hyperconvergeds.v1beta1.hco.kubevirt.io ...
+# Docs: docs/openshift-virt-lab.md § Guest OS boot sources
+spec:
+  enableCommonBootImageImport: {{ ocp_day2_guest_enable_common_boot_image_import | bool | lower }}
+  dataImportCronTemplates:
+{% for name in ocp_day2_guest_disable_system_crons | default([]) %}
+  - metadata:
+      name: {{ name }}
+      annotations:
+        dataimportcrontemplate.kubevirt.io/enable: "false"
+{% endfor %}
+{% for g in ocp_day2_guest_boot_sources %}
+  - metadata:
+      name: {{ g.cron_name }}
+      annotations:
+        cdi.kubevirt.io/storage.bind.immediate.requested: "true"
+        ssp.kubevirt.io/dict.architectures: "{{ ocp_day2_guest_architectures }}"
+        dataimportcrontemplate.kubevirt.io/enable: "true"
+    spec:
+      managedDataSource: {{ g.managed_data_source }}
+      schedule: "{{ ocp_day2_guest_import_schedule }}"
+      garbageCollect: Outdated
+      template:
+        spec:
+          source:
+            registry:
+              url: "docker://{{ ocp_day2_guest_registry }}/{{ g.image }}"
+              certConfigMap: {{ ocp_day2_guest_ca_configmap }}
+          storage:
+            storageClassName: {{ ocp_day2_guest_storage_class }}
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: {{ g.storage | default(ocp_day2_guest_storage_request) }}
+{% endfor %}

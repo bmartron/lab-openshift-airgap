@@ -41,6 +41,8 @@ Ansible (`ocp_mirror_guest_images: true` in `all.yml`) appends `ocp_guest_images
 
 Plan registry free space: existing Virt/LVMS/OSUS plus roughly **~5–15 GiB** for these three (varies by tag).
 
+**Not automatic in Virt:** images land in the registry only. Default boot sources still pull from Red Hat/Quay — patch HyperConverged (API `v1beta1` on 4.22) so the catalog gets PVC boot sources — [docs/openshift-virt-lab.md](../docs/openshift-virt-lab.md) § Guest OS boot sources · Day-2 §6 in [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md).
+
 ### Two platform versions (upgrade)
 
 One OpenShift install dir (`~/lab/4.22-ga`). Span min→max **with** `shortestPath: true` so oc-mirror pulls the upgrade path (endpoints), not every z-stream in between:

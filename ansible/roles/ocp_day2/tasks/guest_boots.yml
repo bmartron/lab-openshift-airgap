@@ -1,0 +1,79 @@
+---
+# Point Virt golden-image DataImportCrons at the lab mirror (not automatic after oc-mirror).
+# Requires LVMS StorageClass with free capacity (2nd disk /dev/vdb on nodes).
+# OCP 4.22: patch hyperconvergeds.v1beta1.hco.kubevirt.io (v1 drops dataImportCronTemplates).
+
+- name: Assert registry CA for CDI guest imports
+  ansible.builtin.stat:
+    path: "{{ ocp_registry_ca_path }}"
+  register: ocp_day2_guest_ca_stat
+
+- name: Fail if ca.crt missing for guest boots
+  ansible.builtin.assert:
+    that:
+      - ocp_day2_guest_ca_stat.stat.exists
+    fail_msg: "Missing {{ ocp_registry_ca_path }} (needed for CDI certConfigMap)"
+
+- name: Ensure StorageClass for guest boots exists
+  ansible.builtin.command:
+    cmd: "oc get storageclass {{ ocp_day2_guest_storage_class }}"
+  environment:
+    KUBECONFIG: "{{ ocp_kubeconfig }}"
+  register: ocp_day2_guest_sc
+  changed_when: false
+  failed_when: ocp_day2_guest_sc.rc != 0
+
+- name: Create mirror-registry-ca ConfigMap (os-images + openshift-cnv)
+  # CDI digest poller Jobs run in openshift-cnv and mount this ConfigMap there.
+  ansible.builtin.shell: |
+    set -euo pipefail
+    for ns in openshift-virtualization-os-images openshift-cnv; do
+      oc create configmap {{ ocp_day2_guest_ca_configmap }} -n "$ns" \
+        --from-file=ca.crt={{ ocp_registry_ca_path | quote }} \
+        --dry-run=client -o yaml | oc apply -f -
+    done
+  environment:
+    KUBECONFIG: "{{ ocp_kubeconfig }}"
+  register: ocp_day2_guest_cm
+  changed_when: >-
+    'created' in ocp_day2_guest_cm.stdout
+    or 'configured' in ocp_day2_guest_cm.stdout
+
+- name: Render HyperConverged guest boot patch
+  ansible.builtin.template:
+    src: hco-guest-boots.yaml.j2
+    dest: "{{ ocp_install_dir }}/hco-guest-boots.yaml"
+    mode: "0644"
+
+- name: Patch HyperConverged dataImportCronTemplates (API v1beta1)
+  ansible.builtin.command:
+    cmd: >-
+      oc patch hyperconvergeds.v1beta1.hco.kubevirt.io kubevirt-hyperconverged
+      -n {{ ocp_day2_virt_namespace }}
+      --type=merge
+      --patch-file={{ ocp_install_dir }}/hco-guest-boots.yaml
+  environment:
+    KUBECONFIG: "{{ ocp_kubeconfig }}"
+  register: ocp_day2_guest_hco
+  changed_when: >-
+    'patched' in (ocp_day2_guest_hco.stdout | default(''))
+    or 'no change' not in (ocp_day2_guest_hco.stdout | default(''))
+
+- name: Show guest DataImportCron sources
+  ansible.builtin.command:
+    cmd: >-
+      oc get dataimportcron -n openshift-virtualization-os-images
+      -o custom-columns=NAME:.metadata.name,SOURCE:.spec.template.spec.source.registry.url
+  environment:
+    KUBECONFIG: "{{ ocp_kubeconfig }}"
+  register: ocp_day2_guest_dic
+  changed_when: false
+  failed_when: false
+
+- name: Guest boots note
+  ansible.builtin.debug:
+    msg:
+      - "Guest DataImportCrons patched (CDI jobs need CA in openshift-cnv)."
+      - "{{ ocp_day2_guest_dic.stdout_lines | default([]) }}"
+      - "PVC Bound requires LVMS capacity (2nd disk /dev/vdb). Check: oc get lvmcluster -A"
+      - "Watch: oc get pvc,dv -n openshift-virtualization-os-images"

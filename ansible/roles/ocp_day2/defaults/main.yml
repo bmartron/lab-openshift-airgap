@@ -20,6 +20,33 @@ ocp_day2_osus: true
 ocp_day2_install_lvms: false
 ocp_day2_install_virt: false
 
+# Guest OS boot sources (Virt catalog) — not automatic after mirroring additionalImages.
+# Needs Virt installed + LVMS StorageClass with free space (2nd disk /dev/vdb).
+# Docs: docs/openshift-virt-lab.md § Guest OS boot sources
+ocp_day2_guest_boots: false
+ocp_day2_guest_enable_common_boot_image_import: true
+ocp_day2_guest_architectures: amd64
+ocp_day2_guest_storage_class: lvms-vg1
+ocp_day2_guest_storage_request: 30Gi
+ocp_day2_guest_import_schedule: "0 */12 * * *"
+ocp_day2_guest_ca_configmap: mirror-registry-ca
+ocp_day2_guest_registry: "registry.lab.local:5000/ocp4-422"
+# System crons that fail in air-gap if not mirrored — disable via annotation
+ocp_day2_guest_disable_system_crons:
+  - fedora-image-cron
+  - centos-stream10-image-cron
+  - rhel8-image-cron
+ocp_day2_guest_boot_sources:
+  - cron_name: rhel9-image-cron
+    managed_data_source: rhel9
+    image: rhel9/rhel-guest-image:latest
+  - cron_name: rhel10-image-cron
+    managed_data_source: rhel10
+    image: rhel10/rhel-guest-image:latest
+  - cron_name: centos-stream9-image-cron
+    managed_data_source: centos-stream9
+    image: containerdisks/centos-stream:9
+
 ocp_day2_osus_namespace: openshift-update-service
 ocp_day2_lvms_namespace: openshift-storage
 ocp_day2_lvms_channel: "{{ ocp_lvms_channel | default('stable-4.22') }}"

@@ -65,3 +65,5 @@ ocp_push_iso_to_proxmox: false        # true = scp agent.x86_64.iso to Proxmox N
 # ocp_day2_osus: true
 # ocp_day2_install_lvms: false
 # ocp_day2_install_virt: false
+# Guest Virt catalog boots (needs Virt + LVMS capacity / 2nd disk):
+# ocp_day2_guest_boots: true

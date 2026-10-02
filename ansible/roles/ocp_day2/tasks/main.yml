@@ -124,12 +124,21 @@
     apply:
       tags: [day2, lvms]
 
+- name: Guest OS boot sources (mirrored RHEL/CentOS → Virt catalog)
+  when: ocp_day2_guest_boots | bool
+  tags: [day2, guest_boots]
+  ansible.builtin.include_tasks:
+    file: guest_boots.yml
+    apply:
+      tags: [day2, guest_boots]
+
 - name: Day-2 summary
   ansible.builtin.debug:
     msg:
-      - "Day-2 applied (see tags: marketplace, mirrors, catalog, registry_ca, osus, lvms)."
+      - "Day-2 applied (tags: marketplace, mirrors, catalog, registry_ca, osus, lvms, guest_boots)."
       - "Check: oc get catalogsource -n openshift-marketplace"
       - "Check: oc get updateservice -n {{ ocp_day2_osus_namespace }}"
       - "Check: oc adm upgrade"
+      - "Guest boots: -e ocp_day2_guest_boots=true (needs Virt + LVMS capacity) — docs/openshift-virt-lab.md"
       - "Virt/LVMS UI or -e ocp_day2_install_lvms=true — openshift/4.22-ga/README.md § Day-2"
   tags: [day2]

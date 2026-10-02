@@ -166,7 +166,7 @@ Resources live under `~/lab/4.22-ga/workspace/working-dir/cluster-resources/` (t
 
 ### Preferred — Ansible day-2 playbook
 
-Automates §1–3, registry CA (§5a), and OSUS through ClusterVersion upstream (§5b–5e). Does **not** start `oc adm upgrade --to=…` (manual). LVMS/Virt install stays optional (UI or `-e`).
+Automates §1–3, registry CA (§5a), and OSUS through ClusterVersion upstream (§5b–5e). Does **not** start `oc adm upgrade --to=…` (manual). LVMS/Virt install stays optional (UI or `-e`). Guest boot sources (§6): `-e ocp_day2_guest_boots=true` — [docs/openshift-virt-lab.md](../../docs/openshift-virt-lab.md).
 
 **Mac:**
 
@@ -430,3 +430,25 @@ Console: **Administration → Cluster Settings**.
 
 Reference: [Updating a cluster in a disconnected environment](https://docs.redhat.com/en/documentation/openshift_container_platform/4.22/html/disconnected_environments/updating-a-cluster-in-a-disconnected-environment).
 
+### 6. Guest OS boot sources (RHEL / CentOS) — not automatic
+
+Mirrored `additionalImages` appear only in the registry. Virt default boot sources still use `registry.redhat.io` / `quay.io` → **NoDigest** / empty PVC until HyperConverged is patched.
+
+After LVMS (`lvms-vg1` **with capacity**) + Virt:
+
+```bash
+# Mac — preferred
+ansible-playbook playbooks/bastion-ocp-day2.yml -e ocp_day2_guest_boots=true --tags guest_boots
+```
+
+Lab findings (4.22):
+
+| Pitfall | Fix |
+|---------|-----|
+| `Warning: unknown field dataImportCronTemplates` | Patch `hyperconvergeds.v1beta1.hco.kubevirt.io` |
+| Custom DICT never created | Annotation `ssp.kubevirt.io/dict.architectures: amd64` |
+| `FailedMount` / `No source digest` | ConfigMap CA in **both** `openshift-virtualization-os-images` and `openshift-cnv` |
+| `NotEnoughCapacity` / LVMCluster Failed | 2nd VirtIO disk + working VG on nodes |
+| fedora / centos10 ImagePullBackOff | Disable those system crons (playbook does this) |
+
+Full detail: [docs/openshift-virt-lab.md](../../docs/openshift-virt-lab.md) § Guest OS boot sources.

@@ -48,15 +48,76 @@ With `WaitForFirstConsumer`, bind a consumer pod to see **Bound**.
 
 If there is no **`packagemanifest`** for the package: mirror catalog not reloaded (see catalog pod delete above).
 
-## Guest OS from mirrored container disks (preferred in air-gap)
+## Guest OS boot sources (mirrored container disks)
 
-After enabling `ocp_mirror_guest_images: true` and remirroring, create a VM from a guest image (console **Virtualization → Catalog**, or CLI). Example containerDisk sources on the lab registry (paths follow oc-mirror v2 layout under `ocp4-422/` — confirm with `curl …/v2/_catalog`):
+Mirroring `additionalImages` (RHEL/CentOS guest images) is **not** enough for the Virt catalog. Default `DataImportCron` / ImageStreams still point at `registry.redhat.io` / `quay.io` → import fails in air-gap.
 
-| Guest | Typical source after mirror |
-|-------|-------------------------------|
-| RHEL 9 | `registry.lab.local:5000/ocp4-422/rhel9/rhel-guest-image:latest` (or digest) |
-| RHEL 10 | `registry.lab.local:5000/ocp4-422/rhel10/rhel-guest-image:latest` |
-| CentOS Stream 9 | `registry.lab.local:5000/ocp4-422/containerdisks/centos-stream:9` |
+### Preferred — Ansible
+
+After Virt + LVMS (`lvms-vg1` with **free capacity** — 2nd disk `/dev/vdb` on nodes):
+
+```bash
+# Mac
+cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/ansible
+ansible-playbook playbooks/bastion-ocp-day2.yml -e ocp_day2_guest_boots=true --tags guest_boots
+```
+
+The role:
+
+1. Creates ConfigMap `mirror-registry-ca` in **`openshift-virtualization-os-images` and `openshift-cnv`** (CDI digest Jobs run in `openshift-cnv` and mount the CA there — missing CM → `FailedMount` / `No source digest`)
+2. Patches **`hyperconvergeds.v1beta1.hco.kubevirt.io`** (not plain `hyperconverged` — v1 drops the field on 4.22)
+3. Sets custom `dataImportCronTemplates` with `ssp.kubevirt.io/dict.architectures: amd64`, local `docker://` URLs, `accessModes: [ReadWriteOnce]`, StorageClass `lvms-vg1`
+4. Disables unmirrored system crons (fedora / centos-stream10 / rhel8)
+
+### 1. Confirm images are on the lab registry
+
+**Bastion:**
+
+```bash
+curl -s --cacert ~/lab/ca.crt https://registry.lab.local:5000/v2/_catalog \
+  | tr ',' '\n' | grep -iE 'rhel-guest|centos-stream|containerdisks'
+```
+
+| Guest | Registry path |
+|-------|----------------|
+| RHEL 9 | `ocp4-422/rhel9/rhel-guest-image` |
+| RHEL 10 | `ocp4-422/rhel10/rhel-guest-image` |
+| CentOS Stream 9 | `ocp4-422/containerdisks/centos-stream` |
+
+Prerequisite: `ocp_mirror_guest_images: true` + remirror — [mirror/README.md](../mirror/README.md).
+
+### 2. Manual HyperConverged patch (if not using Ansible)
+
+Requires StorageClass **`lvms-vg1`** with capacity (`oc get lvmcluster -A` must not be Failed / empty VG).
+
+**OCP 4.22:** always patch **`hyperconvergeds.v1beta1.hco.kubevirt.io`**. Custom golden images need annotation **`ssp.kubevirt.io/dict.architectures: "amd64"`**.
+
+```bash
+export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig
+
+for ns in openshift-virtualization-os-images openshift-cnv; do
+  oc create configmap mirror-registry-ca -n "$ns" \
+    --from-file=ca.crt=/home/bernard/lab/ca.crt \
+    --dry-run=client -o yaml | oc apply -f -
+done
+
+# Prefer the rendered file from Ansible (~/lab/4.22-ga/hco-guest-boots.yaml) or:
+# ansible-playbook … -e ocp_day2_guest_boots=true --tags guest_boots
+```
+
+### 3. Wait for CDI import
+
+```bash
+oc get dataimportcron -n openshift-virtualization-os-images \
+  -o custom-columns=NAME:.metadata.name,SOURCE:.spec.template.spec.source.registry.url
+
+oc get jobs -n openshift-cnv | grep -E 'initial-job|rhel9|rhel10|centos-stream9'
+oc get pvc,dv -n openshift-virtualization-os-images
+```
+
+Expect PVC **Bound** (import a few minutes). If `NotEnoughCapacity` / LVMCluster **Failed**: add a 2nd VirtIO disk on OCP VMs and fix LVMS before retries.
+
+Then create a VM from **Virtualization → Catalog**.
 
 Full DVD ISO upload (`virtctl image-upload`) remains supported for install media — see below — but is larger and slower than guest container disks.
 
