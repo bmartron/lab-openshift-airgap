@@ -53,3 +53,15 @@ ocp_imageset_profile: virt-lvms   # platform-only | gitops | virt-lvms
 
 ocp_agent_generate_iso: false          # true = run openshift-install on bastion
 ocp_push_iso_to_proxmox: false        # true = scp agent.x86_64.iso to Proxmox NFS
+
+# Guest container disks for Virt VM tests (remirror after enabling):
+# ocp_mirror_guest_images: true
+# ocp_guest_images:
+#   - registry.redhat.io/rhel9/rhel-guest-image:latest
+#   - registry.redhat.io/rhel10/rhel-guest-image:latest
+#   - quay.io/containerdisks/centos-stream:9
+
+# Day-2 (bastion-ocp-day2.yml) — after Ready + oc-mirror:
+# ocp_day2_osus: true
+# ocp_day2_install_lvms: false
+# ocp_day2_install_virt: false

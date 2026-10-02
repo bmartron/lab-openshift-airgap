@@ -1,0 +1,160 @@
+---
+# OSUS may already exist (UI). Exactly one OperatorGroup is required.
+
+- name: List OperatorGroups in OSUS namespace
+  ansible.builtin.command:
+    cmd: "oc get og -n {{ ocp_day2_osus_namespace }} -o name"
+  environment:
+    KUBECONFIG: "{{ ocp_kubeconfig }}"
+  register: ocp_day2_ogs
+  changed_when: false
+  failed_when: false
+
+- name: Ensure OSUS namespace
+  ansible.builtin.shell: |
+    set -euo pipefail
+    oc create ns {{ ocp_day2_osus_namespace }} --dry-run=client -o yaml | oc apply -f -
+  environment:
+    KUBECONFIG: "{{ ocp_kubeconfig }}"
+  register: ocp_day2_osus_ns_apply
+  changed_when: "'created' in ocp_day2_osus_ns_apply.stdout or 'configured' in ocp_day2_osus_ns_apply.stdout"
+
+- name: Create OperatorGroup only if none exists
+  when: (ocp_day2_ogs.stdout_lines | default([]) | length) == 0
+  ansible.builtin.shell: |
+    set -euo pipefail
+    oc apply -f - <<EOF
+    apiVersion: operators.coreos.com/v1
+    kind: OperatorGroup
+    metadata:
+      name: openshift-update-service-og
+      namespace: {{ ocp_day2_osus_namespace }}
+    spec:
+      targetNamespaces:
+      - {{ ocp_day2_osus_namespace }}
+    EOF
+  environment:
+    KUBECONFIG: "{{ ocp_kubeconfig }}"
+  register: ocp_day2_og_create
+  changed_when: "'created' in ocp_day2_og_create.stdout or 'configured' in ocp_day2_og_create.stdout"
+
+- name: Warn if multiple OperatorGroups (CSV will fail)
+  when: (ocp_day2_ogs.stdout_lines | default([]) | length) > 1
+  ansible.builtin.fail:
+    msg: >-
+      Namespace {{ ocp_day2_osus_namespace }} has multiple OperatorGroups:
+      {{ ocp_day2_ogs.stdout }}. Keep exactly one (delete the extra), then re-run.
+      Example: oc delete og openshift-update-service-og -n {{ ocp_day2_osus_namespace }}
+
+- name: Check existing Subscription for cincinnati-operator
+  ansible.builtin.command:
+    cmd: >-
+      oc get sub -n {{ ocp_day2_osus_namespace }}
+      -o jsonpath={range .items[?(@.spec.name=="cincinnati-operator")]}{.metadata.name}{"\n"}{end}
+  environment:
+    KUBECONFIG: "{{ ocp_kubeconfig }}"
+  register: ocp_day2_osus_subs
+  changed_when: false
+  failed_when: false
+
+- name: Create Subscription only if missing
+  when: (ocp_day2_osus_subs.stdout_lines | default([]) | length) == 0
+  ansible.builtin.shell: |
+    set -euo pipefail
+    oc apply -f - <<EOF
+    apiVersion: operators.coreos.com/v1alpha1
+    kind: Subscription
+    metadata:
+      name: update-service-operator
+      namespace: {{ ocp_day2_osus_namespace }}
+    spec:
+      channel: {{ ocp_osus_channel | default('v1') }}
+      name: cincinnati-operator
+      source: {{ ocp_day2_catalog_source_name }}
+      sourceNamespace: openshift-marketplace
+      installPlanApproval: Automatic
+    EOF
+  environment:
+    KUBECONFIG: "{{ ocp_kubeconfig }}"
+  register: ocp_day2_osus_sub
+  changed_when: "'created' in ocp_day2_osus_sub.stdout or 'configured' in ocp_day2_osus_sub.stdout"
+
+- name: Wait until Update Service operator is usable
+  ansible.builtin.shell: |
+    set -euo pipefail
+    # Prefer a Succeeded CSV; also OK if operator deployment is Available
+    if oc get csv -n {{ ocp_day2_osus_namespace }} --no-headers 2>/dev/null \
+         | grep -iE 'update-service-operator|cincinnati' | grep -q Succeeded; then
+      exit 0
+    fi
+    if oc get deploy -n {{ ocp_day2_osus_namespace }} updateservice-operator \
+         -o jsonpath='{.status.availableReplicas}' 2>/dev/null | grep -Eq '^[1-9]'; then
+      exit 0
+    fi
+    exit 1
+  environment:
+    KUBECONFIG: "{{ ocp_kubeconfig }}"
+  register: ocp_day2_osus_ready
+  until: ocp_day2_osus_ready.rc == 0
+  retries: 60
+  delay: 10
+  changed_when: false
+
+- name: Apply UpdateService from oc-mirror
+  ansible.builtin.command:
+    cmd: >-
+      oc apply -n {{ ocp_day2_osus_namespace }}
+      -f {{ ocp_cluster_resources_dir }}/updateService.yaml
+  environment:
+    KUBECONFIG: "{{ ocp_kubeconfig }}"
+  register: ocp_day2_us
+  changed_when: "'created' in ocp_day2_us.stdout or 'configured' in ocp_day2_us.stdout"
+
+- name: Trust ingress CA for CVO → OSUS route (proxy trustedCA)
+  ansible.builtin.shell: |
+    set -euo pipefail
+    oc -n openshift-ingress-operator get secret router-ca \
+      -o jsonpath='{.data.tls\.crt}' | base64 -d > /tmp/ingress-ca-day2.crt
+    oc create configmap trusted-ca -n openshift-config \
+      --from-file=ca-bundle.crt=/tmp/ingress-ca-day2.crt \
+      --dry-run=client -o yaml | oc apply -f -
+    oc patch proxy/cluster --type=merge \
+      -p '{"spec":{"trustedCA":{"name":"trusted-ca"}}}'
+  environment:
+    KUBECONFIG: "{{ ocp_kubeconfig }}"
+  register: ocp_day2_proxy
+  changed_when: >-
+    'patched' in ocp_day2_proxy.stdout
+    or 'configured' in ocp_day2_proxy.stdout
+    or 'created' in ocp_day2_proxy.stdout
+
+- name: Wait for UpdateService RegistryCACertFound=True
+  ansible.builtin.shell: |
+    set -euo pipefail
+    oc get updateservice update-service-oc-mirror -n {{ ocp_day2_osus_namespace }} \
+      -o jsonpath='{range .status.conditions[*]}{.type}={.status}{"\n"}{end}' \
+      | grep -qx 'RegistryCACertFound=True'
+  environment:
+    KUBECONFIG: "{{ ocp_kubeconfig }}"
+  register: ocp_day2_us_ready
+  until: ocp_day2_us_ready.rc == 0
+  retries: 36
+  delay: 10
+  changed_when: false
+  failed_when: false
+
+- name: Point ClusterVersion upstream at local OSUS graph
+  ansible.builtin.command:
+    cmd: >-
+      oc patch clusterversion version --type merge
+      -p '{"spec":{"upstream":"{{ ocp_day2_osus_upstream }}"}}'
+  environment:
+    KUBECONFIG: "{{ ocp_kubeconfig }}"
+  register: ocp_day2_cv
+  changed_when: "'patched' in (ocp_day2_cv.stdout | default(''))"
+
+- name: Hint — wait for Recommended updates
+  ansible.builtin.debug:
+    msg: >-
+      ClusterVersion upstream set. Wait 2–3 min then: oc adm upgrade
+      (expect Recommended 4.22.12). Upgrade is NOT started by this playbook.

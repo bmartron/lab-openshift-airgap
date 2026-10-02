@@ -1,0 +1,135 @@
+---
+- name: Assert kubeconfig and cluster-resources exist
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop:
+    - "{{ ocp_kubeconfig }}"
+    - "{{ ocp_cluster_resources_dir }}"
+  register: ocp_day2_paths
+
+- name: Fail if day-2 prerequisites missing
+  ansible.builtin.assert:
+    that:
+      - ocp_day2_paths.results[0].stat.exists
+      - ocp_day2_paths.results[1].stat.exists
+    fail_msg: >-
+      Need {{ ocp_kubeconfig }} and {{ ocp_cluster_resources_dir }}
+      (cluster Ready + oc-mirror done). See openshift/4.22-ga/README.md § Day-2.
+
+- name: Disable default OperatorHub sources
+  ansible.builtin.command:
+    cmd: >-
+      oc patch OperatorHub cluster --type json
+      -p '[{"op":"add","path":"/spec/disableAllDefaultSources","value":true}]'
+  environment:
+    KUBECONFIG: "{{ ocp_kubeconfig }}"
+  when: ocp_day2_disable_default_sources | bool
+  tags: [day2, marketplace]
+  register: ocp_day2_oh_patch
+  changed_when: "'patched' in (ocp_day2_oh_patch.stdout | default(''))"
+
+- name: Apply IDMS / ITMS from oc-mirror
+  ansible.builtin.command:
+    cmd: "oc apply -f {{ ocp_cluster_resources_dir }}/{{ item }}"
+  environment:
+    KUBECONFIG: "{{ ocp_kubeconfig }}"
+  loop:
+    - idms-oc-mirror.yaml
+    - itms-oc-mirror.yaml
+  when: ocp_day2_apply_mirrors | bool
+  tags: [day2, mirrors]
+  register: ocp_day2_mirrors
+  changed_when: >-
+    'created' in (ocp_day2_mirrors.stdout | default(''))
+    or 'configured' in (ocp_day2_mirrors.stdout | default(''))
+
+- name: Apply CatalogSource / CatalogSourceConfig / signatures
+  ansible.builtin.command:
+    cmd: "oc apply -f {{ ocp_cluster_resources_dir }}/{{ item }}"
+  environment:
+    KUBECONFIG: "{{ ocp_kubeconfig }}"
+  loop:
+    - cs-redhat-operator-index-v4-22.yaml
+    - cc-redhat-operator-index-v4-22.yaml
+    - signature-configmap.yaml
+  when: ocp_day2_apply_catalog | bool
+  tags: [day2, catalog]
+  register: ocp_day2_catalog
+  changed_when: >-
+    'created' in (ocp_day2_catalog.stdout | default(''))
+    or 'configured' in (ocp_day2_catalog.stdout | default(''))
+
+- name: Refresh marketplace catalog pod
+  ansible.builtin.command:
+    cmd: >-
+      oc delete pod -n openshift-marketplace
+      -l olm.catalogSource={{ ocp_day2_catalog_source_name }}
+      --ignore-not-found=true --wait=false
+  environment:
+    KUBECONFIG: "{{ ocp_kubeconfig }}"
+  when: ocp_day2_apply_catalog | bool
+  tags: [day2, catalog]
+  changed_when: true
+
+- name: Trust registry CA for image pulls + OSUS (updateservice-registry key)
+  when: ocp_day2_registry_ca | bool
+  tags: [day2, registry_ca]
+  block:
+    - name: Assert registry CA file on bastion
+      ansible.builtin.stat:
+        path: "{{ ocp_registry_ca_path }}"
+      register: ocp_day2_ca_stat
+
+    - name: Fail if ca.crt missing
+      ansible.builtin.assert:
+        that:
+          - ocp_day2_ca_stat.stat.exists
+        fail_msg: "Missing {{ ocp_registry_ca_path }}"
+
+    - name: Create/update openshift-config/registry-config ConfigMap
+      ansible.builtin.shell: |
+        set -euo pipefail
+        oc create configmap registry-config -n openshift-config \
+          --from-file=registry.lab.local..5000={{ ocp_registry_ca_path | quote }} \
+          --from-file=updateservice-registry={{ ocp_registry_ca_path | quote }} \
+          --dry-run=client -o yaml | oc apply -f -
+      environment:
+        KUBECONFIG: "{{ ocp_kubeconfig }}"
+      register: ocp_day2_reg_cm
+      changed_when: "'created' in ocp_day2_reg_cm.stdout or 'configured' in ocp_day2_reg_cm.stdout"
+
+    - name: Patch image.config additionalTrustedCA
+      ansible.builtin.command:
+        cmd: >-
+          oc patch image.config.openshift.io/cluster --type=merge
+          -p '{"spec":{"additionalTrustedCA":{"name":"registry-config"}}}'
+      environment:
+        KUBECONFIG: "{{ ocp_kubeconfig }}"
+      register: ocp_day2_img_patch
+      changed_when: "'patched' in (ocp_day2_img_patch.stdout | default(''))"
+
+- name: OSUS — operator, UpdateService, ingress trust, ClusterVersion upstream
+  when: ocp_day2_osus | bool
+  tags: [day2, osus]
+  ansible.builtin.include_tasks:
+    file: osus.yml
+    apply:
+      tags: [day2, osus]
+
+- name: Optional LVMS Subscription
+  when: ocp_day2_install_lvms | bool
+  tags: [day2, lvms]
+  ansible.builtin.include_tasks:
+    file: lvms.yml
+    apply:
+      tags: [day2, lvms]
+
+- name: Day-2 summary
+  ansible.builtin.debug:
+    msg:
+      - "Day-2 applied (see tags: marketplace, mirrors, catalog, registry_ca, osus, lvms)."
+      - "Check: oc get catalogsource -n openshift-marketplace"
+      - "Check: oc get updateservice -n {{ ocp_day2_osus_namespace }}"
+      - "Check: oc adm upgrade"
+      - "Virt/LVMS UI or -e ocp_day2_install_lvms=true — openshift/4.22-ga/README.md § Day-2"
+  tags: [day2]

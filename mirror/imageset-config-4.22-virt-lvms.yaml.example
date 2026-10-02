@@ -1,6 +1,7 @@
 # Platform + Virtualization + LVMS + update graph (OSUS).
 # Platform: min≠max + shortestPath:true → upgrade path only.
 # Operators: one package entry with channel min/max (duplicate packages rejected by oc-mirror).
+# additionalImages: RHEL/CentOS guest container disks for Virt VM tests (~few GiB each; not DVD ISOs).
 apiVersion: mirror.openshift.io/v1alpha2
 kind: ImageSetConfiguration
 mirror:
@@ -29,3 +30,7 @@ mirror:
         - name: cincinnati-operator
           channels:
             - name: v1
+  additionalImages:
+    - name: registry.redhat.io/rhel9/rhel-guest-image:latest
+    - name: registry.redhat.io/rhel10/rhel-guest-image:latest
+    - name: quay.io/containerdisks/centos-stream:9

@@ -43,3 +43,11 @@ mirror:
             - name: {{ ocp_osus_channel }}
 {% endif %}
 {% endif %}
+{% if (ocp_mirror_guest_images | default(false) | bool) and (ocp_guest_images | default([]) | length > 0) %}
+  # Bootable guest container disks for OpenShift Virtualization VM tests
+  # (qcow2 in registry — a few GiB each; NOT full DVD ISOs)
+  additionalImages:
+{% for img in ocp_guest_images %}
+    - name: {{ img }}
+{% endfor %}
+{% endif %}

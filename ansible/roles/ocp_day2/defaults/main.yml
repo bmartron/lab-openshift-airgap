@@ -1,0 +1,31 @@
+---
+# Day-2 air-gap: OperatorHub, mirrors, catalog, registry CA, optional OSUS.
+# Run on bastion after cluster Ready + oc-mirror workspace exists.
+# Docs: openshift/4.22-ga/README.md § Day-2
+
+ocp_install_dir: "{{ bastion_lab_dir | default('/home/bernard/lab') }}/4.22-ga"
+ocp_kubeconfig: "{{ ocp_install_dir }}/auth/kubeconfig"
+ocp_cluster_resources_dir: "{{ ocp_install_dir }}/workspace/working-dir/cluster-resources"
+ocp_registry_ca_path: "{{ bastion_lab_dir | default('/home/bernard/lab') }}/ca.crt"
+
+ocp_day2_catalog_source_name: cs-redhat-operator-index-v4-22
+
+# Steps (toggle or use --tags)
+ocp_day2_disable_default_sources: true
+ocp_day2_apply_mirrors: true
+ocp_day2_apply_catalog: true
+ocp_day2_registry_ca: true
+ocp_day2_osus: true
+# Operator installs left false — often done in UI; enable for full CLI path
+ocp_day2_install_lvms: false
+ocp_day2_install_virt: false
+
+ocp_day2_osus_namespace: openshift-update-service
+ocp_day2_lvms_namespace: openshift-storage
+ocp_day2_lvms_channel: "{{ ocp_lvms_channel | default('stable-4.22') }}"
+ocp_day2_lvms_starting_csv: "lvms-operator.v{{ ocp_lvms_operator_min_version | default('4.22.0') }}"
+ocp_day2_virt_namespace: openshift-cnv
+
+# ClusterVersion upstream path after UpdateService is Ready
+ocp_day2_osus_upstream: >-
+  https://update-service-oc-mirror-route-openshift-update-service.apps.{{ ocp_cluster_name | default('ocp422') }}.{{ ocp_base_domain | default('lab.local') }}/api/upgrades_info/v1/graph

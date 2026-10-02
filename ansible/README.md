@@ -77,7 +77,8 @@ ansible-playbook playbooks/lab-infra.yml
 ansible-playbook playbooks/bastion-ocp-install.yml
 ```
 
-Then on the **bastion**: `oc-mirror` — [mirror/README.md](../mirror/README.md).
+Then on the **bastion**: `oc-mirror` — [mirror/README.md](../mirror/README.md).  
+After the cluster is Ready: day-2 catalog / OSUS — `ansible-playbook playbooks/bastion-ocp-day2.yml` ([openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) § Day-2).
 
 `lab-infra.yml` order: **dns → registry → bastion** (includes DVD repo, NTP, registry disk/TLS/image/container, bastion packages/CA/clients).
 
@@ -115,6 +116,7 @@ Ansible template: [roles/rhel_dvd/templates/rhel-dvd.repo.j2](roles/rhel_dvd/tem
 | `playbooks/registry.yml` | Registry host only (same `registry` role; use if you do not want dns/bastion) |
 | `playbooks/registry-data-disk.yml` | Data disk `/opt/registry` only |
 | `playbooks/bastion-ocp-install.yml` | `lab-ssh` + install-config, agent-config, imageset, CA, pull-secret |
+| `playbooks/bastion-ocp-day2.yml` | After Ready + mirror: OperatorHub disable, IDMS/ITMS, CatalogSource, registry CA, OSUS upstream |
 | `playbooks/bastion-scripts.yml` | Bastion: copy `~/lab/scripts/*.sh` only (**no** sudo / dnf) |
 
 ### SSH keys (redeploy often)

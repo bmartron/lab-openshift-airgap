@@ -83,6 +83,14 @@ ocp_mirror_update_graph: true
 ocp_mirror_update_service: true
 ocp_osus_channel: v1
 
+# Guest OS container disks for Virt VM tests (additionalImages). Off by default —
+# enable when you remirror for VM labs. Prefer these over DVD ISOs (~few GiB each).
+ocp_mirror_guest_images: false
+ocp_guest_images:
+  - registry.redhat.io/rhel9/rhel-guest-image:latest
+  - registry.redhat.io/rhel10/rhel-guest-image:latest
+  - quay.io/containerdisks/centos-stream:9
+
 ocp_deploy_lab_scripts: true
 ocp_configure_registry_trust: true
 ocp_agent_generate_iso: false

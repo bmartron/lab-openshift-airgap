@@ -1,0 +1,40 @@
+---
+- name: Ensure LVMS namespace
+  ansible.builtin.shell: |
+    set -euo pipefail
+    oc create ns {{ ocp_day2_lvms_namespace }} --dry-run=client -o yaml | oc apply -f -
+  environment:
+    KUBECONFIG: "{{ ocp_kubeconfig }}"
+  register: ocp_day2_lvms_ns
+  changed_when: "'created' in ocp_day2_lvms_ns.stdout or 'configured' in ocp_day2_lvms_ns.stdout"
+
+- name: Apply LVMS OperatorGroup + Subscription
+  ansible.builtin.shell: |
+    set -euo pipefail
+    oc apply -f - <<EOF
+    apiVersion: operators.coreos.com/v1
+    kind: OperatorGroup
+    metadata:
+      name: openshift-storage-og
+      namespace: {{ ocp_day2_lvms_namespace }}
+    spec:
+      targetNamespaces:
+      - {{ ocp_day2_lvms_namespace }}
+    ---
+    apiVersion: operators.coreos.com/v1alpha1
+    kind: Subscription
+    metadata:
+      name: lvms-operator
+      namespace: {{ ocp_day2_lvms_namespace }}
+    spec:
+      channel: {{ ocp_day2_lvms_channel }}
+      name: lvms-operator
+      source: {{ ocp_day2_catalog_source_name }}
+      sourceNamespace: openshift-marketplace
+      installPlanApproval: Automatic
+      startingCSV: {{ ocp_day2_lvms_starting_csv }}
+    EOF
+  environment:
+    KUBECONFIG: "{{ ocp_kubeconfig }}"
+  register: ocp_day2_lvms_sub
+  changed_when: "'created' in ocp_day2_lvms_sub.stdout or 'configured' in ocp_day2_lvms_sub.stdout"

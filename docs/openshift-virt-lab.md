@@ -6,12 +6,13 @@ Lab notes: operators, local storage, guest ISO import.
 
 | Component | Detail |
 |-----------|--------|
+| Day-2 catalog | Follow [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) § Day-2 (disable OperatorHub defaults → IDMS/ITMS → CatalogSource) |
 | Mirror | **virt-lvms** profile — [mirror/imageset-config-4.22-virt-lvms.yaml.example](../mirror/imageset-config-4.22-virt-lvms.yaml.example) |
-| Cluster | `oc apply` **IDMS/ITMS** from `workspace-*/working-dir/cluster-resources/` |
-| OLM catalog | After mirror: `oc delete pod -n openshift-marketplace -l olm.catalogSource=cs-redhat-operator-index-v4-22` then `oc get packagemanifest \| grep lvms` |
-| LVMS | 2nd VirtIO disk on SNO VM (Proxmox) — `vda` = OCP, **`vdb`** = LVMS |
-| Nested virt | CPU **host** on SNO VM — [proxmox/network.md](../proxmox/network.md) |
-| `oc` | `KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig-admin` — [proxmox/access.md](../proxmox/access.md) |
+| Cluster | `oc apply` **IDMS/ITMS** from `~/lab/4.22-ga/workspace/working-dir/cluster-resources/` |
+| OLM catalog | After CS apply: `oc delete pod -n openshift-marketplace -l olm.catalogSource=cs-redhat-operator-index-v4-22` then `oc get packagemanifest \| grep lvms` |
+| LVMS | 2nd VirtIO disk on SNO/compact3 VMs (Proxmox) — `vda` = OCP, **`vdb`** = LVMS |
+| Nested virt | CPU **host** on OCP VMs — [proxmox/network.md](../proxmox/network.md) |
+| `oc` | `KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig` — [proxmox/access.md](../proxmox/access.md) |
 
 ## LVMS
 
@@ -47,7 +48,19 @@ With `WaitForFirstConsumer`, bind a consumer pod to see **Bound**.
 
 If there is no **`packagemanifest`** for the package: mirror catalog not reloaded (see catalog pod delete above).
 
-## Guest ISO import (RHEL, etc.)
+## Guest OS from mirrored container disks (preferred in air-gap)
+
+After enabling `ocp_mirror_guest_images: true` and remirroring, create a VM from a guest image (console **Virtualization → Catalog**, or CLI). Example containerDisk sources on the lab registry (paths follow oc-mirror v2 layout under `ocp4-422/` — confirm with `curl …/v2/_catalog`):
+
+| Guest | Typical source after mirror |
+|-------|-------------------------------|
+| RHEL 9 | `registry.lab.local:5000/ocp4-422/rhel9/rhel-guest-image:latest` (or digest) |
+| RHEL 10 | `registry.lab.local:5000/ocp4-422/rhel10/rhel-guest-image:latest` |
+| CentOS Stream 9 | `registry.lab.local:5000/ocp4-422/containerdisks/centos-stream:9` |
+
+Full DVD ISO upload (`virtctl image-upload`) remains supported for install media — see below — but is larger and slower than guest container disks.
+
+## Guest ISO import (RHEL DVD, etc.)
 
 Goal: bootable PVC on **`lvms-vg1`**, not a “repo” on the bastion.
 
@@ -62,13 +75,13 @@ scp /path/to/file.iso bernard@192.168.1.144:~/lab/isos/
 CDI pods (`virt-cdi-uploadserver`, `virt-cdi-importer`) reference **`registry.redhat.io/...`**. Images live on **`registry.lab.local:5000/ocp4-422/container-native-virtualization/...`** after a Virt mirror — without cluster mirrors → **ImagePullBackOff** / upload timeout.
 
 ```bash
-export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig-admin
-# Operator (CNV) mirror — do not limit yourself to the LVMS-only workspace
+export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig
+# Operator (CNV) mirror — do not limit yourself to an LVMS-only workspace
 oc patch imagedigestmirrorset idms-operator-0 --type=json -p='[
   {"op":"add","path":"/spec/imageDigestMirrors/-","value":{"source":"registry.redhat.io/container-native-virtualization","mirrors":["registry.lab.local:5000/ocp4-422/container-native-virtualization"]}}
 ]' 2>/dev/null || true
-oc apply -f ~/lab/4.22-ga/workspace-operators/working-dir/cluster-resources/idms-oc-mirror.yaml
-# Keep lvms4 if needed: merge idms-operator-0 entries; do not re-apply the LVMS-only file afterwards (it overwrites CNV).
+oc apply -f ~/lab/4.22-ga/workspace/working-dir/cluster-resources/idms-oc-mirror.yaml
+# Keep lvms4 if needed: merge idms-operator-0 entries; do not re-apply an LVMS-only IDMS afterwards (it overwrites CNV).
 ```
 
 ### `virtctl` (bastion)

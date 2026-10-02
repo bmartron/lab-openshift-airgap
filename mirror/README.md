@@ -25,7 +25,21 @@ Default in role defaults: **`virt-lvms`**.
 |------------------------|-----------------|----------|
 | `platform-only` | [imageset-config-4.22-platform-only.yaml.example](imageset-config-4.22-platform-only.yaml.example) | OCP platform only (smallest / fastest) |
 | `gitops` | [imageset-config-4.22.yaml.example](imageset-config-4.22.yaml.example) | Platform + OpenShift GitOps |
-| `virt-lvms` | [imageset-config-4.22-virt-lvms.yaml.example](imageset-config-4.22-virt-lvms.yaml.example) | Platform + Virt + LVMS + update **graph** / OSUS (**lab default**) |
+| `virt-lvms` | [imageset-config-4.22-virt-lvms.yaml.example](imageset-config-4.22-virt-lvms.yaml.example) | Platform + Virt + LVMS + update **graph** / OSUS (**lab default**); example also lists optional guest disks |
+
+### Guest OS images (Virt VM tests)
+
+Do **not** mirror full DVD ISOs with oc-mirror. Use **guest container disks** (`additionalImages`) — typically a few GiB each:
+
+| Image | Role |
+|-------|------|
+| `registry.redhat.io/rhel9/rhel-guest-image:latest` | RHEL 9 cloud/guest |
+| `registry.redhat.io/rhel10/rhel-guest-image:latest` | RHEL 10 cloud/guest |
+| `quay.io/containerdisks/centos-stream:9` | CentOS Stream 9 |
+
+Ansible (`ocp_mirror_guest_images: true` in `all.yml`) appends `ocp_guest_images` to the generated imageset. Quay public images may not need RH auth; RHEL guest images need the pull-secret.
+
+Plan registry free space: existing Virt/LVMS/OSUS plus roughly **~5–15 GiB** for these three (varies by tag).
 
 ### Two platform versions (upgrade)
 
@@ -68,11 +82,12 @@ Disk on registry (`/opt/registry`): plan **≥ 120 GiB**; ~22 GiB observed for G
 ~/lab/scripts/verify-mirror-before-sno.sh ~/lab/4.22-ga
 ```
 
-**Next:** boot the SNO (agent ISO should already be on Proxmox from `bastion-ocp-install.yml`) — [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) § Boot SNO.
+**Next:** boot the cluster (agent ISO should already be on Proxmox from `bastion-ocp-install.yml`) — [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md).
 
 If the ISO was not generated yet, use that guide § Agent ISO (Ansible flags or hand commands), then boot.
 
-Day-2 Virt/LVMS: [docs/openshift-virt-lab.md](../docs/openshift-virt-lab.md).
+Day-2 (disable default catalogs → IDMS/ITMS → CatalogSource → Virt/LVMS): [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) § Day-2.  
+Virt/LVMS details: [docs/openshift-virt-lab.md](../docs/openshift-virt-lab.md).
 
 ## See also
 
