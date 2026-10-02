@@ -233,12 +233,35 @@
     msg: >-
       Configs déployées dans {{ ocp_config_backup_dir }}.
       Générer l'ISO sur la bastion :
-      cd {{ ocp_install_dir }} && rm -f .openshift_install_state.json agent.x86_64.iso &&
+      cd {{ ocp_install_dir }} && rm -rf .openshift_install_state.json agent.x86_64.iso cluster-manifests auth &&
+      cp config-backup/*.yaml . &&
       openshift-install agent create cluster-manifests --dir . &&
       openshift-install agent create image --dir . &&
       cp config-backup/*.yaml .
       (ou ocp_agent_generate_iso: true)
   when: not (ocp_agent_generate_iso | bool)
+
+# Clean BEFORE manifests — stale ClusterImageSet / auth/kubeconfig from a prior
+# cluster break create image and leave oc pointing at the old CA after reinstall.
+- name: Clean previous installer state before ISO
+  ansible.builtin.file:
+    path: "{{ ocp_install_dir }}/{{ item }}"
+    state: absent
+  loop: "{{ ocp_iso_clean_paths }}"
+  when: ocp_agent_generate_iso | bool
+
+- name: Restaurer configs avant create manifests
+  ansible.builtin.copy:
+    src: "{{ ocp_config_backup_dir }}/{{ item }}"
+    dest: "{{ ocp_install_dir }}/{{ item }}"
+    remote_src: true
+    owner: "{{ lab_user }}"
+    group: "{{ lab_user }}"
+    mode: "0600"
+  loop:
+    - install-config.yaml
+    - agent-config.yaml
+  when: ocp_agent_generate_iso | bool
 
 - name: openshift-install agent create cluster-manifests
   become: true
@@ -249,15 +272,6 @@
   when: ocp_agent_generate_iso | bool
   register: ocp_manifests
   changed_when: ocp_manifests.rc == 0
-
-- name: Supprimer état ISO précédent
-  ansible.builtin.file:
-    path: "{{ ocp_install_dir }}/{{ item }}"
-    state: absent
-  loop:
-    - .openshift_install_state.json
-    - agent.x86_64.iso
-  when: ocp_agent_generate_iso | bool
 
 - name: openshift-install agent create image
   become: true

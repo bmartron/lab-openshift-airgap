@@ -88,6 +88,7 @@ That builds `agent.x86_64.iso` on the bastion and copies it to Proxmox `nfs_iso`
 | Variable | Default | When to change |
 |----------|---------|----------------|
 | `ocp_agent_generate_iso` | `false` | Set `true` for first ISO (or after config/CA/key change) |
+| `ocp_iso_clean_paths` | state, ISO, `cluster-manifests`, `auth` | Wiped before ISO gen (avoids stale kubeconfig CA) |
 | `ocp_push_iso_to_proxmox` | `false` | Set `true` with generate, to scp to NFS |
 | `ocp_proxmox_host` / `ocp_proxmox_iso_dir` | lab NUC defaults | Only if Proxmox/NFS paths differ |
 | `ocp_cluster_name` / `ocp_base_domain` | `ocp422` / `lab.local` | Rarely |

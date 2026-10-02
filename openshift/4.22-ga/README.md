@@ -44,12 +44,12 @@ Details: [docs/ansible-ocp-install.md](../../docs/ansible-ocp-install.md).
 
 ### Fallback — ISO by hand on bastion
 
-Only if the flags above were `false`. `create image` **deletes** work-dir YAML — restore from `config-backup/`:
+Only if the flags above were `false`. `create image` **deletes** work-dir YAML — restore from `config-backup/`. On reinstall, also remove stale `auth/` (old kubeconfig CA):
 
 ```bash
 cd ~/lab/4.22-ga
 cp config-backup/install-config.yaml config-backup/agent-config.yaml .
-rm -f .openshift_install_state.json agent.x86_64.iso
+rm -rf .openshift_install_state.json agent.x86_64.iso cluster-manifests auth
 
 openshift-install agent create cluster-manifests --dir .
 openshift-install agent create image --dir . --log-level info
@@ -194,6 +194,7 @@ oc get packagemanifest -n openshift-marketplace | grep -iE 'lvms|kubevirt|hyperc
 ocp_platform_version: "4.22.0"       # install / clients
 ocp_platform_min_version: "4.22.0"
 ocp_platform_max_version: "4.22.12"
+ocp_mirror_shortest_path: true       # required — else every z-stream in the range
 ```
 
 Then remirror and:

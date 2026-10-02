@@ -29,19 +29,19 @@ Default in role defaults: **`virt-lvms`**.
 
 ### Two platform versions (upgrade)
 
-One OpenShift install dir (`~/lab/4.22-ga`). The **imageset** can span z-streams so the registry holds both releases + Cincinnati graph:
+One OpenShift install dir (`~/lab/4.22-ga`). Span min→max **with** `shortestPath: true` so oc-mirror pulls the upgrade path (endpoints), not every z-stream in between:
 
 ```yaml
 # ansible/inventory/group_vars/all.yml
 ocp_platform_version: "4.22.0"          # installer / clients (install at this version)
-ocp_platform_min_version: "4.22.0"      # oc-mirror channel span
+ocp_platform_min_version: "4.22.0"
 ocp_platform_max_version: "4.22.12"
-# optional operator ranges for day-2 upgrades:
-# ocp_virt_operator_min_version: "4.22.0"
-# ocp_virt_operator_max_version: "4.22.9"
+ocp_mirror_shortest_path: true          # REQUIRED when min≠max
 ```
 
-Defaults keep `min == max == ocp_platform_version` (single release). Example file already shows a `4.22.0`→`4.22.12` span.
+Without `shortestPath`, a wide span can pull thousands of images.
+
+Operators have **no** `shortestPath`. Use **one** package entry with channel `minVersion`/`maxVersion` (oc-mirror rejects duplicate package names). Intermediate operator bundles between min and max are included — usually far fewer than platform z-streams.
 
 Verify on bastion before mirroring: `head -40 ~/lab/4.22-ga/imageset-config.yaml`
 

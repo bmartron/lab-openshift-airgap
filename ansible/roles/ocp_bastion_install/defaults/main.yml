@@ -8,9 +8,11 @@ ocp_base_domain: lab.local
 ocp_platform_channel: stable-4.22
 # Installer / clients pin (what the cluster is installed at)
 ocp_platform_version: "4.22.12"
-# Imageset platform channel span (upgrade lab: min < max so oc-mirror pulls both)
+# Imageset platform channel span (upgrade lab: min < max). Use shortestPath
+# so oc-mirror pulls the upgrade path endpoints, not every z-stream in between.
 ocp_platform_min_version: "{{ ocp_platform_version }}"
 ocp_platform_max_version: "{{ ocp_platform_version }}"
+ocp_mirror_shortest_path: true
 
 ocp_mirror_namespace: ocp4-422
 ocp_registry_fqdn: "{{ registry_hostname }}"
@@ -84,6 +86,14 @@ ocp_osus_channel: v1
 ocp_deploy_lab_scripts: true
 ocp_configure_registry_trust: true
 ocp_agent_generate_iso: false
+
+# Removed under ocp_install_dir when ocp_agent_generate_iso=true (before create image).
+# auth/ must go on reinstall — stale kubeconfig CA → x509 unknown authority on oc.
+ocp_iso_clean_paths:
+  - .openshift_install_state.json
+  - agent.x86_64.iso
+  - cluster-manifests
+  - auth
 
 # bastion → Proxmox NFS (scp as lab_user; SSH key root@pve on bastion)
 ocp_push_iso_to_proxmox: false
