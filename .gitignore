@@ -45,10 +45,11 @@ ansible/files/install_ssh_key.pub
 ansible/files/registry-certs/*.crt
 ansible/files/registry-certs/*.key
 
-# OS / éditeur
+# OS / editor
 .DS_Store
 .idea/
 .vscode/
+.cursor/
 *.swp
 *~
 
