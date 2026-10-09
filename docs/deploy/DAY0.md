@@ -27,7 +27,7 @@ Next: [DAY1.md](DAY1.md) (Deployment) · Tips: [../faq/README.md](../faq/README.
 ### 1. Proxmox network and storage
 
 - [ ] Bridge **`vmbr1`** — [../../proxmox/network.md](../../proxmox/network.md)
-- [ ] NFS: `nfs_vm`, `nfs_iso` + `local-lvm` — [../../terraform/README.md](../../terraform/README.md)
+- [ ] Storage: `nfs_vm` + `nfs_iso` (NAS) for light infra/ISOs; **`local-lvm`** for registry + OCP (NFS is too slow for etcd/registry — [../architecture/architecture.md](../architecture/architecture.md)#why-ocp--registry-are-not-on-the-nas-nfs) · [../../terraform/README.md](../../terraform/README.md)
 - [ ] Snippets enabled on `local`
 
 ```bash
