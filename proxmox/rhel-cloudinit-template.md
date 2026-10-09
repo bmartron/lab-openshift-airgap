@@ -91,4 +91,4 @@ Rule: **cloud-init on the same datastore as the OS**.
 
 - Do **not** convert the registry VM to a template (it has data on `virtio1`).
 - After clone, cloud-init applies `ipconfig0` / `ipconfig1`.
-- Next: Ansible — [docs/iac.md](../docs/iac.md) · [ansible/README.md](../ansible/README.md).
+- Next: Ansible — [docs/deploy/iac.md](../docs/deploy/iac.md) · [ansible/README.md](../ansible/README.md).

@@ -14,4 +14,4 @@ Root `install-config.yaml.example` / `agent-config.yaml.example` are thin copies
 | Mirror pull fail | Mirror finished? CA + `imageContentSources` in install-config |
 | Permission denied `core@` | Bastion live key in ISO — [proxmox/access.md](../proxmox/access.md) § OpenShift node SSH |
 
-Full rebuild: [docs/iac.md](../docs/iac.md).
+Full rebuild: [docs/deploy/iac.md](../docs/deploy/iac.md).

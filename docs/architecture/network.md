@@ -21,17 +21,18 @@
 | `bastion.lab.local` | `172.16.10.10` | Bastion lab NIC |
 | `dns.lab.local` | `172.16.10.11` | dnsmasq + NTP |
 | `registry.lab.local` | `172.16.10.20` | Mirror registry |
-| `ocp-sno-422.lab.local` | `172.16.10.100` | OpenShift 4.22 GA SNO |
+| `ocp-master-0` … `-2` | `172.16.10.100`–`.102` | compact3 masters (or SNO on `.100`) |
 
-### DNS records — OpenShift 4.22 GA
+### DNS records — OpenShift 4.22 GA (compact3)
 
 | FQDN | IP | Notes |
 |------|-----|-------|
-| `api.ocp422.lab.local` | `172.16.10.100` | Kubernetes API |
-| `api-int.ocp422.lab.local` | `172.16.10.100` | Internal API |
-| `*.apps.ocp422.lab.local` | `172.16.10.100` | Ingress wildcard |
+| `api.ocp422.lab.local` | `172.16.10.50` | API VIP |
+| `api-int.ocp422.lab.local` | `172.16.10.50` | Internal API VIP |
+| `*.apps.ocp422.lab.local` | `172.16.10.49` | Ingress VIP |
+| Host A/PTR | `.100`–`.102` | Node hostnames |
 
-Deployed by Ansible role `dns` — [dns/dnsmasq.conf.example](../dns/dnsmasq.conf.example).
+SNO uses `.100` for API/ingress (no VIPs). Deployed by Ansible role `dns` — [../../dns/dnsmasq.conf.example](../../dns/dnsmasq.conf.example).
 
 ## Connectivity matrix
 
@@ -39,8 +40,8 @@ Deployed by Ansible role `dns` — [dns/dnsmasq.conf.example](../dns/dnsmasq.con
 |----|------------------|-------|----------|
 | bastion | Yes (`eth0`) | Yes (`eth1`) | entire lab |
 | dns | No | Yes | all lab resolvers |
-| registry | No | Yes | bastion + OCP node |
-| OCP SNO | No | Yes | dns + registry |
+| registry | No | Yes | bastion + OCP nodes |
+| OCP masters | No | Yes | dns + registry |
 
 ## Strict air-gap simulation
 

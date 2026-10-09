@@ -98,4 +98,4 @@ VMs: [terraform/lab-ocp/vm-nodes.tf](../terraform/lab-ocp/vm-nodes.tf).
 
 - Network bridge: [network.md](network.md)
 - RHEL templates: [rhel-cloudinit-template.md](rhel-cloudinit-template.md)
-- Rebuild path: [docs/iac.md](../docs/iac.md)
+- Rebuild path: [docs/deploy/iac.md](../docs/deploy/iac.md)

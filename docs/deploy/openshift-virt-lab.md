@@ -1,24 +1,48 @@
-# OpenShift Virtualization + LVMS — air-gap lab (SNO)
+# OpenShift Virtualization + LVMS — air-gap lab (compact3 / SNO)
 
-Lab notes: operators, local storage, guest ISO import.
+**Checklist path:** [DAY2.md](DAY2.md) · tips: [../faq/README.md](../faq/README.md)
+
+Lab notes (operators, guest boots, ISO upload) — use Day-2 for the ordered steps.
 
 ## Prerequisites
 
 | Component | Detail |
 |-----------|--------|
-| Day-2 catalog | Follow [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) § Day-2 (disable OperatorHub defaults → IDMS/ITMS → CatalogSource) |
-| Mirror | **virt-lvms** profile — [mirror/imageset-config-4.22-virt-lvms.yaml.example](../mirror/imageset-config-4.22-virt-lvms.yaml.example) |
+| Day-2 catalog | Follow [openshift/4.22-ga/README.md](../../openshift/4.22-ga/README.md) § Day-2 (disable OperatorHub defaults → IDMS/ITMS → CatalogSource) |
+| Mirror | **virt-lvms** profile — [mirror/imageset-config-4.22-virt-lvms.yaml.example](../../mirror/imageset-config-4.22-virt-lvms.yaml.example) |
 | Cluster | `oc apply` **IDMS/ITMS** from `~/lab/4.22-ga/workspace/working-dir/cluster-resources/` |
 | OLM catalog | After CS apply: `oc delete pod -n openshift-marketplace -l olm.catalogSource=cs-redhat-operator-index-v4-22` then `oc get packagemanifest \| grep lvms` |
-| LVMS | 2nd VirtIO disk on SNO/compact3 VMs (Proxmox) — `vda` = OCP, **`vdb`** = LVMS |
-| Nested virt | CPU **host** on OCP VMs — [proxmox/network.md](../proxmox/network.md) |
-| `oc` | `KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig` — [proxmox/access.md](../proxmox/access.md) |
+| OCP disks | Terraform `lvms_disk_gb = 100` at VM create — virtio0 = OS, **virtio1 → `/dev/vdb`** LVMS ([terraform/lab-ocp](../../terraform/lab-ocp/)) |
+| Agent root disk | `rootDeviceHints` `/dev/disk/by-path/pci-0000:06:0a.0` → `vda` (not `vdb`) |
+| Nested virt | CPU **host** on OCP VMs — [proxmox/network.md](../../proxmox/network.md) |
+| `oc` | `KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig` — [proxmox/access.md](../../proxmox/access.md) |
+
+### Disk layout (lab-verified)
+
+On agent live or after install (`core@` from bastion):
+
+```bash
+lsblk -d -o NAME,SIZE
+ls -l /dev/disk/by-path/
+# pci-0000:06:0a.0 → ../../vda  (120G install)
+# pci-0000:06:0b.0 → ../../vdb  (100G LVMS, empty until LVMCluster)
+```
 
 ## LVMS
 
-1. Install **`lvms-operator`** (Operator Hub or Subscription, channel **`stable-4.22`**).
-2. Create **LVMCluster** (e.g. name **`lvms`**) on device **`/dev/vdb`** (prefer `/dev/disk/by-id/...`).
+Order matters:
+
+1. Install **`lvms-operator`** (Operator Hub, or Ansible `-e ocp_day2_install_lvms=true`) — channel **`stable-4.22`**. Wait for CSV **Succeeded**.
+2. Create **LVMCluster** (e.g. name **`lvms`**) on device **`/dev/vdb`**. The Subscription playbook does **not** create this CR.
 3. Typical StorageClass: **`lvms-vg1`** (`topolvm.io`, `WaitForFirstConsumer`).
+
+```bash
+oc get csv -n openshift-storage
+oc get lvmcluster -A
+oc get sc lvms-vg1
+```
+
+Then install **OpenShift Virtualization** (`kubevirt-hyperconverged`) from the local catalog until HCO is Ready (`oc get hyperconverged -n openshift-cnv`).
 
 PVC test:
 
@@ -84,7 +108,7 @@ curl -s --cacert ~/lab/ca.crt https://registry.lab.local:5000/v2/_catalog \
 | RHEL 10 | `ocp4-422/rhel10/rhel-guest-image` |
 | CentOS Stream 9 | `ocp4-422/containerdisks/centos-stream` |
 
-Prerequisite: `ocp_mirror_guest_images: true` + remirror — [mirror/README.md](../mirror/README.md).
+Prerequisite: `ocp_mirror_guest_images: true` + remirror — [mirror/README.md](../../mirror/README.md).
 
 ### 2. Manual HyperConverged patch (if not using Ansible)
 
@@ -111,13 +135,23 @@ done
 oc get dataimportcron -n openshift-virtualization-os-images \
   -o custom-columns=NAME:.metadata.name,SOURCE:.spec.template.spec.source.registry.url
 
-oc get jobs -n openshift-cnv | grep -E 'initial-job|rhel9|rhel10|centos-stream9'
 oc get pvc,dv -n openshift-virtualization-os-images
+oc get datasource -n openshift-virtualization-os-images
 ```
 
-Expect PVC **Bound** (import a few minutes). If `NotEnoughCapacity` / LVMCluster **Failed**: add a 2nd VirtIO disk on OCP VMs and fix LVMS before retries.
+Expect DV **Succeeded**, PVC **Bound**, and DataSources **`rhel9` / `rhel10` / `centos-stream9`** with `Ready=True` (fedora / rhel8 `NotFound` is OK when not mirrored).
 
-Then create a VM from **Virtualization → Catalog**.
+If `NotEnoughCapacity` / LVMCluster **Failed**: set `lvms_disk_gb > 0` on OCP VMs and fix LVMS before retries.
+
+### 4. Console: where bootable volumes appear
+
+PVC Bound alone is not enough for the UI — the Catalog / **Bootable volumes** page reads **DataSources**.
+
+In the OpenShift console:
+
+1. **Virtualization → Bootable volumes**
+2. Set the project filter to **`openshift-virtualization-os-images`** or **All Projects** (a user project filter hides golden images)
+3. Create a VM from **Virtualization → Catalog** with preference RHEL 9 / RHEL 10 / CentOS Stream 9
 
 Full DVD ISO upload (`virtctl image-upload`) remains supported for install media — see below — but is larger and slower than guest container disks.
 
@@ -251,11 +285,11 @@ Certificate: open
 `https://cdi-uploadproxy-openshift-cnv.apps.ocp422.lab.local/v1beta1/upload-form-async`  
 (**404** on `/` alone is normal), then retry the console upload.
 
-Tunnel detail: [proxmox/access.md](../proxmox/access.md) § OpenShift console.
+Tunnel detail: [proxmox/access.md](../../proxmox/access.md) § OpenShift console.
 
 ## Bash completions (`oc`, `virtctl`)
 
-On bastion: **`bash-completion`** package (DVD repo if no Internet — [ansible/README.md](../ansible/README.md) § RHEL DVD), then:
+On bastion: **`bash-completion`** package (DVD repo if no Internet — [ansible/README.md](../../ansible/README.md) § RHEL DVD), then:
 
 ```bash
 oc completion bash | sudo tee /etc/bash_completion.d/oc
@@ -266,6 +300,6 @@ Load **`/usr/share/bash-completion/bash_completion`** in `~/.bashrc` **before** 
 
 ## References
 
-- [mirror/README.md](../mirror/README.md)
-- [proxmox/access.md](../proxmox/access.md)
-- [docs/iac.md](iac.md)
+- [mirror/README.md](../../mirror/README.md)
+- [proxmox/access.md](../../proxmox/access.md)
+- [iac.md](iac.md)

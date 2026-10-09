@@ -1,5 +1,8 @@
 # OpenShift 4.22 GA — agent-based air-gap (SNO or compact3)
 
+**Human path (official Red Hat Day 0 / 1 / 2):** [Day 0 — Design](../../docs/deploy/DAY0.md) → [Day 1 — Deployment](../../docs/deploy/DAY1.md) → [Day 2 — Operations](../../docs/deploy/DAY2.md) · [FAQ](../../docs/faq/README.md)
+
+This file is the **detailed** CLI reference. Prefer the Day docs for checklist order.
 
 | Parameter    | Value                                                                                                                                       |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -40,7 +43,7 @@ cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/ansible
 ansible-playbook playbooks/bastion-ocp-install.yml
 ```
 
-Details: [docs/ansible-ocp-install.md](../../docs/ansible-ocp-install.md).
+Details: [docs/deploy/ansible-ocp-install.md](../../docs/deploy/ansible-ocp-install.md).
 
 ### Fallback — ISO by hand on bastion
 
@@ -166,7 +169,20 @@ Resources live under `~/lab/4.22-ga/workspace/working-dir/cluster-resources/` (t
 
 ### Preferred — Ansible day-2 playbook
 
-Automates §1–3, registry CA (§5a), and OSUS through ClusterVersion upstream (§5b–5e). Does **not** start `oc adm upgrade --to=…` (manual). LVMS/Virt install stays optional (UI or `-e`). Guest boot sources (§6): `-e ocp_day2_guest_boots=true` — [docs/openshift-virt-lab.md](../../docs/openshift-virt-lab.md).
+Automates §1–3, registry CA (§5a), and OSUS through ClusterVersion upstream (§5b–5e). Does **not** start `oc adm upgrade --to=…` (manual). LVMS/Virt install stays optional (UI or `-e`). Guest boot sources (§6): `-e ocp_day2_guest_boots=true` — [docs/deploy/openshift-virt-lab.md](../../docs/deploy/openshift-virt-lab.md).
+
+**Validated day-2 order (compact3 + Virt guests):**
+
+| Step | What | How |
+|------|------|-----|
+| 0 | Both disks on OCP VMs | Terraform `lvms_disk_gb = 100` → virtio0 (OS) + virtio1 (`/dev/vdb` LVMS) at create — [terraform/lab-ocp](../../terraform/lab-ocp/) |
+| 1–3 | OperatorHub / IDMS / catalog | `bastion-ocp-day2.yml` (default) |
+| 4a | LVMS Subscription | UI or `-e ocp_day2_install_lvms=true` |
+| 4b | **LVMCluster** on `/dev/vdb` | UI or YAML — creates SC **`lvms-vg1`** (not in the Subscription playbook) |
+| 4c | OpenShift Virtualization (HCO) | UI OperatorHub (`kubevirt-hyperconverged`) — no Ansible tasks yet |
+| 6 | Guest boot sources | `-e ocp_day2_guest_boots=true --tags guest_boots` after `lvms-vg1` has capacity |
+
+Agent install already pins OS to virtio0 via `rootDeviceHints` (`/dev/disk/by-path/pci-0000:06:0a.0` → `vda`). On agent live: `ls -l /dev/disk/by-path/` → `06:0a.0` = install, `06:0b.0` = LVMS.
 
 **Mac:**
 
@@ -175,6 +191,7 @@ cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/ansible
 ansible-playbook playbooks/bastion-ocp-day2.yml
 # Skip OSUS:     -e ocp_day2_osus=false
 # Also LVMS sub: -e ocp_day2_install_lvms=true
+# Guest boots:   -e ocp_day2_guest_boots=true --tags guest_boots
 # Tags only:     --tags mirrors,catalog
 ```
 
@@ -237,14 +254,22 @@ oc get packagemanifest -n openshift-marketplace | grep -iE 'lvms|kubevirt|hyperc
 
 ### 4. Install LVMS then OpenShift Virtualization
 
-Order: **LVMS first**, then Virt. Source must be the **local** catalog `cs-redhat-operator-index-v4-22` (not `redhat-operators`).
+**Prerequisite (Proxmox):** each OCP node must have a second empty VirtIO disk. Set `lvms_disk_gb = 100` in `terraform/lab-ocp/terraform.tfvars` **before** `terraform apply` (do not leave at `0`). After RHCOS install:
 
-**UI (console)** — tunnel from the Mac if needed (§5 above), then **Operators → OperatorHub**:
+| Disk | Proxmox | Guest | Role |
+|------|---------|-------|------|
+| OS | virtio0 120G | `/dev/vda` · by-path `pci-0000:06:0a.0` | Agent `rootDeviceHints` |
+| LVMS | virtio1 100G | `/dev/vdb` · by-path `pci-0000:06:0b.0` | LVMCluster device |
+
+Order: **LVMS Subscription → LVMCluster → Virt (HCO)**. Source must be the **local** catalog `cs-redhat-operator-index-v4-22` (not `redhat-operators`).
+
+**UI (console)** — tunnel from the Mac if needed, then **Operators → OperatorHub**:
 
 1. **LVMS Operator** (`lvms-operator`) → Install → namespace `openshift-storage`, channel `stable-4.22`, version pinned to the mirrored CSV (e.g. `4.22.0`).
-2. **OpenShift Virtualization** (`kubevirt-hyperconverged`) → Install → namespace `openshift-cnv`, channel `stable`, version from the mirror (e.g. `4.22.0` for an upgrade-lab baseline).
+2. After CSV **Succeeded**, create **LVMCluster** (device `/dev/vdb`) → StorageClass **`lvms-vg1`**.
+3. **OpenShift Virtualization** (`kubevirt-hyperconverged`) → Install → namespace `openshift-cnv`, channel `stable`.
 
-**CLI** — LVMS example:
+**CLI** — LVMS Subscription (also: `-e ocp_day2_install_lvms=true` on the day-2 playbook):
 
 ```bash
 oc create ns openshift-storage 2>/dev/null || true
@@ -276,9 +301,21 @@ EOF
 oc get csv,sub -n openshift-storage
 ```
 
-After the LVMS CSV is **Succeeded**, install Virt the same way (UI or Subscription in `openshift-cnv`, `source: cs-redhat-operator-index-v4-22`).
+The Subscription playbook **does not** create `LVMCluster`. After CSV Succeeded, create it (UI or YAML) on **`/dev/vdb`**, then:
 
-Then create **LVMCluster** / HyperConverged as needed — [docs/openshift-virt-lab.md](../../docs/openshift-virt-lab.md).
+```bash
+oc get lvmcluster -A
+oc get sc lvms-vg1
+```
+
+Then install Virt (UI or Subscription in `openshift-cnv`, `source: cs-redhat-operator-index-v4-22`) until HCO is Ready:
+
+```bash
+oc get csv -n openshift-cnv
+oc get hyperconverged -n openshift-cnv
+```
+
+Details: [docs/deploy/openshift-virt-lab.md](../../docs/deploy/openshift-virt-lab.md).
 
 ### 5. Air-gap updates (Cincinnati / OSUS)
 
@@ -434,12 +471,26 @@ Reference: [Updating a cluster in a disconnected environment](https://docs.redha
 
 Mirrored `additionalImages` appear only in the registry. Virt default boot sources still use `registry.redhat.io` / `quay.io` → **NoDigest** / empty PVC until HyperConverged is patched.
 
-After LVMS (`lvms-vg1` **with capacity**) + Virt:
+After LVMS (`lvms-vg1` **with capacity**) + Virt HCO Ready:
 
 ```bash
 # Mac — preferred
+cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/ansible
 ansible-playbook playbooks/bastion-ocp-day2.yml -e ocp_day2_guest_boots=true --tags guest_boots
 ```
+
+**Bastion — wait for import:**
+
+```bash
+export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig
+oc get dv,pvc -n openshift-virtualization-os-images
+# Expect DV Succeeded + PVC Bound for rhel9 / rhel10 / centos-stream9
+
+oc get datasource -n openshift-virtualization-os-images
+# rhel9 / rhel10 / centos-stream9 → Ready=True (fedora/rhel8 NotFound is OK if not mirrored)
+```
+
+**Console — bootable volumes look empty?** Select project **`openshift-virtualization-os-images`** or **All Projects** (default project filter hides cluster golden images). Then **Virtualization → Bootable volumes** / **Catalog**.
 
 Lab findings (4.22):
 
@@ -448,7 +499,8 @@ Lab findings (4.22):
 | `Warning: unknown field dataImportCronTemplates` | Patch `hyperconvergeds.v1beta1.hco.kubevirt.io` |
 | Custom DICT never created | Annotation `ssp.kubevirt.io/dict.architectures: amd64` |
 | `FailedMount` / `No source digest` | ConfigMap CA in **both** `openshift-virtualization-os-images` and `openshift-cnv` |
-| `NotEnoughCapacity` / LVMCluster Failed | 2nd VirtIO disk + working VG on nodes |
+| `NotEnoughCapacity` / LVMCluster Failed | `lvms_disk_gb > 0` at VM create + working LVMCluster on `/dev/vdb` |
 | fedora / centos10 ImagePullBackOff | Disable those system crons (playbook does this) |
+| PVC Bound but UI empty | Console project ≠ `openshift-virtualization-os-images` |
 
-Full detail: [docs/openshift-virt-lab.md](../../docs/openshift-virt-lab.md) § Guest OS boot sources.
+Full detail: [docs/deploy/openshift-virt-lab.md](../../docs/deploy/openshift-virt-lab.md) § Guest OS boot sources.

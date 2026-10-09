@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Docs (reorg — official Day 0/1/2)
+- Split under `docs/deploy/`, `docs/architecture/`, `docs/faq/`
+- DAY checklists use Red Hat Day definitions; FAQ aggregator at [faq/README.md](faq/README.md)
+- Slimmed [ansible/README.md](../ansible/README.md) and [bastion/README.md](../bastion/README.md)
+
+### Docs (human path)
+- Added [DAY0.md](deploy/DAY0.md) / [DAY1.md](deploy/DAY1.md) / [DAY2.md](deploy/DAY2.md) / [FAQ.md](faq/FAQ.md) + [docs/README.md](README.md) index
+- Root [README.md](../README.md) slimmed to a hub pointing at Day docs
+
+### Docs (Day-2 Virt / LVMS / guest boots — lab-validated)
+- [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) § Day-2 — order: disks at Terraform create → LVMS sub → **LVMCluster** → Virt → guest_boots; console project filter for bootable volumes
+- [docs/deploy/openshift-virt-lab.md](deploy/openshift-virt-lab.md) — disk by-path map, DataSource Ready checks, Bootable volumes UI tip
+- [README.md](../README.md) Day-2 table aligned; guest boots marked validated on compact3
+
 ### Removed (lab scope)
 - Dropped OpenShift **5 RC** / Assisted connected track: `openshift/5-rc/`, `terraform/assisted-ocp-bma/`, `mirror/imageset-config-5-rc.yaml.example`
 - Removed ocp5 DNS records from Ansible `dns` role and examples
@@ -11,8 +25,8 @@
 - Registry role enables `podman-restart.service` (lab-verified: without it, `ocp-registry` stays Exited after VM reboot)
 
 ### Docs (rebuild)
-- [docs/iac.md](iac.md) — after Terraform: `ssh_public_key_file`, `ssh-keygen -R` lab IPs, verify bastion SSH before Ansible
-- [docs/ansible-ocp-install.md](ansible-ocp-install.md) — rewritten: happy path (mandatory) vs optional workarounds
+- [docs/deploy/iac.md](deploy/iac.md) — after Terraform: `ssh_public_key_file`, `ssh-keygen -R` lab IPs, verify bastion SSH before Ansible
+- [docs/deploy/ansible-ocp-install.md](deploy/ansible-ocp-install.md) — rewritten: happy path (mandatory) vs optional workarounds
 
 ### Added (lab SSH trust playbook)
 - `ansible/playbooks/lab-ssh.yml` — bastion key → dns/registry + Proxmox; `ssh-keygen -R` on bastion for lab IPs
@@ -29,12 +43,12 @@
 
 ### Ajouté (Ansible install OCP bastion)
 - Playbook `ansible/playbooks/bastion-ocp-install.yml` + rôle `ocp_bastion_install` (install-config, agent-config, imageset, CA, pull-secret)
-- [docs/ansible-ocp-install.md](ansible-ocp-install.md) — procédure mise à jour configs sans YAML manuel
+- [docs/deploy/ansible-ocp-install.md](deploy/ansible-ocp-install.md) — procédure mise à jour configs sans YAML manuel
 - Bastion scripts kept: `pull-secret-for-oc-mirror.sh`, `lab-startup-check.sh`, `verify-mirror-before-sno.sh` (install-config helpers removed — use Ansible)
 
 ### Corrigé (alignement doc)
-- Stack alignment (versions provider, commandes obsolètes) fusionné dans [docs/versions.md](versions.md)
-- Docs recovery/parity/teardown registry retirés — rebuild via [docs/iac.md](iac.md) + [terraform/README.md](../terraform/README.md)
+- Stack alignment (versions provider, commandes obsolètes) fusionné dans [docs/architecture/versions.md](architecture/versions.md)
+- Docs recovery/parity/teardown registry retirés — rebuild via [docs/deploy/iac.md](deploy/iac.md) + [terraform/README.md](../terraform/README.md)
 - Harmonisation **`oc-mirror`** dans README / bastion / mirror / registry / 5-rc
 - [mirror/imageset-config-5-rc.yaml.example](../mirror/imageset-config-5-rc.yaml.example) — GitOps épinglé
 
@@ -46,10 +60,10 @@
 ### Ajouté (IaC lab)
 - [terraform/](../terraform/) — VMs Proxmox (registry clone : virtio0 + virtio1 /dev/vdb)
 - [ansible/](../ansible/) — playbooks DNS / registry / bastion
-- [docs/iac.md](iac.md) — parcours lab existant vs greenfield
+- [docs/deploy/iac.md](deploy/iac.md) — parcours lab existant vs greenfield
 
 ### Ajouté (coupure quotidienne lab)
-- [docs/lab-power-cycle.md](lab-power-cycle.md) — arrêt/démarrage ordonné, NTP, dépannage SNO
+- [docs/deploy/lab-power-cycle.md](deploy/lab-power-cycle.md) — arrêt/démarrage ordonné, NTP, dépannage SNO
 - [bastion/scripts/lab-startup-check.sh](../bastion/scripts/lab-startup-check.sh) — prérequis avant boot SNO (DNS, registry, NTP)
 - [dns/README.md](../dns/README.md) — drop-in systemd dnsmasq au reboot
 
@@ -63,7 +77,7 @@
 - RHEL 10 pour toutes les VMs infra
 - Double piste OpenShift : GA 4.22.12 + RC 5.0.0-ec.6
 - Configs versionnées : `openshift/4.22-ga/`, `openshift/5-rc/`
-- `versions.env.example`, `docs/versions.md`, `bastion/README.md`
+- `versions.env.example`, `docs/architecture/versions.md`, `bastion/README.md`
 
 ### Ajouté (session DNS / accès lab)
 - [rhel/dvd-repo.md](../rhel/dvd-repo.md) — repo local DVD sans souscription

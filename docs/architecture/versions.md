@@ -4,7 +4,7 @@
 
 | Track | OpenShift version | Use | Config |
 |-------|-------------------|-----|--------|
-| **GA** | **4.22.12** (Kubernetes 1.35) | Air-gap SNO / compact3; upgrades via mirror min/max | [openshift/4.22-ga/](../openshift/4.22-ga/) |
+| **GA** | **4.22.12** (Kubernetes 1.35) | Air-gap SNO / compact3; upgrades via mirror min/max | [openshift/4.22-ga/](../../openshift/4.22-ga/) |
 
 Check z-streams on [console.redhat.com](https://console.redhat.com/openshift/downloads).
 
@@ -16,9 +16,9 @@ Last review: **Proxmox VE 9.2** + **OCP 4.22.12**.
 |-----------|------------------|---------------|
 | Proxmox | **9.2.x** | NUC host |
 | Terraform | ≥ 1.5 | Mac |
-| Proxmox provider | **telmate/proxmox 3.0.2-rc10** | [terraform/lab-infra/versions.tf](../terraform/lab-infra/versions.tf) |
+| Proxmox provider | **telmate/proxmox 3.0.2-rc10** | [terraform/lab-infra/versions.tf](../../terraform/lab-infra/versions.tf) |
 | API token | `root@pam!terraform`, privilege separation off (lab) | Proxmox UI |
-| Registry VM | virtio0 32G + virtio1 120G, clone `rhel10-tpl` | Terraform + [proxmox/rhel-cloudinit-template.md](../proxmox/rhel-cloudinit-template.md) |
+| Registry VM | virtio0 32G + virtio1 120G, clone `rhel10-tpl` | Terraform + [proxmox/rhel-cloudinit-template.md](../../proxmox/rhel-cloudinit-template.md) |
 | Registry data | `/opt/registry` on **virtio1** (`/dev/vdb`) | Ansible `registry_data_device` |
 
 ### OpenShift GA
@@ -82,9 +82,9 @@ curl -O https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.22.12
 
 ## Updating versions
 
-1. Edit [versions.env.example](../versions.env.example)
+1. Edit [versions.env.example](../../versions.env.example)
 2. Update ImageSets under `mirror/`
-3. Regenerate mirrors — [mirror/README.md](../mirror/README.md)
+3. Regenerate mirrors — [mirror/README.md](../../mirror/README.md)
 4. Note in [CHANGELOG.md](CHANGELOG.md)
 
-Prefer full **Terraform + Ansible** rebuild — [docs/iac.md](iac.md).
+Prefer full **Terraform + Ansible** rebuild — [docs/deploy/iac.md](../deploy/iac.md).

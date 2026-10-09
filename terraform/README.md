@@ -12,7 +12,7 @@ Apply order: **infra first**, then **ocp**. Destroy OCP alone without touching b
 Infra: **linked clones** from RHEL templates (fast). OCP: empty disks + agent ISO.
 
 SNO / agent boot: [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md).  
-Full rebuild: [docs/iac.md](../docs/iac.md).
+Full rebuild: [docs/deploy/iac.md](../docs/deploy/iac.md).
 
 Legacy monorepo `lab-airgap/` is **deprecated** — see [lab-airgap/README.md](lab-airgap/README.md) for state migration.
 
@@ -77,7 +77,7 @@ ssh-keygen -R 172.16.10.100
 ssh -o StrictHostKeyChecking=accept-new bernard@192.168.1.144 'hostname'
 ```
 
-Then Ansible `lab-infra.yml` — [docs/iac.md](../docs/iac.md).
+Then Ansible `lab-infra.yml` — [docs/deploy/iac.md](../docs/deploy/iac.md).
 
 ## Teardown
 

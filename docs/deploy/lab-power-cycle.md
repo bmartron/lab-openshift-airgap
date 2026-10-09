@@ -2,7 +2,7 @@
 
 Procédure pour éteindre et rallumer le lab sans casser le SNO (DNS, registry, NTP, certs kubelet).
 
-> **Ansible** : équivalents playbook dans les sections ci-dessous — [ansible/README.md](../ansible/README.md).
+> **Ansible** : équivalents playbook dans les sections ci-dessous — [ansible/README.md](../../ansible/README.md).
 
 ## VMs et IPs (`vmbr1`)
 
@@ -101,7 +101,7 @@ oc get nodes
 curl -k -s -o /dev/null -w "healthz %{http_code}\n" https://172.16.10.100:6443/healthz
 ```
 
-Console : voir [proxmox/access.md](../proxmox/access.md) (tunnel depuis le Mac).
+Console : voir [proxmox/access.md](../../proxmox/access.md) (tunnel depuis le Mac).
 
 ---
 
@@ -188,6 +188,6 @@ scp /tmp/lb-ext.kubeconfig bernard@172.16.10.10:~/lab/4.22-ga/auth/kubeconfig-ad
 ## Références
 
 - [dns/README.md](../dns/README.md) — dnsmasq, NTP, firewall
-- [ansible/README.md](../ansible/README.md) — registry Podman + lab-infra
-- [proxmox/access.md](../proxmox/access.md) — SSH, console Mac
-- [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) — post-install
+- [ansible/README.md](../../ansible/README.md) — registry Podman + lab-infra
+- [proxmox/access.md](../../proxmox/access.md) — SSH, console Mac
+- [openshift/4.22-ga/README.md](../../openshift/4.22-ga/README.md) — post-install

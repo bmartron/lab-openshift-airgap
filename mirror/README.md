@@ -41,7 +41,7 @@ Ansible (`ocp_mirror_guest_images: true` in `all.yml`) appends `ocp_guest_images
 
 Plan registry free space: existing Virt/LVMS/OSUS plus roughly **~5–15 GiB** for these three (varies by tag).
 
-**Not automatic in Virt:** images land in the registry only. Default boot sources still pull from Red Hat/Quay — patch HyperConverged (API `v1beta1` on 4.22) so the catalog gets PVC boot sources — [docs/openshift-virt-lab.md](../docs/openshift-virt-lab.md) § Guest OS boot sources · Day-2 §6 in [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md).
+**Not automatic in Virt:** images land in the registry only. Default boot sources still pull from Red Hat/Quay — patch HyperConverged (API `v1beta1` on 4.22) so the catalog gets PVC boot sources — [docs/deploy/openshift-virt-lab.md](../docs/deploy/openshift-virt-lab.md) § Guest OS boot sources · Day-2 §6 in [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md).
 
 ### Two platform versions (upgrade)
 
@@ -89,9 +89,9 @@ Disk on registry (`/opt/registry`): plan **≥ 120 GiB**; ~22 GiB observed for G
 If the ISO was not generated yet, use that guide § Agent ISO (Ansible flags or hand commands), then boot.
 
 Day-2 (disable default catalogs → IDMS/ITMS → CatalogSource → Virt/LVMS): [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) § Day-2.  
-Virt/LVMS details: [docs/openshift-virt-lab.md](../docs/openshift-virt-lab.md).
+Virt/LVMS details: [docs/deploy/openshift-virt-lab.md](../docs/deploy/openshift-virt-lab.md).
 
 ## See also
 
-- Rebuild path: [docs/iac.md](../docs/iac.md)
-- Versions / namespaces: [docs/versions.md](../docs/versions.md)
+- Rebuild path: [docs/deploy/iac.md](../docs/deploy/iac.md)
+- Versions / namespaces: [docs/architecture/versions.md](../docs/architecture/versions.md)

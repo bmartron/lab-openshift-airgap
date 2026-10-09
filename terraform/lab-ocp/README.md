@@ -16,7 +16,7 @@ Sizing (NUC 64 GiB):
 - **sno**: 8 cores / 24 GiB (override with `sno_*`)
 - **compact3**: 8 cores / 16 GiB each
 
-Optional LVMS disk: `lvms_disk_gb` (default 100; `0` to disable).
+LVMS disk: set `lvms_disk_gb = 100` (default in examples) so **virtio1** exists at VM create (`/dev/vdb`). Agent install pins OS to virtio0 via Ansible `rootDeviceHints` — safe with both disks present. Use `0` only if you intentionally skip LVMS.
 
 ## Files
 
@@ -28,7 +28,7 @@ Optional LVMS disk: `lvms_disk_gb` (default 100; `0` to disable).
 
 No cloud-init — attach agent ISO (`agent_iso`) or boot from Proxmox UI.
 
-**Install disk hint:** prefer `/dev/disk/by-path/pci-…` in Ansible — [docs/ansible-ocp-install.md](../../docs/ansible-ocp-install.md).
+**Install disk hint:** prefer `/dev/disk/by-path/pci-…` in Ansible — [docs/deploy/ansible-ocp-install.md](../../docs/deploy/ansible-ocp-install.md).
 
 ## Examples
 

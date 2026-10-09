@@ -1,14 +1,16 @@
 # Infrastructure as Code (Terraform + Ansible)
 
+Human path: [DAY0](DAY0.md) → [DAY1](DAY1.md) → [DAY2](DAY2.md). This page is the detailed rebuild checklist.
+
 **Default path** for rebuilding the lab.
 
 | Tool | Scope |
 |------|--------|
-| [Terraform](../terraform/README.md) | Proxmox VMs — [`lab-infra/`](../terraform/lab-infra/) + [`lab-ocp/`](../terraform/lab-ocp/) |
-| [Ansible](../ansible/README.md) | OS config: DVD, NTP, dnsmasq, registry, bastion, install-config |
+| [Terraform](../../terraform/README.md) | Proxmox VMs — [`lab-infra/`](../../terraform/lab-infra/) + [`lab-ocp/`](../../terraform/lab-ocp/) |
+| [Ansible](../../ansible/README.md) | OS config: DVD, NTP, dnsmasq, registry, bastion, install-config |
 
-OpenShift images: [mirror/](../mirror/README.md) (`oc-mirror` on bastion — **after** install configs / agent ISO).  
-Install configs + agent ISO: [ansible-ocp-install.md](ansible-ocp-install.md) · boot SNO: [openshift/4.22-ga/](../openshift/4.22-ga/README.md).
+OpenShift images: [mirror/](../../mirror/README.md) (`oc-mirror` on bastion — **after** install configs / agent ISO).  
+Install configs + agent ISO: [ansible-ocp-install.md](ansible-ocp-install.md) · boot SNO: [openshift/4.22-ga/](../../openshift/4.22-ga/README.md).
 
 ## Full air-gap rebuild
 
@@ -19,8 +21,8 @@ ssh_user = "bernard"
 ssh_public_key_file = "/Users/bmartron/.ssh/id_ed25519.pub"
 ```
 
-1. RHEL templates — [proxmox/rhel-cloudinit-template.md](../proxmox/rhel-cloudinit-template.md)
-2. **Mac (once):** `podman save` → `registry:2` tar; set `registry_image_tar` — [ansible/README.md](../ansible/README.md)
+1. RHEL templates — [proxmox/rhel-cloudinit-template.md](../../proxmox/rhel-cloudinit-template.md)
+2. **Mac (once):** `podman save` → `registry:2` tar; set `registry_image_tar` — [ansible/README.md](../../ansible/README.md)
 3. **Mac** — wipe + recreate **infra** VMs (BPG + linked clone):
 
 ```bash
@@ -59,10 +61,10 @@ ansible-playbook playbooks/lab-infra.yml --ask-become-pass
 ```
 
 7. Set `ocp_agent_generate_iso` / `ocp_push_iso_to_proxmox` in `inventory/group_vars/all.yml`, then `bastion-ocp-install.yml` — [ansible-ocp-install.md](ansible-ocp-install.md)
-8. On bastion: `oc-mirror` — [mirror/README.md](../mirror/README.md) (**do not boot SNO yet**)
-9. `lab-startup-check.sh`, then boot SNO — [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md)
+8. On bastion: `oc-mirror` — [mirror/README.md](../../mirror/README.md) (**do not boot SNO yet**)
+9. `lab-startup-check.sh`, then boot SNO — [openshift/4.22-ga/README.md](../../openshift/4.22-ga/README.md)
 
-SSH model: [ansible/README.md](../ansible/README.md) § SSH keys · [proxmox/access.md](../proxmox/access.md).
+SSH model: [ansible/README.md](../../ansible/README.md) § SSH keys · [proxmox/access.md](../../proxmox/access.md).
 
 ## Rebuild OCP only
 
@@ -74,7 +76,7 @@ terraform destroy -auto-approve
 terraform apply -auto-approve
 ```
 
-Then regenerate agent ISO / boot — [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md).
+Then regenerate agent ISO / boot — [openshift/4.22-ga/README.md](../../openshift/4.22-ga/README.md).
 
 ## Re-run registry only
 
@@ -82,4 +84,4 @@ Then regenerate agent ISO / boot — [openshift/4.22-ga/README.md](../openshift/
 
 ## Shared variables
 
-Align with [versions.env.example](../versions.env.example) (`DNS_IP`, `REGISTRY_IP`, `PROXMOX_HOST`).
+Align with [versions.env.example](../../versions.env.example) (`DNS_IP`, `REGISTRY_IP`, `PROXMOX_HOST`).

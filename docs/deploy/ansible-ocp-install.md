@@ -3,7 +3,7 @@
 Playbook: **`ansible/playbooks/bastion-ocp-install.yml`**  
 Runs from the **Mac**. Deploys install YAML + pull-secret + imageset on the bastion, optionally builds the agent ISO and copies it to Proxmox NFS.
 
-Place in the rebuild: **after** [lab-infra](../ansible/README.md) · **before** [oc-mirror](../mirror/README.md) · **before** booting SNO — full sequence: [iac.md](iac.md).
+Place in the rebuild: **after** [lab-infra](../../ansible/README.md) · **before** [oc-mirror](../../mirror/README.md) · **before** booting SNO — full sequence: [iac.md](iac.md).
 
 ---
 
@@ -17,9 +17,9 @@ Do this once after a fresh `lab-infra`, in order.
 |-------|--------|
 | `lab-infra.yml` OK | dns + registry + bastion |
 | `ansible/files/pull-secret.txt` | Mac — from [console.redhat.com](https://cloud.redhat.com/openshift/install/pull-secret) |
-| Mac can SSH `bernard@192.168.1.144` and `root@192.168.1.147` | [proxmox/access.md](../proxmox/access.md) |
+| Mac can SSH `bernard@192.168.1.144` and `root@192.168.1.147` | [proxmox/access.md](../../proxmox/access.md) |
 
-SNO `sshKey` is **not** a Mac file: the playbook reads the live bastion `~/.ssh/id_ed25519.pub` ([proxmox/access.md](../proxmox/access.md) § OpenShift node SSH).
+SNO `sshKey` is **not** a Mac file: the playbook reads the live bastion `~/.ssh/id_ed25519.pub` ([proxmox/access.md](../../proxmox/access.md) § OpenShift node SSH).
 `lab-ssh.yml` is **imported automatically** by this playbook — do not run it separately.
 
 ### 2. Topology / imageset / VIPs in `inventory/group_vars/all.yml`
@@ -53,9 +53,9 @@ That builds `agent.x86_64.iso` on the bastion and copies it to Proxmox `nfs_iso`
 
 ### 4. Next steps (not this playbook)
 
-1. **Mirror** on bastion — [mirror/README.md](../mirror/README.md)  
+1. **Mirror** on bastion — [mirror/README.md](../../mirror/README.md)  
 2. **`~/lab/scripts/lab-startup-check.sh`** on bastion  
-3. **Boot cluster** — [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) (SNO or compact3 VMs)
+3. **Boot cluster** — [openshift/4.22-ga/README.md](../../openshift/4.22-ga/README.md) (SNO or compact3 VMs)
 
 ---
 
@@ -163,7 +163,7 @@ ansible-playbook playbooks/bastion-scripts.yml
 
 ## See also
 
-- [docs/iac.md](iac.md) — full rebuild order  
-- [ansible/README.md](../ansible/README.md) — inventory, `lab-ssh`, registry  
-- [mirror/README.md](../mirror/README.md) — `oc-mirror` after imageset exists  
-- [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) — boot SNO  
+- [iac.md](iac.md) — full rebuild order  
+- [ansible/README.md](../../ansible/README.md) — inventory, `lab-ssh`, registry  
+- [mirror/README.md](../../mirror/README.md) — `oc-mirror` after imageset exists  
+- [openshift/4.22-ga/README.md](../../openshift/4.22-ga/README.md) — boot SNO  
