@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Docs (versions — BPG provider)
+- [architecture/versions.md](architecture/versions.md): stack table uses **bpg/proxmox ~> 0.85** (not Telmate)
+
 ### Docs (reorg — official Day 0/1/2)
 - Split under `docs/deploy/`, `docs/architecture/`, `docs/faq/`
 - DAY checklists use Red Hat Day definitions; FAQ aggregator at [faq/README.md](faq/README.md)

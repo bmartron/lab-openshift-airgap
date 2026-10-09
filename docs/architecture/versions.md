@@ -16,7 +16,7 @@ Last review: **Proxmox VE 9.2** + **OCP 4.22.12**.
 |-----------|------------------|---------------|
 | Proxmox | **9.2.x** | NUC host |
 | Terraform | ≥ 1.5 | Mac |
-| Proxmox provider | **telmate/proxmox 3.0.2-rc10** | [terraform/lab-infra/versions.tf](../../terraform/lab-infra/versions.tf) |
+| Proxmox provider | **[bpg/proxmox](https://registry.terraform.io/providers/bpg/proxmox) ~> 0.85** | [terraform/lab-infra/versions.tf](../../terraform/lab-infra/versions.tf) · [lab-ocp](../../terraform/lab-ocp/versions.tf) |
 | API token | `root@pam!terraform`, privilege separation off (lab) | Proxmox UI |
 | Registry VM | virtio0 32G + virtio1 120G, clone `rhel10-tpl` | Terraform + [proxmox/rhel-cloudinit-template.md](../../proxmox/rhel-cloudinit-template.md) |
 | Registry data | `/opt/registry` on **virtio1** (`/dev/vdb`) | Ansible `registry_data_device` |
@@ -30,7 +30,7 @@ Last review: **Proxmox VE 9.2** + **OCP 4.22.12**.
 | SNO IP | `172.16.10.100` |
 | Bastion binaries | `oc`, `openshift-install`, **`oc-mirror`** |
 | Mirror auth | `--authfile ~/lab/pull-secret-oc-mirror.txt` |
-| Install configs | [ansible-ocp-install.md](ansible-ocp-install.md) |
+| Install configs | [../deploy/ansible-ocp-install.md](../deploy/ansible-ocp-install.md) |
 
 ### Do not use (obsolete)
 
@@ -38,8 +38,8 @@ Last review: **Proxmox VE 9.2** + **OCP 4.22.12**.
 |----------|-------------|
 | `oc mirror -c ...` | `oc-mirror -c ...` |
 | `--src-pull-secret` | `--authfile …` |
-| Provider telmate/proxmox **2.9** on PVE 9 | **3.0.2-rc10** |
-| `disk { type = "scsi" }` (provider 3) | `type = "disk"`, slot `virtio0` / `virtio1` |
+| Provider **telmate/proxmox** | **bpg/proxmox** (`~> 0.85`) — Telmate state is not compatible |
+| Telmate `disk { type = "scsi" }` | BPG `disk { interface = "virtio0" }` / `virtio1` |
 
 ### Files to version
 
@@ -85,6 +85,6 @@ curl -O https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.22.12
 1. Edit [versions.env.example](../../versions.env.example)
 2. Update ImageSets under `mirror/`
 3. Regenerate mirrors — [mirror/README.md](../../mirror/README.md)
-4. Note in [CHANGELOG.md](CHANGELOG.md)
+4. Note in [../CHANGELOG.md](../CHANGELOG.md)
 
 Prefer full **Terraform + Ansible** rebuild — [docs/deploy/iac.md](../deploy/iac.md).

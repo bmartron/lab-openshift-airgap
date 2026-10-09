@@ -7,7 +7,7 @@ Build once on Proxmox for Terraform clones:
 | **`rhel10-tpl`** | `local-lvm` | **registry** (`rhel_template`) |
 | **`rhel10-nfs`** | `nfs_vm` | **dns**, **bastion** (`rhel_template_infra`) |
 
-Two templates are **required** for the NFS/SSD mix: Telmate does not move UEFI efidisk across storages.
+Two templates are **required** for the NFS/SSD mix: keep the UEFI efidisk on the same datastore as the OS disk (BPG linked clones do not relocate it).
 
 ## Prerequisites
 
