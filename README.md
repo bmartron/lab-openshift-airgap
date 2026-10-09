@@ -1,6 +1,6 @@
 # OpenShift Lab on Proxmox (NUC)
 
-Personal **OpenShift 4.22 GA** air-gap lab on **Proxmox** (NUC 15 Pro) — used for now **until RHEL / NAS NFS issues are resolved** ([why](docs/architecture/architecture.md#hypervisor-choice-current)).  
+Personal **OpenShift 4.22 GA** air-gap lab on **Proxmox** (NUC 15 Pro) — used for now **until RHEL / NAS NFS issues are resolved** ([why](docs/architecture/architecture.md#why-proxmox)).  
 **Validated:** compact **3-node** (`compact3`). SNO = same stack (`ocp_topology`).
 
 ---

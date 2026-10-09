@@ -54,12 +54,12 @@ Mac key must be in Terraform `ssh_public_key_file` before clone — [../../proxm
 ### Why Proxmox (not a RHEL-only host setup)?
 
 **Temporary choice:** Proxmox is used **until RHEL / NAS NFS problems are resolved**. Heavy disks (OCP, registry) need local SSD I/O; putting them on the NAS was unstable.  
-See [../architecture/architecture.md#hypervisor-choice-current](../architecture/architecture.md#hypervisor-choice-current).
+See [../architecture/architecture.md#why-proxmox](../architecture/architecture.md#why-proxmox).
 
 ### Why are OCP and registry not on the NAS NFS?
 
 NFS on the home NAS is fine for **dns/bastion/ISOs**, but too slow for **etcd** (OCP) and **registry** write load. Those disks stay on NUC **`local-lvm`**.  
-Full rationale: [../architecture/architecture.md#why-ocp--registry-are-not-on-the-nas-nfs](../architecture/architecture.md#why-ocp--registry-are-not-on-the-nas-nfs).
+Full rationale: [../architecture/architecture.md#why-not-nas-nfs](../architecture/architecture.md#why-not-nas-nfs).
 
 ### Registry tar platform arm64 vs amd64
 

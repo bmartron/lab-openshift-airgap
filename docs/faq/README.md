@@ -47,5 +47,5 @@ Full answers: [FAQ.md](FAQ.md) · Procedures: [../deploy/DAY0.md](../deploy/DAY0
 ## Architecture
 
 - [Bastion dual-NIC](../architecture/bastion.md) · [Network](../architecture/network.md) · [Versions](../architecture/versions.md)
-- [Why Proxmox for now (RHEL/NFS pending)](../architecture/architecture.md#hypervisor-choice-current)
-- [Why OCP/registry not on NAS NFS](../architecture/architecture.md#why-ocp--registry-are-not-on-the-nas-nfs)
+- [Why Proxmox for now (RHEL/NFS pending)](../architecture/architecture.md#why-proxmox)
+- [Why OCP/registry not on NAS NFS](../architecture/architecture.md#why-not-nas-nfs)

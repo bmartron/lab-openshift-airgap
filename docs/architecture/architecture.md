@@ -2,7 +2,9 @@
 
 Design reference for **Day 0**. Procedures: [../deploy/DAY0.md](../deploy/DAY0.md) → [DAY1](../deploy/DAY1.md) → [DAY2](../deploy/DAY2.md).
 
-## Hypervisor choice (current)
+<a id="why-proxmox"></a>
+
+## Why Proxmox for now
 
 This lab runs on **Proxmox VE** for now, **while waiting to resolve RHEL / NAS NFS issues** that blocked a cleaner RHEL-centric layout (guest and registry disks on the NAS were too slow / unstable for OpenShift etcd and the mirror registry).
 
@@ -64,9 +66,11 @@ SNO alternative: one node ~8 cores / 24 GiB — [../../terraform/lab-ocp/README.
 
 Details: [../../terraform/README.md](../../terraform/README.md) · templates: [../../proxmox/rhel-cloudinit-template.md](../../proxmox/rhel-cloudinit-template.md)
 
-### Why OCP / registry are not on the NAS NFS
+<a id="why-not-nas-nfs"></a>
 
-Same NFS limitation that keeps the lab on **Proxmox + local-lvm** for heavy disks (see [Hypervisor choice](#hypervisor-choice-current)).
+### Why OCP and registry are not on the NAS NFS
+
+Same NFS limitation that keeps the lab on **Proxmox + local-lvm** for heavy disks (see [Why Proxmox for now](#why-proxmox)).
 
 This lab **does not** put OpenShift (RHCOS) or the mirror registry data disks on the NAS NFS. Lab experience: NFS latency and IOPS are too weak for:
 
