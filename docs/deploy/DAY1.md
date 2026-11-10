@@ -38,26 +38,50 @@ cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/ansible
 ansible-playbook playbooks/lab-infra.yml --ask-become-pass
 ```
 
-### 4. Agent ISO (Mac)
+### 4. Install configs + imageset (Mac)
 
-In `ansible/inventory/group_vars/all.yml`: `ocp_topology: compact3`, ISO flags `true`.
+In `ansible/inventory/group_vars/all.yml`: `ocp_topology: compact3` (leave ISO flags `false` for now).
 
 ```bash
+cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/ansible
 ansible-playbook playbooks/bastion-ocp-install.yml
 ```
 
-Detail: [ansible-ocp-install.md](ansible-ocp-install.md)
+Deploys `install-config` / `agent-config` / `imageset-config.yaml` on the bastion. Detail: [ansible-ocp-install.md](ansible-ocp-install.md)
 
 ### 5. Mirror (bastion)
 
-Follow [../../mirror/README.md](../../mirror/README.md), then:
+Host: `bernard@192.168.1.144`. Detail / profiles: [../../mirror/README.md](../../mirror/README.md).
+
+```bash
+cd ~/lab/4.22-ga
+
+oc-mirror -c imageset-config.yaml \
+  --workspace file://$HOME/lab/4.22-ga/workspace \
+  docker://registry.lab.local:5000/ocp4-422 \
+  --authfile ~/lab/pull-secret-oc-mirror.txt \
+  --v2
+```
+
+Then verify:
 
 ```bash
 ~/lab/scripts/verify-mirror-before-sno.sh ~/lab/4.22-ga
 ~/lab/scripts/lab-startup-check.sh
 ```
 
-### 6. OCP VMs (Mac) — both disks
+### 6. Agent ISO generate + push (Mac)
+
+After the mirror is OK, re-run the OCP playbook with ISO build + copy to Proxmox NFS:
+
+```bash
+cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/ansible
+ansible-playbook playbooks/bastion-ocp-install.yml --ask-become-pass \
+  -e ocp_agent_generate_iso=true \
+  -e ocp_push_iso_to_proxmox=true
+```
+
+### 7. OCP VMs (Mac) — both disks
 
 `terraform/lab-ocp/terraform.tfvars`: `lvms_disk_gb = 100`, agent ISO on CD-ROM.
 
@@ -71,7 +95,7 @@ terraform apply
 | virtio0 120G | `/dev/vda` · `pci-0000:06:0a.0` | RHCOS (`rootDeviceHints`) |
 | virtio1 100G | `/dev/vdb` · `pci-0000:06:0b.0` | LVMS (Day 2) |
 
-### 7. Wait for install (bastion)
+### 8. Wait for install (bastion)
 
 Rendezvous = **`172.16.10.100`**.
 
@@ -83,7 +107,7 @@ openshift-install agent create cluster-manifests --dir .
 openshift-install agent wait-for install-complete --dir . --log-level info
 ```
 
-### 8. Confirm Ready (bastion)
+### 9. Confirm Ready (bastion)
 
 ```bash
 export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig
