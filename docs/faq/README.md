@@ -48,4 +48,4 @@ Full answers: [FAQ.md](FAQ.md) · Procedures: [../deploy/DAY0.md](../deploy/DAY0
 
 - [Bastion dual-NIC](../architecture/bastion.md) · [Network](../architecture/network.md) · [Versions](../architecture/versions.md)
 - [Why Proxmox for now (RHEL/NFS pending)](../architecture/architecture.md#why-proxmox)
-- [Why OCP/registry not on NAS NFS](../architecture/architecture.md#why-not-nas-nfs)
+- [Why OCP stays on the NUC SSD](../architecture/architecture.md#why-not-nas-nfs)

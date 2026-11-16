@@ -4,8 +4,8 @@ Build once on Proxmox for Terraform clones:
 
 | Template | Datastore | VMs |
 |----------|-----------|-----|
-| **`rhel10-tpl`** | `local-lvm` | **registry** (`rhel_template`) |
-| **`rhel10-nfs`** | `nfs_vm` | **dns**, **bastion** (`rhel_template_infra`) |
+| **`rhel10-tpl`** | `local-lvm` | SSD template source (`rhel_template`); not cloned for running VMs |
+| **`rhel10-nfs`** | `nfs_vm` | **dns**, **bastion**, **registry** (`rhel_template_infra`) |
 
 Two templates are **required** for the NFS/SSD mix: keep the UEFI efidisk on the same datastore as the OS disk (BPG linked clones do not relocate it).
 
@@ -82,7 +82,7 @@ terraform plan && terraform apply
 |----|----------|----------------------|-------|
 | dns | `rhel10-nfs` | `nfs_vm` | — |
 | bastion | `rhel10-nfs` | `nfs_vm` | dual NIC |
-| registry | `rhel10-tpl` | `local-lvm` | **virtio1** 120 GiB → `/dev/vdb` (`/opt/registry`) |
+| registry | `rhel10-nfs` | `nfs_vm` | **virtio1** 120 GiB → `/dev/vdb` (`/opt/registry`) |
 | SNO | — (RHCOS) | `local-lvm` | **virtio0** + optional **virtio1** LVMS + agent ISO |
 
 Rule: **cloud-init on the same datastore as the OS**.

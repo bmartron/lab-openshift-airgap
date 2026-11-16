@@ -3,7 +3,7 @@
 **Official meaning:** *install, set up, and configure the software*  
 ([Red Hat — Day 0 / Day 1 / Day 2](https://www.redhat.com/en/blog/how-does-red-hat-support-day-2-operations))
 
-In this lab: create VMs, configure lab services, mirror images, boot the agent ISO, wait until the cluster is **Ready**.
+In this lab: create VMs, configure common services and install OC requirements, mirror images, boot the agent ISO, wait until the cluster is **Ready**.
 
 Prereq: [DAY0.md](DAY0.md) · Next: [DAY2.md](DAY2.md) · Tips: [../faq/README.md](../faq/README.md)
 
@@ -31,7 +31,7 @@ ssh-keygen -R 172.16.10.20
 ssh -o StrictHostKeyChecking=accept-new bernard@192.168.1.144 'hostname'
 ```
 
-### 3. Lab services (Mac)
+### 3. Configure common services + Install OC requirements (Mac)
 
 ```bash
 cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/ansible

@@ -1,5 +1,6 @@
 # Registry — 172.16.10.20 (vmbr1)
-# Linked clone from rhel10-tpl + data disk virtio1.
+# Linked clone from rhel10-nfs (nfs_vm) + data disk virtio1.
+# OS and data stay on NFS so local-lvm is free for the OCP nodes.
 
 resource "proxmox_virtual_environment_vm" "registry" {
   count = var.create_registry ? 1 : 0
@@ -18,7 +19,7 @@ resource "proxmox_virtual_environment_vm" "registry" {
   }
 
   clone {
-    vm_id = local.template_perf_id
+    vm_id = local.template_infra_id
     full  = var.full_clone
   }
 
@@ -32,12 +33,12 @@ resource "proxmox_virtual_environment_vm" "registry" {
   }
 
   efi_disk {
-    datastore_id = var.storage_perf
+    datastore_id = var.storage_infra
     type         = "4m"
   }
 
   disk {
-    datastore_id = var.storage_perf
+    datastore_id = var.storage_infra
     interface    = "virtio0"
     size         = local.vms_registry.sys_disk_gb
     iothread     = true
@@ -45,7 +46,7 @@ resource "proxmox_virtual_environment_vm" "registry" {
   }
 
   disk {
-    datastore_id = var.storage_perf
+    datastore_id = var.storage_infra
     interface    = "virtio1"
     size         = local.vms_registry.data_disk_gb
     iothread     = true
@@ -67,7 +68,7 @@ resource "proxmox_virtual_environment_vm" "registry" {
   }
 
   initialization {
-    datastore_id = var.storage_perf
+    datastore_id = var.storage_infra
 
     dns {
       servers = [var.lab_gateway]

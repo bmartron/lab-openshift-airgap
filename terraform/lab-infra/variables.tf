@@ -34,13 +34,13 @@ variable "proxmox_ssh_user" {
 variable "storage_infra" {
   type        = string
   default     = "nfs_vm"
-  description = "OS + EFI + cloud-init for dns/bastion (same datastore as rhel10-nfs)"
+  description = "OS + EFI + cloud-init + registry data (same datastore as rhel10-nfs)"
 }
 
 variable "storage_perf" {
   type        = string
   default     = "local-lvm"
-  description = "OS + EFI + cloud-init + registry data (same datastore as rhel10-tpl)"
+  description = "Unused in lab-infra. OCP disks use lab-ocp storage_perf (local-lvm). Kept so existing tfvars still apply."
 }
 
 variable "snippets_datastore" {
@@ -52,13 +52,13 @@ variable "snippets_datastore" {
 variable "rhel_template_id" {
   type        = number
   default     = null
-  description = "VMID of rhel10-tpl (registry). Default 100."
+  description = "VMID of rhel10-tpl on local-lvm. Not used for registry clones. Default 100."
 }
 
 variable "rhel_template_infra_id" {
   type        = number
   default     = null
-  description = "VMID of rhel10-nfs (dns/bastion). Default 101."
+  description = "VMID of rhel10-nfs (dns, bastion, registry). Default 101."
 }
 
 # Kept for docs / examples compatibility (names); clone uses *_id

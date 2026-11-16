@@ -13,7 +13,7 @@ OpenShift node VMs: **[../lab-ocp/](../lab-ocp/)** (separate state).
 |------|------|
 | `vm-dns.tf` | VM `dns` — linked clone `rhel10-nfs` (VMID 101) |
 | `vm-bastion.tf` | VM `bastion` — dual NIC + custom user-data |
-| `vm-registry.tf` | VM `registry` — linked clone `rhel10-tpl` (VMID 100) + virtio1 |
+| `vm-registry.tf` | VM `registry` — linked clone `rhel10-nfs` (VMID 101) + virtio1 |
 | `cloud-init-bastion.tf` | Snippet `manage_etc_hosts: false` |
 | `cloud-init/bastion-user.yaml.tftpl` | Bastion cloud-init user-data |
 | `variables.tf` / `locals.tf` | IDs, storage, clone mode |
@@ -43,8 +43,8 @@ SSH agent on the Mac must reach `root@` Proxmox (snippet upload).
 
 | Variable | Datastore | Usage |
 |----------|-----------|--------|
-| **`storage_infra`** | **`nfs_vm`** | dns, bastion |
-| **`storage_perf`** | **`local-lvm`** | registry |
+| **`storage_infra`** | **`nfs_vm`** | dns, bastion, registry |
+| **`storage_perf`** | **`local-lvm`** | unused here (OCP uses `lab-ocp`) |
 | **`snippets_datastore`** | **`local`** | bastion user-data |
 | ISO | **`nfs_iso:iso/...`** | CD-ROM |
 

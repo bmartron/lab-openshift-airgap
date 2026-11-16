@@ -1,6 +1,6 @@
 # dns + bastion + registry — OCP nodes: ../lab-ocp/
 # Provider: bpg/proxmox — linked clone by default (full_clone = false)
-# Templates: proxmox/rhel-cloudinit-template.md (VMID 100=rhel10-tpl, 101=rhel10-nfs)
+# Templates: proxmox/rhel-cloudinit-template.md (VMID 101=rhel10-nfs for dns/bastion/registry)
 # cp terraform.tfvars.example terraform.tfvars
 
 proxmox_api_url          = "https://192.168.1.147:8006/api2/json"

@@ -20,8 +20,8 @@ Legacy monorepo `lab-airgap/` is **deprecated** — see [lab-airgap/README.md](l
 
 | Proxmox ID | Role | Mount on `pve` | Terraform usage |
 |------------|------|----------------|-----------------|
-| **`local-lvm`** | **registry + OCP** disks + template `rhel10-tpl` | Local LVM thin | `storage_perf` |
-| **`nfs_vm`** | **dns + bastion** disks + template `rhel10-nfs` | `/mnt/pve/nfs_vm/` | `storage_infra` (`lab-infra`) |
+| **`local-lvm`** | **OCP** disks + template `rhel10-tpl` | Local LVM thin | `storage_perf` (`lab-ocp`) |
+| **`nfs_vm`** | **dns, bastion, registry** disks + template `rhel10-nfs` | `/mnt/pve/nfs_vm/` | `storage_infra` (`lab-infra`) |
 | **`nfs_iso`** | ISO images | `/mnt/pve/nfs_iso/template/iso/` | `nfs_iso:iso/file.iso` |
 
 Proxmox format: **`nfs_iso:iso/name.iso`** (ISO); disks via `storage_infra` / `storage_perf`.  

@@ -8,13 +8,15 @@ proxmox_tls_insecure     = true
 
 proxmox_node = "pve"
 
+storage_infra = "nfs_vm"
+# storage_perf is unused in lab-infra (OCP disks use lab-ocp / local-lvm)
 storage_perf = "local-lvm"
 
 create_dns      = false
 create_bastion  = false
 create_registry = true
 
-# rhel_template_id = 100  # rhel10-tpl
+# rhel_template_infra_id = 101  # rhel10-nfs — registry clone
 full_clone   = false
 rhel_dvd_iso = "nfs_iso:iso/rhel-10.2-x86_64-dvd.iso"
 

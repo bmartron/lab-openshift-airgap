@@ -26,6 +26,7 @@ Default in role defaults: **`virt-lvms`**.
 | `platform-only` | [imageset-config-4.22-platform-only.yaml.example](imageset-config-4.22-platform-only.yaml.example) | OCP platform only (smallest / fastest) |
 | `gitops` | [imageset-config-4.22.yaml.example](imageset-config-4.22.yaml.example) | Platform + OpenShift GitOps |
 | `virt-lvms` | [imageset-config-4.22-virt-lvms.yaml.example](imageset-config-4.22-virt-lvms.yaml.example) | Platform + Virt + LVMS + update **graph** / OSUS (**lab default**); example also lists optional guest disks |
+| *(test, not a profile)* | [imageset-config-4.22-gpu-operator-test.yaml.example](imageset-config-4.22-gpu-operator-test.yaml.example) | One platform z-stream (`4.22.12`) + `gpu-operator-certified` `stable` **26.7.2** only |
 
 ### Guest OS images (Virt VM tests)
 

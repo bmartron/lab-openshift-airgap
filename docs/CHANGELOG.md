@@ -3,7 +3,7 @@
 ## [Unreleased]
 
 ### Docs (storage / hypervisor rationale)
-- [architecture/architecture.md](architecture/architecture.md): Proxmox used **until RHEL/NAS NFS issues are fixed**; OCP/registry on `local-lvm` — FAQ + Day 0 pointers
+- [architecture/architecture.md](architecture/architecture.md): Proxmox used **until RHEL/NAS NFS issues are fixed**; registry on `nfs_vm`, OCP on `local-lvm`
 
 ### Docs (versions — BPG provider)
 - [architecture/versions.md](architecture/versions.md): stack table uses **bpg/proxmox ~> 0.85** (not Telmate)

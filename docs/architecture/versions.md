@@ -18,7 +18,7 @@ Last review: **Proxmox VE 9.2** + **OCP 4.22.12**.
 | Terraform | ≥ 1.5 | Mac |
 | Proxmox provider | **[bpg/proxmox](https://registry.terraform.io/providers/bpg/proxmox) ~> 0.85** | [terraform/lab-infra/versions.tf](../../terraform/lab-infra/versions.tf) · [lab-ocp](../../terraform/lab-ocp/versions.tf) |
 | API token | `root@pam!terraform`, privilege separation off (lab) | Proxmox UI |
-| Registry VM | virtio0 32G + virtio1 120G, clone `rhel10-tpl` | Terraform + [proxmox/rhel-cloudinit-template.md](../../proxmox/rhel-cloudinit-template.md) |
+| Registry VM | virtio0 32G + virtio1 120G on `nfs_vm`, clone `rhel10-nfs` | Terraform + [proxmox/rhel-cloudinit-template.md](../../proxmox/rhel-cloudinit-template.md) |
 | Registry data | `/opt/registry` on **virtio1** (`/dev/vdb`) | Ansible `registry_data_device` |
 
 ### OpenShift GA

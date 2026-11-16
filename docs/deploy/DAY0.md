@@ -27,7 +27,7 @@ Next: [DAY1.md](DAY1.md) (Deployment) · Tips: [../faq/README.md](../faq/README.
 ### 1. Proxmox network and storage
 
 - [ ] Bridge **`vmbr1`** — [../../proxmox/network.md](../../proxmox/network.md)
-- [ ] Storage: `nfs_vm` + `nfs_iso` (NAS) for light infra/ISOs; **`local-lvm`** for registry + OCP (NFS is too slow for etcd/registry — [why](../architecture/architecture.md#why-not-nas-nfs)) · [../../terraform/README.md](../../terraform/README.md)
+- [ ] Storage: `nfs_vm` + `nfs_iso` (NAS) for dns, bastion, registry, and ISOs; **`local-lvm`** for OCP (NFS is too slow for etcd — [why](../architecture/architecture.md#why-not-nas-nfs)) · [../../terraform/README.md](../../terraform/README.md)
 - [ ] Snippets enabled on `local`
 
 ```bash
@@ -37,7 +37,7 @@ pvesm status
 
 ### 2. RHEL cloud-init templates
 
-- [ ] `rhel10-tpl` (registry) · `rhel10-nfs` (dns/bastion)  
+- [ ] `rhel10-nfs` (dns, bastion, registry) · `rhel10-tpl` stays on `local-lvm` as the SSD template source  
   [../../proxmox/rhel-cloudinit-template.md](../../proxmox/rhel-cloudinit-template.md)
 
 ### 3. Local config and secrets (Mac)

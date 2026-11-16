@@ -6,9 +6,9 @@ Design reference for **Day 0**. Procedures: [../deploy/DAY0.md](../deploy/DAY0.m
 
 ## Why Proxmox for now
 
-This lab runs on **Proxmox VE** for now, **while waiting to resolve RHEL / NAS NFS issues** that blocked a cleaner RHEL-centric layout (guest and registry disks on the NAS were too slow / unstable for OpenShift etcd and the mirror registry).
+This lab runs on **Proxmox VE** for now, **while waiting to resolve RHEL / NAS NFS issues** that blocked a cleaner RHEL-centric layout (NFS was too slow / unstable for OpenShift etcd).
 
-Proxmox is therefore the practical host: VMs on mixed storage (`nfs_vm` for light infra, **`local-lvm`** on the NUC SSD for OCP + registry). Revisit a RHEL-only hosting model once NFS performance (or an alternative shared storage) is fixed — see [Storage](#storage) below.
+Proxmox is therefore the practical host: VMs on mixed storage (`nfs_vm` for dns, bastion, and the registry; **`local-lvm`** on the NUC SSD for OCP). Revisit a RHEL-only hosting model once NFS performance (or an alternative shared storage) is fixed — see [Storage](#storage) below.
 
 ## Overview
 
@@ -51,7 +51,7 @@ flowchart TB
 |----|------|-----|------|
 | bastion | 2 | 8 GiB | 40 GiB NFS |
 | dns | 1 | 1–2 GiB | ~10 GiB NFS |
-| registry | 2 | 4–8 GiB | OS + data on `local-lvm` |
+| registry | 2 | 4–8 GiB | OS 32 GiB + data 120 GiB on `nfs_vm` |
 | ocp-master-0..2 (compact3) | 8 | 16 GiB each | 120G OS + 100G LVMS |
 
 SNO alternative: one node ~8 cores / 24 GiB — [../../terraform/lab-ocp/README.md](../../terraform/lab-ocp/README.md)
@@ -60,27 +60,21 @@ SNO alternative: one node ~8 cores / 24 GiB — [../../terraform/lab-ocp/README.
 
 | Datastore | Used for | Why |
 |-----------|----------|-----|
-| **`nfs_vm`** (NAS) | dns, bastion OS disks + template `rhel10-nfs` | Enough for light infra; frees NUC SSD |
+| **`nfs_vm`** (NAS) | dns, bastion, **registry** (OS + data) + template `rhel10-nfs` | Frees the NUC SSD for OCP |
 | **`nfs_iso`** (NAS) | RHEL DVD, agent ISO | Shared ISO library |
-| **`local-lvm`** (NUC SSD) | **registry** + **OCP** disks + template `rhel10-tpl` | Performance — see below |
+| **`local-lvm`** (NUC SSD) | **OCP** disks + template `rhel10-tpl` | etcd / control plane — see below |
 
 Details: [../../terraform/README.md](../../terraform/README.md) · templates: [../../proxmox/rhel-cloudinit-template.md](../../proxmox/rhel-cloudinit-template.md)
 
 <a id="why-not-nas-nfs"></a>
 
-### Why OCP and registry are not on the NAS NFS
+### Why OCP stays on the NUC SSD
 
-Same NFS limitation that keeps the lab on **Proxmox + local-lvm** for heavy disks (see [Why Proxmox for now](#why-proxmox)).
+Same NFS limitation that keeps the lab on **Proxmox + local-lvm** for OpenShift disks (see [Why Proxmox for now](#why-proxmox)).
 
-This lab **does not** put OpenShift (RHCOS) or the mirror registry data disks on the NAS NFS. Lab experience: NFS latency and IOPS are too weak for:
+The mirror registry (OS + 120 GiB data) is on **`nfs_vm`** so the NUC SSD can hold the compact3 disks. OpenShift node disks stay on **`local-lvm`** (`storage_perf` in `lab-ocp`): NFS latency and IOPS are too weak for **etcd** and control-plane disks (timeouts, slow API, unstable Ready).
 
-- **etcd** and control-plane disks on OCP nodes (timeouts, slow API, unstable Ready)
-- **Registry** image blobs / frequent small writes under `oc-mirror` and cluster pulls
-
-Those VMs therefore use **`local-lvm`** on the NUC internal SSD (`storage_perf`).  
-dns/bastion stay on **`nfs_vm`**: low I/O, acceptable on NFS.
-
-Do **not** move OCP or registry back to NFS “to save SSD space” without expecting install/runtime pain. Two RHEL templates exist so EFI/OS stay on the same datastore as each clone (NFS vs SSD mix).
+`oc-mirror` and cluster pulls against the registry are slower on NFS. dns, bastion, and registry clone **`rhel10-nfs`** so EFI and OS stay on `nfs_vm`.
 
 ## Related
 
