@@ -1,7 +1,7 @@
 ---
 dns_interface: eth0
 lab_domain: lab.local
-ocp_cluster_name: ocp422
+ocp_cluster_name: ocp
 ocp_topology: sno
 ocp_sno_ip: "172.16.10.100"
 ocp_sno_hostname: ocp-sno-422

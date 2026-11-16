@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Cluster DNS name
+- Cluster name `ocp422` → **`ocp`** (`api.ocp.lab.local`, `*.apps.ocp.lab.local`); mirror path `ocp4-422` unchanged
+
 ### Docs (storage / hypervisor rationale)
 - [architecture/architecture.md](architecture/architecture.md): Proxmox used **until RHEL/NAS NFS issues are fixed**; registry on `nfs_vm`, OCP on `local-lvm`
 
@@ -124,7 +127,7 @@
 - [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md) — workflow install complet, dépannage ISO, surveillance logs
 
 ### Corrigé (configs install GA 4.22.12)
-- `install-config.yaml` : `baseDomain: lab.local` (pas `ocp422.lab.local`), bloc `networking` avec `machineNetwork: 172.16.10.0/24`
+- `install-config.yaml` : `baseDomain: lab.local` (pas `ocp.lab.local`), bloc `networking` avec `machineNetwork: 172.16.10.0/24`
 - `agent-config.yaml` : `apiVersion: v1beta1`, `additionalNTPSources`, `rendezvousIP`, `mac-address` dans networkConfig
 - `rootDeviceHints` : Proxmox SCSI → `/dev/sda` (pas `/dev/vda`) ; chemins `by-id` non acceptés par l'installer
 - Génération ISO : reset `.openshift_install_state.json` si état partiel ; prérequis `xorriso`

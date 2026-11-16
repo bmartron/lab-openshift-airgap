@@ -3,7 +3,7 @@
 apiVersion: v1beta1
 kind: AgentConfig
 metadata:
-  name: ocp422
+  name: ocp
 rendezvousIP: 172.16.10.100
 additionalNTPSources:
 - 172.16.10.11

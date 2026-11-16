@@ -211,9 +211,9 @@ virtctl image-upload pvc rhel-10-2-dvd \
 **Bastion — `/etc/hosts`** (home DNS does not resolve `*.apps`):
 
 ```text
-172.16.10.100  cdi-uploadproxy-openshift-cnv.apps.ocp422.lab.local
-172.16.10.100  console-openshift-console.apps.ocp422.lab.local
-172.16.10.100  oauth-openshift.apps.ocp422.lab.local
+172.16.10.100  cdi-uploadproxy-openshift-cnv.apps.ocp.lab.local
+172.16.10.100  console-openshift-console.apps.ocp.lab.local
+172.16.10.100  oauth-openshift.apps.ocp.lab.local
 ```
 
 **ISO > ~8 GiB — upload OOM (600M limit)**: patch **`HyperConverged`**, not the `CDI` CR alone (HCO reconciles CDI).
@@ -276,13 +276,13 @@ Tunnel: `sudo ssh -L 443:172.16.10.100:443 -N bernard@192.168.1.144`
 `/etc/hosts` on the **Mac** — apps FQDNs as **`127.0.0.1`** (not `172.16.10.100`):
 
 ```text
-127.0.0.1  console-openshift-console.apps.ocp422.lab.local
-127.0.0.1  oauth-openshift.apps.ocp422.lab.local
-127.0.0.1  cdi-uploadproxy-openshift-cnv.apps.ocp422.lab.local
+127.0.0.1  console-openshift-console.apps.ocp.lab.local
+127.0.0.1  oauth-openshift.apps.ocp.lab.local
+127.0.0.1  cdi-uploadproxy-openshift-cnv.apps.ocp.lab.local
 ```
 
 Certificate: open  
-`https://cdi-uploadproxy-openshift-cnv.apps.ocp422.lab.local/v1beta1/upload-form-async`  
+`https://cdi-uploadproxy-openshift-cnv.apps.ocp.lab.local/v1beta1/upload-form-async`  
 (**404** on `/` alone is normal), then retry the console upload.
 
 Tunnel detail: [proxmox/access.md](../../proxmox/access.md) § OpenShift console.

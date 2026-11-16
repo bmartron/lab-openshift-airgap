@@ -7,13 +7,13 @@ This file is the **detailed** CLI reference. Prefer the Day docs for checklist o
 | Parameter    | Value                                                                                                                                       |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | Version      | **4.22.12**                                                                                                                                 |
-| Cluster name | `ocp422`                                                                                                                                    |
-| Base domain  | `lab.local` → API `api.ocp422.lab.local`                                                                                                    |
+| Cluster name | `ocp`                                                                                                                                    |
+| Base domain  | `lab.local` → API `api.ocp.lab.local`                                                                                                    |
 | Topology     | `ocp_topology`: **sno** (`.100`, `platform: none`) or **compact3** (`.100`–`.102`, `platform: baremetal`, API VIP `.50`, ingress VIP `.49`) |
 | Mirror       | `registry.lab.local:5000/ocp4-422`                                                                                                          |
 
 
-**Do not** set `baseDomain: ocp422.lab.local` (double subdomain → `api.ocp422.ocp422.lab.local`).
+**Do not** set `baseDomain: ocp.lab.local` (double subdomain → `api.ocp.ocp.lab.local`).
 
 ## Recommended order
 
@@ -123,7 +123,7 @@ Typical duration: **~30 min** with mirror already present.
 `wait-for` may **timeout on TLS** while the cluster is already up. Confirm:
 
 ```bash
-curl -k https://api.ocp422.lab.local:6443/healthz   # → ok
+curl -k https://api.ocp.lab.local:6443/healthz   # → ok
 ```
 
 Success = `oc login` + node **Ready** + ClusterOperators **Available**.
@@ -152,7 +152,7 @@ oc get co
 ```
 
 Password (if needed): `cat ~/lab/4.22-ga/auth/kubeadmin-password`  
-Console URL: `https://console-openshift-console.apps.ocp422.lab.local`
+Console URL: `https://console-openshift-console.apps.ocp.lab.local`
 
 ### Web console from the Mac
 
@@ -413,7 +413,7 @@ oc delete pod -n openshift-update-service -l updateservice=update-service-oc-mir
 
 #### 5d. Trust the OSUS route CA (ingress) for ClusterVersion
 
-§5a trusts the **registry**. The CVO talks to OSUS over the **apps** route (`*.apps.ocp422.lab.local`), signed by the ingress CA. Without this step you get:
+§5a trusts the **registry**. The CVO talks to OSUS over the **apps** route (`*.apps.ocp.lab.local`), signed by the ingress CA. Without this step you get:
 
 `tls: failed to verify certificate: x509: certificate signed by unknown authority`
 
@@ -436,11 +436,11 @@ Wait ~2–3 minutes for the CVO to pick up the new trust bundle (it only re-quer
 ```bash
 oc get updateservice update-service-oc-mirror -n openshift-update-service \
   -o jsonpath='{.status.policyEngineURI}{"\n"}'
-# → https://update-service-oc-mirror-route-openshift-update-service.apps.ocp422.lab.local
+# → https://update-service-oc-mirror-route-openshift-update-service.apps.ocp.lab.local
 
 oc patch clusterversion version --type merge -p '{
   "spec": {
-    "upstream": "https://update-service-oc-mirror-route-openshift-update-service.apps.ocp422.lab.local/api/upgrades_info/v1/graph"
+    "upstream": "https://update-service-oc-mirror-route-openshift-update-service.apps.ocp.lab.local/api/upgrades_info/v1/graph"
   }
 }'
 

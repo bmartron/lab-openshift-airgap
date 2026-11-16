@@ -69,7 +69,7 @@ sudo tee -a /etc/hosts << 'EOF'
 172.16.10.11  dns.lab.local dns
 172.16.10.20  registry.lab.local registry
 172.16.10.10  bastion.lab.local bastion
-172.16.10.100 api.ocp422.lab.local
+172.16.10.100 api.ocp.lab.local
 EOF
 ```
 

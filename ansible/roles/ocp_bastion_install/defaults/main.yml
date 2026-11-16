@@ -3,7 +3,7 @@
 ocp_install_dir: "{{ bastion_lab_dir }}/4.22-ga"
 ocp_config_backup_dir: "{{ ocp_install_dir }}/config-backup"
 
-ocp_cluster_name: ocp422
+ocp_cluster_name: ocp
 ocp_base_domain: lab.local
 ocp_platform_channel: stable-4.22
 # Installer / clients pin (what the cluster is installed at)

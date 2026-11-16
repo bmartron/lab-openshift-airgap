@@ -7,6 +7,8 @@ In this lab: disconnected catalog, OSUS/updates, LVMS, Virtualization, guest boo
 
 Prereq: cluster **Ready** ([DAY1.md](DAY1.md)) · Tips: [../faq/README.md](../faq/README.md) · Virt detail: [openshift-virt-lab.md](openshift-virt-lab.md)
 
+**Hosts:** Mac = Ansible playbooks · Bastion `bernard@192.168.1.144` = all `oc` / `export KUBECONFIG` — [../../proxmox/access.md](../../proxmox/access.md)
+
 ---
 
 ## Order
@@ -37,20 +39,33 @@ export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig
 oc get packagemanifest -n openshift-marketplace | grep -iE 'lvms|kubevirt|cincinnati'
 ```
 
-### 3. LVMS (Mac or UI)
+### 3. LVMS
+
+**Mac** — Subscription (or install from OperatorHub in the console):
 
 ```bash
+cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/ansible
 ansible-playbook playbooks/bastion-ocp-day2.yml -e ocp_day2_install_lvms=true --tags lvms
-# Then create LVMCluster on /dev/vdb (not created by Subscription alone)
+```
+
+Then create **LVMCluster** on `/dev/vdb` (console or YAML — Subscription alone does not create it).
+
+**Bastion** — verify:
+
+```bash
+export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig
 oc get csv -n openshift-storage
 oc get lvmcluster -A && oc get sc lvms-vg1
 ```
 
-### 4. Virtualization (UI)
+### 4. Virtualization
 
-Install `kubevirt-hyperconverged` from local catalog → HCO Ready.
+**Console** — install `kubevirt-hyperconverged` from the local catalog → wait until HCO is Ready.
+
+**Bastion** — verify:
 
 ```bash
+export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig
 oc get csv -n openshift-cnv
 oc get hyperconverged -n openshift-cnv
 ```
@@ -58,6 +73,7 @@ oc get hyperconverged -n openshift-cnv
 ### 5. Guest boot sources (Mac)
 
 ```bash
+cd /Users/bmartron/Documents/Cursor/Projet-Airgap-deploy/ansible
 ansible-playbook playbooks/bastion-ocp-day2.yml \
   -e ocp_day2_guest_boots=true --tags guest_boots
 ```
@@ -65,14 +81,16 @@ ansible-playbook playbooks/bastion-ocp-day2.yml \
 ### 6. Confirm imports (bastion)
 
 ```bash
+export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig
 oc get dv,pvc,datasource -n openshift-virtualization-os-images
 ```
 
 Console: **Bootable volumes** → project **`openshift-virtualization-os-images`** or **All Projects**.
 
-### 7. Optional — upgrade
+### 7. Optional — upgrade (bastion)
 
 ```bash
+export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig
 oc adm upgrade
 oc adm upgrade --to=4.22.12
 ```

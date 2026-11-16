@@ -55,4 +55,4 @@ ocp_day2_virt_namespace: openshift-cnv
 
 # ClusterVersion upstream path after UpdateService is Ready
 ocp_day2_osus_upstream: >-
-  https://update-service-oc-mirror-route-openshift-update-service.apps.{{ ocp_cluster_name | default('ocp422') }}.{{ ocp_base_domain | default('lab.local') }}/api/upgrades_info/v1/graph
+  https://update-service-oc-mirror-route-openshift-update-service.apps.{{ ocp_cluster_name | default('ocp') }}.{{ ocp_base_domain | default('lab.local') }}/api/upgrades_info/v1/graph

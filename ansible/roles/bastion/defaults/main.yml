@@ -36,6 +36,6 @@ bastion_etc_hosts_entries: |
   {{ dns_ip }}  dns.lab.local dns
   {{ registry_ip }}  {{ registry_hostname }} registry
   {{ bastion_lab_ip }}  bastion.lab.local bastion
-  {{ bastion_ocp_api_ip }}  api.{{ ocp_cluster_name | default('ocp422') }}.{{ ocp_base_domain | default('lab.local') }} api-int.{{ ocp_cluster_name | default('ocp422') }}.{{ ocp_base_domain | default('lab.local') }}
-  {{ bastion_ocp_apps_ip }}  oauth-openshift.apps.{{ ocp_cluster_name | default('ocp422') }}.{{ ocp_base_domain | default('lab.local') }}
-  {{ bastion_ocp_apps_ip }}  console-openshift-console.apps.{{ ocp_cluster_name | default('ocp422') }}.{{ ocp_base_domain | default('lab.local') }}
+  {{ bastion_ocp_api_ip }}  api.{{ ocp_cluster_name | default('ocp') }}.{{ ocp_base_domain | default('lab.local') }} api-int.{{ ocp_cluster_name | default('ocp') }}.{{ ocp_base_domain | default('lab.local') }}
+  {{ bastion_ocp_apps_ip }}  oauth-openshift.apps.{{ ocp_cluster_name | default('ocp') }}.{{ ocp_base_domain | default('lab.local') }}
+  {{ bastion_ocp_apps_ip }}  console-openshift-console.apps.{{ ocp_cluster_name | default('ocp') }}.{{ ocp_base_domain | default('lab.local') }}

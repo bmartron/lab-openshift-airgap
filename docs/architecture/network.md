@@ -29,9 +29,9 @@
 
 | FQDN | IP | Notes |
 |------|-----|-------|
-| `api.ocp422.lab.local` | `172.16.10.50` | API VIP |
-| `api-int.ocp422.lab.local` | `172.16.10.50` | Internal API VIP |
-| `*.apps.ocp422.lab.local` | `172.16.10.49` | Ingress VIP |
+| `api.ocp.lab.local` | `172.16.10.50` | API VIP |
+| `api-int.ocp.lab.local` | `172.16.10.50` | Internal API VIP |
+| `*.apps.ocp.lab.local` | `172.16.10.49` | Ingress VIP |
 | Host A/PTR | `.100`–`.102` | Node hostnames |
 
 SNO uses `.100` for API/ingress (no VIPs). Deployed by Ansible role `dns` — [../../dns/dnsmasq.conf.example](../../dns/dnsmasq.conf.example).

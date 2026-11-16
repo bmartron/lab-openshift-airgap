@@ -118,9 +118,9 @@ Ou créer le fichier directement sur la VM avec `sudo tee` — voir le contenu d
 Sur la VM DNS :
 
 ```bash
-dig @127.0.0.1 api.ocp422.lab.local +short    # → 172.16.10.100
-dig @127.0.0.1 api.ocp422.lab.local +short    # → 172.16.10.100
-dig @127.0.0.1 test.apps.ocp422.lab.local +short
+dig @127.0.0.1 api.ocp.lab.local +short    # → 172.16.10.100
+dig @127.0.0.1 api.ocp.lab.local +short    # → 172.16.10.100
+dig @127.0.0.1 test.apps.ocp.lab.local +short
 ```
 
 Depuis **Proxmox** et **bastion** :
@@ -206,8 +206,8 @@ sudo firewall-cmd --reload
 | `dns.lab.local` | `172.16.10.11` |
 | `bastion.lab.local` | `172.16.10.10` |
 | `registry.lab.local` | `172.16.10.20` |
-| `api.ocp422.lab.local` | `172.16.10.100` |
-| `*.apps.ocp422.lab.local` | `172.16.10.100` |
+| `api.ocp.lab.local` | `172.16.10.100` |
+| `*.apps.ocp.lab.local` | `172.16.10.100` |
 
 ## dnsmasq au reboot (recommandé)
 

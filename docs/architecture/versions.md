@@ -78,7 +78,7 @@ curl -O https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.22.12
 
 | Cluster | Base domain | API | Node |
 |---------|-------------|-----|------|
-| GA | `ocp422.lab.local` | `api.ocp422.lab.local` | `172.16.10.100` |
+| GA | `ocp.lab.local` | `api.ocp.lab.local` | `172.16.10.100` |
 
 ## Updating versions
 

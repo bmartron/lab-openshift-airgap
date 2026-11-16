@@ -1,7 +1,7 @@
 apiVersion: v1
 baseDomain: lab.local
 metadata:
-  name: ocp422
+  name: ocp
 compute:
 - name: worker
   replicas: 0

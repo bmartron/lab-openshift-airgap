@@ -22,9 +22,9 @@ address=/registry.lab.local/172.16.10.20
 address=/ocp-master-0.lab.local/172.16.10.100
 address=/ocp-master-1.lab.local/172.16.10.101
 address=/ocp-master-2.lab.local/172.16.10.102
-address=/api.ocp422.lab.local/172.16.10.100
-address=/api-int.ocp422.lab.local/172.16.10.100
-address=/.apps.ocp422.lab.local/172.16.10.100
+address=/api.ocp.lab.local/172.16.10.100
+address=/api-int.ocp.lab.local/172.16.10.100
+address=/.apps.ocp.lab.local/172.16.10.100
 
 # Optional DHCP (disabled when all IPs are static)
 # dhcp-range=172.16.10.50,172.16.10.99,255.255.255.0,12h

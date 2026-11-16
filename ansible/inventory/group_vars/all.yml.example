@@ -30,6 +30,9 @@ bastion_install_startup_check: true
 
 # Install agent — ansible-playbook playbooks/bastion-ocp-install.yml
 # Topology must match terraform/lab-ocp (sno | compact3)
+# FQDNs: api.ocp.lab.local / *.apps.ocp.lab.local (not versioned in the name)
+ocp_cluster_name: ocp
+ocp_base_domain: lab.local
 ocp_topology: compact3
 # compact3 → install-config platform baremetal + VIPs (free on 172.16.10.0/24)
 ocp_api_vip: "172.16.10.50"

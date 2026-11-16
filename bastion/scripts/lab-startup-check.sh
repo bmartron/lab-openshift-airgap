@@ -16,7 +16,7 @@ BASTION_IP="${BASTION_IP:-172.16.10.10}"
 SNO_IP="${SNO_IP:-172.16.10.100}"
 REGISTRY_HOST="${REGISTRY_HOST:-registry.lab.local}"
 REGISTRY_PORT="${REGISTRY_PORT:-5000}"
-API_FQDN="${API_FQDN:-api.ocp422.lab.local}"
+API_FQDN="${API_FQDN:-api.ocp.lab.local}"
 OCP_MIRROR_NS="${OCP_MIRROR_NS:-ocp4-422}"
 
 if [[ -f "$VERSIONS_FILE" ]]; then
