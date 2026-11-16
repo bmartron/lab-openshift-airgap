@@ -95,6 +95,20 @@ oc adm upgrade
 oc adm upgrade --to=4.22.12
 ```
 
+Watch progress (second shell) — platform operators vs OLM CSVs:
+
+```bash
+export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig
+
+# ClusterVersion + all ClusterOperators (platform upgrade)
+watch -n 5 'oc get clusterversion; echo; oc get co'
+
+# OLM operators only (LVMS / Virt / OSUS CSV phases)
+watch -n 5 'oc get csv -A'
+```
+
+Same helpers are listed in [DAY0.md](DAY0.md) and used during install wait in [DAY1.md](DAY1.md).
+
 ### 8. Daily ops
 
 Power cycle order: [lab-power-cycle.md](lab-power-cycle.md)

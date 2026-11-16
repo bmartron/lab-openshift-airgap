@@ -71,6 +71,24 @@ podman save -o ~/Downloads/registry2-amd64.tar docker.io/library/registry:2
 
 ---
 
+## Watch helpers (Day 1 / Day 2 — bastion)
+
+No cluster yet on Day 0. After install produces `~/lab/4.22-ga/auth/kubeconfig` on the bastion (`bernard@192.168.1.144`), use these to follow progress:
+
+```bash
+export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig
+
+# Platform install or upgrade (ClusterVersion + all ClusterOperators)
+watch -n 5 'oc get clusterversion; echo; oc get co'
+
+# OLM operators only (CSV — not the full platform set)
+watch -n 5 'oc get csv -A'
+```
+
+Also referenced in [DAY1.md](DAY1.md) § wait/Ready and [DAY2.md](DAY2.md) § upgrade.
+
+---
+
 ## Done when
 
 - Design choices recorded (topology, versions, mirror profile)

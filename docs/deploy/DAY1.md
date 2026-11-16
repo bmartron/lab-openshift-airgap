@@ -107,6 +107,15 @@ openshift-install agent create cluster-manifests --dir .
 openshift-install agent wait-for install-complete --dir . --log-level info
 ```
 
+In a **second** bastion shell, once `auth/kubeconfig` exists, watch platform operators:
+
+```bash
+export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig
+watch -n 5 'oc get clusterversion; echo; oc get co'
+```
+
+(`oc get csv -A` is only OLM operators later — Day 2. Cheat sheet also in [DAY0.md](DAY0.md).)
+
 ### 9. Confirm Ready (bastion)
 
 ```bash
