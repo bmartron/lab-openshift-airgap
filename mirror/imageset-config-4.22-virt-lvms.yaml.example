@@ -1,7 +1,14 @@
-# Platform + Virtualization + LVMS + update graph (OSUS).
-# Platform: min≠max + shortestPath:true → upgrade path only.
-# Operators: one package entry with channel min/max (duplicate packages rejected by oc-mirror).
-# additionalImages: RHEL/CentOS guest container disks for Virt VM tests (~few GiB each; not DVD ISOs).
+# Lab default — platform single-pin + operators by channel (no CSV version pins).
+# Prefer Ansible: ocp_imageset_profile=virt-lvms → regenerates ~/lab/4.22-ga/imageset-config.yaml
+#
+# Why no operator min/max: pinning a CSV that is missing from channel metadata
+# breaks the pruned index (opm: "bundle ... not found in any channel entries").
+# Channel-only stays consistent with the catalog; Subscription picks the channel head.
+#
+# Platform (as of 2026-11-18): 4.22.22
+# Operators: Virt stable / LVMS stable-4.22 / OSUS v1 (whole channel)
+#
+# OpenShift 5: imageset-config-5.0-virt-lvms.yaml.example
 apiVersion: mirror.openshift.io/v1alpha2
 kind: ImageSetConfiguration
 mirror:
@@ -10,8 +17,8 @@ mirror:
       - amd64
     channels:
       - name: stable-4.22
-        minVersion: 4.22.0
-        maxVersion: 4.22.12
+        minVersion: 4.22.22
+        maxVersion: 4.22.22
         shortestPath: true
     graph: true
   operators:
@@ -20,13 +27,9 @@ mirror:
         - name: kubevirt-hyperconverged
           channels:
             - name: stable
-              minVersion: 4.22.0
-              maxVersion: 4.22.9
         - name: lvms-operator
           channels:
             - name: stable-4.22
-              minVersion: 4.22.0
-              maxVersion: 4.22.0
         - name: cincinnati-operator
           channels:
             - name: v1

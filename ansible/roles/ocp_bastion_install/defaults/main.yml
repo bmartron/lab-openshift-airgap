@@ -7,9 +7,9 @@ ocp_cluster_name: ocp
 ocp_base_domain: lab.local
 ocp_platform_channel: stable-4.22
 # Installer / clients pin (what the cluster is installed at)
-ocp_platform_version: "4.22.12"
-# Imageset platform channel span (upgrade lab: min < max). Use shortestPath
-# so oc-mirror pulls the upgrade path endpoints, not every z-stream in between.
+ocp_platform_version: "4.22.22"
+# Imageset platform pin (min=max for single version). For upgrade-lab spans
+# set min < max and keep shortestPath so oc-mirror skips intermediate z-streams.
 ocp_platform_min_version: "{{ ocp_platform_version }}"
 ocp_platform_max_version: "{{ ocp_platform_version }}"
 ocp_mirror_shortest_path: true
@@ -26,7 +26,7 @@ ocp_topology: sno
 ocp_sno_ip: 172.16.10.100
 ocp_sno_mac: ""
 ocp_sno_interface: enp6s18
-ocp_sno_hostname: ocp-sno-422
+ocp_sno_hostname: ocp-master-0  # same nomenclature as compact3 node0
 ocp_sno_root_device: "/dev/disk/by-path/pci-0000:06:0a.0"
 
 # compact3 defaults — align with terraform/lab-ocp variables.tf
@@ -56,7 +56,7 @@ ocp_dns_ip: "{{ dns_ip }}"
 ocp_ntp_ip: "{{ lab_ntp_server }}"
 
 # compact3 + platform baremetal (agent) — VIPs must be free on lab L2 (vmbr1)
-# SNO must stay platform none (no VIPs) — Red Hat agent-based requirement
+# sno: platform none only (installer rejects baremetal with 1 CP + 0 workers)
 ocp_api_vip: "172.16.10.50"
 ocp_ingress_vip: "172.16.10.49"
 
@@ -65,16 +65,17 @@ ocp_pull_secret_path: "{{ playbook_dir }}/../files/pull-secret.txt"
 # Cluster sshKey: live from bastion ~/.ssh/id_ed25519.pub (see tasks)
 ocp_registry_ca_fallback_path: "{{ playbook_dir }}/../files/registry-ca.crt"
 
-# imageset: platform-only | gitops | virt-lvms
+# imageset profile — lab default virt-lvms (see mirror/imageset-config-4.22-virt-lvms.yaml.example)
 ocp_imageset_profile: virt-lvms
-# Operator pins — set min≠max to mirror a version range for day-2 upgrades
-ocp_virt_operator_version: "4.22.9"
+# Operators: empty version = channel-only (recommended; avoids pruned-index CSV gaps).
+# Set e.g. ocp_virt_operator_version: "4.22.9" only when you need a hard pin.
+ocp_virt_operator_version: ""
 ocp_virt_operator_min_version: "{{ ocp_virt_operator_version }}"
 ocp_virt_operator_max_version: "{{ ocp_virt_operator_version }}"
 ocp_gitops_channel: gitops-1.16
 ocp_gitops_version: "1.16.5"
 ocp_lvms_channel: stable-4.22
-ocp_lvms_operator_version: "4.22.0"
+ocp_lvms_operator_version: ""
 ocp_lvms_operator_min_version: "{{ ocp_lvms_operator_version }}"
 ocp_lvms_operator_max_version: "{{ ocp_lvms_operator_version }}"
 

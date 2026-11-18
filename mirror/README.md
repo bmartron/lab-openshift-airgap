@@ -21,12 +21,10 @@ Default in role defaults: **`virt-lvms`**.
 
 ### Imageset profiles (GA 4.22 → namespace `ocp4-422`)
 
-| `ocp_imageset_profile` | Example in repo | Contents |
-|------------------------|-----------------|----------|
-| `platform-only` | [imageset-config-4.22-platform-only.yaml.example](imageset-config-4.22-platform-only.yaml.example) | OCP platform only (smallest / fastest) |
-| `gitops` | [imageset-config-4.22.yaml.example](imageset-config-4.22.yaml.example) | Platform + OpenShift GitOps |
-| `virt-lvms` | [imageset-config-4.22-virt-lvms.yaml.example](imageset-config-4.22-virt-lvms.yaml.example) | Platform + Virt + LVMS + update **graph** / OSUS (**lab default**); example also lists optional guest disks |
-| *(upgrade demo, 2 steps)* | [imageset-config-4.22-to-5.0-upgrade.yaml.example](imageset-config-4.22-to-5.0-upgrade.yaml.example) then […-step2-5.0.yaml.example](imageset-config-4.22-to-5.0-upgrade-step2-5.0.yaml.example) | **4.22.22** + Virt/LVMS/OSUS, then **5.0.1** + Virt **5.0.0** / LVMS **`stable-5.0`** / OSUS (5.0.1 needs ≥4.22.17; split: no `stable-4.23`) |
+| Example / profile | Contents |
+|-------------------|----------|
+| [imageset-config-4.22-virt-lvms.yaml.example](imageset-config-4.22-virt-lvms.yaml.example) (`ocp_imageset_profile: virt-lvms`) | **4.22.22** + Virt/LVMS/OSUS **by channel** (no CSV pin) + guest disks (**lab default**) |
+| [imageset-config-5.0-virt-lvms.yaml.example](imageset-config-5.0-virt-lvms.yaml.example) (manual) | **5.0.2** + Virt/LVMS/OSUS **by channel** + guest disks |
 
 ### Guest OS images (Virt VM tests)
 
@@ -44,21 +42,25 @@ Plan registry free space: existing Virt/LVMS/OSUS plus roughly **~5–15 GiB** f
 
 **Not automatic in Virt:** images land in the registry only. Default boot sources still pull from Red Hat/Quay — patch HyperConverged (API `v1beta1` on 4.22) so the catalog gets PVC boot sources — [docs/deploy/openshift-virt-lab.md](../docs/deploy/openshift-virt-lab.md) § Guest OS boot sources · Day-2 §6 in [openshift/4.22-ga/README.md](../openshift/4.22-ga/README.md).
 
-### Two platform versions (upgrade)
+### Single-pin vs upgrade span
 
-One OpenShift install dir (`~/lab/4.22-ga`). Span min→max **with** `shortestPath: true` so oc-mirror pulls the upgrade path (endpoints), not every z-stream in between:
+**Lab default:** one platform version (`4.22.22`) + operators **channel-only** (no `minVersion`/`maxVersion` — avoids broken pruned catalogs). Optional operator pins via `ocp_virt_operator_version` / `ocp_lvms_operator_version` in `all.yml`.
+
+Optional upgrade-lab span (min≠max) needs `shortestPath: true` so oc-mirror pulls endpoints, not every z-stream:
 
 ```yaml
-# ansible/inventory/group_vars/all.yml
-ocp_platform_version: "4.22.0"          # installer / clients (install at this version)
+# ansible/inventory/group_vars/all.yml — optional span example
+ocp_platform_version: "4.22.0"
 ocp_platform_min_version: "4.22.0"
-ocp_platform_max_version: "4.22.12"
+ocp_platform_max_version: "4.22.22"
 ocp_mirror_shortest_path: true          # REQUIRED when min≠max
 ```
 
 Without `shortestPath`, a wide span can pull thousands of images.
 
-Operators have **no** `shortestPath`. Use **one** package entry with channel `minVersion`/`maxVersion` (oc-mirror rejects duplicate package names). Intermediate operator bundles between min and max are included — usually far fewer than platform z-streams.
+Operators have **no** `shortestPath`. Prefer `minVersion == maxVersion`. Use **one** package entry (oc-mirror rejects duplicate package names).
+
+**4 → 5:** never put `stable-4.22` and `stable-5.0` in the same ImageSet. Mirror [4.22 virt-lvms](imageset-config-4.22-virt-lvms.yaml.example) then [5.0 virt-lvms](imageset-config-5.0-virt-lvms.yaml.example).
 
 Verify on bastion before mirroring: `head -40 ~/lab/4.22-ga/imageset-config.yaml`
 
@@ -76,8 +78,8 @@ oc-mirror -c imageset-config.yaml \
   --v2
 ```
 
-Typical duration: ~7+ minutes (platform-only); longer with Virt/LVMS/operators.  
-Disk on registry (`/opt/registry`): plan **≥ 120 GiB**; ~22 GiB observed for GA 4.22.12 platform.
+Typical duration: longer with Virt/LVMS/operators + guest disks.  
+Disk on registry (`/opt/registry`): plan **≥ 120 GiB**; ~22 GiB observed for a single 4.22.z platform pin.
 
 ## After mirror
 

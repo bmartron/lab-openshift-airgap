@@ -8,7 +8,7 @@ rendezvousIP: 172.16.10.100
 additionalNTPSources:
 - 172.16.10.11
 hosts:
-- hostname: ocp-sno-422
+- hostname: ocp-master-0
   interfaces:
   - name: enp6s18
     macAddress: "bc:24:11:e1:8f:82"

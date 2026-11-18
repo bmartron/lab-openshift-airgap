@@ -6,7 +6,7 @@ This file is the **detailed** CLI reference. Prefer the Day docs for checklist o
 
 | Parameter    | Value                                                                                                                                       |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Version      | **4.22.12**                                                                                                                                 |
+| Version      | **4.22.22** (single-pin ImageSet; V5 gateway **5.0.2**)                                                                                    |
 | Cluster name | `ocp`                                                                                                                                    |
 | Base domain  | `lab.local` → API `api.ocp.lab.local`                                                                                                    |
 | Topology     | `ocp_topology`: **sno** (`.100`, `platform: none`) or **compact3** (`.100`–`.102`, `platform: baremetal`, API VIP `.50`, ingress VIP `.49`) |
@@ -319,12 +319,13 @@ Details: [docs/deploy/openshift-virt-lab.md](../../docs/deploy/openshift-virt-la
 
 ### 5. Air-gap updates (Cincinnati / OSUS)
 
-Prerequisite in the imageset: `platform.graph: true`, `cincinnati-operator`, and a platform span with `shortestPath: true` (e.g. install **4.22.0**, upgrade to **4.22.12**):
+Prerequisite in the imageset: `platform.graph: true`, `cincinnati-operator`. Lab default is a single pin (**4.22.22**). Optional upgrade span needs `shortestPath: true`:
 
 ```yaml
+# Optional span — lab default is min=max=4.22.22
 ocp_platform_version: "4.22.0"
 ocp_platform_min_version: "4.22.0"
-ocp_platform_max_version: "4.22.12"
+ocp_platform_max_version: "4.22.22"
 ocp_mirror_shortest_path: true
 ```
 
@@ -460,7 +461,7 @@ If you still see `RemoteFailed` / `unknown authority`, confirm §5d then wait an
 To apply the upgrade:
 
 ```bash
-oc adm upgrade --to=4.22.12
+oc adm upgrade --to=4.22.22
 ```
 
 Console: **Administration → Cluster Settings**.

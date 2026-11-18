@@ -1,4 +1,4 @@
-# OpenShift SNO — cp terraform.tfvars.sno.example terraform.tfvars
+# OpenShift SNO (1 node, platform none via Ansible) — cp to terraform.tfvars
 # Infra VMs: ../lab-infra/
 
 proxmox_api_url          = "https://192.168.1.147:8006/api2/json"
@@ -12,11 +12,11 @@ lab_bridge   = "vmbr1"
 
 ocp_topology = "sno"
 
-sno_vm_name   = "ocp-sno"
+sno_vm_name   = "ocp-master-0"
 sno_ip        = "172.16.10.100"
 sno_mac       = "bc:24:11:e1:8f:82" # must match ansible ocp_sno_mac
 sno_cpu_cores = 8
-sno_memory_mb = 24576
+sno_memory_mb = 32768
 
 agent_iso       = "nfs_iso:iso/agent.x86_64.iso"
 install_disk_gb = 120

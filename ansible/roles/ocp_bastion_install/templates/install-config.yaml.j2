@@ -27,7 +27,7 @@ imageContentSources:
   mirrors:
   - {{ ocp_registry_fqdn }}:{{ ocp_registry_port }}/{{ ocp_mirror_namespace }}/openshift/release
 {% if ocp_topology == 'compact3' %}
-# Multi-node agent: baremetal + VIPs (API/ingress). SNO must use platform none.
+# Multi-node agent: baremetal + VIPs. openshift-install rejects baremetal with 1 CP + 0 workers.
 platform:
   baremetal:
     apiVIPs:
@@ -35,6 +35,7 @@ platform:
     ingressVIPs:
     - {{ ocp_ingress_vip }}
 {% else %}
+# SNO (1 CP + 0 workers): platform none only (no VIPs) — installer requirement.
 platform:
   none: {}
 {% endif %}

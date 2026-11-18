@@ -13,8 +13,8 @@ Next: [DAY1.md](DAY1.md) (Deployment) · Tips: [../faq/README.md](../faq/README.
 
 | Decision | Lab default | Reference |
 |----------|-------------|-----------|
-| Topology | **compact3** (or `sno`) | [../architecture/architecture.md](../architecture/architecture.md) |
-| OpenShift version | **4.22.12** | [../architecture/versions.md](../architecture/versions.md) |
+| Topology | **sno** (`platform: none`) or **compact3** (baremetal + VIP `.50`/`.49`) | [../architecture/architecture.md](../architecture/architecture.md) |
+| OpenShift version | **4.22.22** (V5 gateway **5.0.2**) | [../architecture/versions.md](../architecture/versions.md) |
 | Network | `vmbr1` / `172.16.10.0/24` | [../architecture/network.md](../architecture/network.md) |
 | Bastion dual-NIC | LAN `.144` + lab `.10` | [../architecture/bastion.md](../architecture/bastion.md) |
 | Mirror profile | `virt-lvms` (if Virt + guests) | [../../mirror/README.md](../../mirror/README.md) |

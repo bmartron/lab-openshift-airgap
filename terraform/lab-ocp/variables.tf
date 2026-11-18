@@ -73,7 +73,7 @@ variable "cpu_type" {
 
 variable "sno_vm_name" {
   type    = string
-  default = "ocp-sno"
+  default = "ocp-master-0" # align with compact3 node0 hostname
 }
 
 variable "sno_ip" {
@@ -95,7 +95,7 @@ variable "sno_cpu_cores" {
 
 variable "sno_memory_mb" {
   type    = number
-  default = 24576
+  default = 32768
 }
 
 # --- compact3 defaults (used when ocp_topology = compact3) ---

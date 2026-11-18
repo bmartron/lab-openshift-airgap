@@ -4,13 +4,13 @@
 
 | Track | OpenShift version | Use | Config |
 |-------|-------------------|-----|--------|
-| **GA** | **4.22.12** (Kubernetes 1.35) | Air-gap SNO / compact3; upgrades via mirror min/max | [openshift/4.22-ga/](../../openshift/4.22-ga/) |
+| **GA** | **4.22.22** (Kubernetes 1.35) | Air-gap SNO / compact3; single-pin mirror (V5 via separate ImageSet) | [openshift/4.22-ga/](../../openshift/4.22-ga/) |
 
 Check z-streams on [console.redhat.com](https://console.redhat.com/openshift/downloads).
 
 ## Stack alignment
 
-Last review: **Proxmox VE 9.2** + **OCP 4.22.12**.
+Last review: **Proxmox VE 9.2** + **OCP 4.22.22** (V5 gateway **5.0.2**).
 
 | Component | Version / choice | Where defined |
 |-----------|------------------|---------------|
@@ -25,7 +25,8 @@ Last review: **Proxmox VE 9.2** + **OCP 4.22.12**.
 
 | Item | Value |
 |------|-------|
-| Release | **4.22.12** |
+| Release | **4.22.22** (platform single-pin; Virt/LVMS/OSUS by channel) |
+| V5 ImageSet | **5.0.2** — [imageset-config-5.0-virt-lvms.yaml.example](../../mirror/imageset-config-5.0-virt-lvms.yaml.example) |
 | Mirror namespace | `ocp4-422` |
 | SNO IP | `172.16.10.100` |
 | Bastion binaries | `oc`, `openshift-install`, **`oc-mirror`** |
@@ -61,9 +62,9 @@ Last review: **Proxmox VE 9.2** + **OCP 4.22.12**.
 ## Binaries (bastion)
 
 ```bash
-export OCP_RELEASE=4.22.12-x86_64
-curl -O https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.22.12/openshift-client-linux-4.22.12.tar.gz
-curl -O https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.22.12/openshift-install-linux-4.22.12.tar.gz
+export OCP_RELEASE=4.22.22-x86_64
+curl -O https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.22.22/openshift-client-linux-4.22.22.tar.gz
+curl -O https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.22.22/openshift-install-linux-4.22.22.tar.gz
 ```
 
 (Or Ansible `lab-infra` bastion role.)
@@ -72,7 +73,7 @@ curl -O https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.22.12
 
 | Track | Registry path | Disk |
 |-------|---------------|------|
-| GA 4.22.12 | `registry.lab.local:5000/ocp4-422` | ≥ 120 GiB |
+| GA 4.22.22 (+ optional 5.0.2) | `registry.lab.local:5000/ocp4-422` | ≥ 120 GiB |
 
 ## Cluster DNS
 

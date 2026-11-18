@@ -55,7 +55,7 @@ Prefer Terraform + Ansible over hand-edited YAML on the bastion.
 | Network | `vmbr0` home · `vmbr1` lab `172.16.10.0/24` |
 | VIPs (compact3) | API `.50` · ingress `.49` |
 | OCP disks | virtio0 120G + virtio1 100G (`lvms_disk_gb = 100`) |
-| Versions | OCP **4.22.12** · [docs/architecture/versions.md](docs/architecture/versions.md) |
+| Versions | OCP **4.22.22** (V5 **5.0.2**) · [docs/architecture/versions.md](docs/architecture/versions.md) |
 
 ```
 docs/deploy/     ← Day 0 / 1 / 2

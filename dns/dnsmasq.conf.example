@@ -18,10 +18,9 @@ address=/dns.lab.local/172.16.10.11
 address=/bastion.lab.local/172.16.10.10
 address=/registry.lab.local/172.16.10.20
 
-# OpenShift — compact3 (ocp_topology: compact3). For sno: ocp-sno-422 → .100 only.
+# OpenShift — prefer Ansible role dns (renders sno or compact3).
+# Example: sno (platform none) — api/apps on node .100
 address=/ocp-master-0.lab.local/172.16.10.100
-address=/ocp-master-1.lab.local/172.16.10.101
-address=/ocp-master-2.lab.local/172.16.10.102
 address=/api.ocp.lab.local/172.16.10.100
 address=/api-int.ocp.lab.local/172.16.10.100
 address=/.apps.ocp.lab.local/172.16.10.100

@@ -27,16 +27,17 @@ SNO `sshKey` is **not** a Mac file: the playbook reads the live bastion `~/.ssh/
 Keep durable settings in **`ansible/inventory/group_vars/all.yml`** (example):
 
 ```yaml
-ocp_topology: compact3                  # or sno — must match terraform/lab-ocp
+ocp_topology: sno                       # or compact3 — must match terraform/lab-ocp
 ocp_api_vip: "172.16.10.50"             # compact3 baremetal API VIP (free on lab L2)
 ocp_ingress_vip: "172.16.10.49"         # compact3 ingress VIP
+ocp_sno_mac: "bc:24:11:e1:8f:82"        # required for sno
 ocp_sno_root_device: "/dev/disk/by-path/pci-0000:06:0a.0"
 ocp_imageset_profile: virt-lvms             # see profiles below
 ```
 
-**compact3** uses `platform: baremetal` + those VIPs in `install-config`. **sno** stays `platform: none` (no VIPs). DNS / bastion `/etc/hosts`: `api`→API VIP, `*.apps`→ingress VIP.
+**compact3** uses `platform: baremetal` + those VIPs. **sno** must use `platform: none` (openshift-install rejects baremetal with 1 CP + 0 workers). DNS / bastion `/etc/hosts`: compact3 → VIPs; sno → node `.100`.
 
-For **sno**, also set `ocp_sno_mac` (must match Terraform). For **compact3**, MACs/IPs default to Terraform values (`…:82` / `:83` / `:84` on `.100`–`.102`).
+For **sno**, set `ocp_sno_mac` (must match Terraform). For **compact3**, MACs/IPs default to Terraform values (`…:82` / `:83` / `:84` on `.100`–`.102`).
 
 ### 3. Run with ISO generate + push (one-shot)
 
@@ -95,7 +96,7 @@ That builds `agent.x86_64.iso` on the bastion and copies it to Proxmox `nfs_iso`
 | `ocp_platform_min_version` / `ocp_platform_max_version` | = `ocp_platform_version` | Set min≠max to mirror two z-streams for upgrades |
 | `ocp_compact3_nodes` / `ocp_nodes` | role defaults | Override host list if MACs/IPs differ |
 
-**Imageset profiles:** `platform-only` \| `gitops` \| `virt-lvms`
+**Imageset profile (lab):** `virt-lvms` — examples under [mirror/](../../mirror/)
 
 ---
 

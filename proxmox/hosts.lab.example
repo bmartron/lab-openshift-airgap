@@ -7,4 +7,4 @@
 172.16.10.11  dns.lab.local dns
 172.16.10.20  registry.lab.local registry
 172.16.10.10  bastion.lab.local bastion
-172.16.10.100 ocp-sno-422.lab.local api.ocp.lab.local
+172.16.10.100 ocp-master-0.lab.local api.ocp.lab.local api-int.ocp.lab.local

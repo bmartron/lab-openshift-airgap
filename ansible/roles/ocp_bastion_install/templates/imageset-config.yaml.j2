@@ -23,18 +23,23 @@ mirror:
               minVersion: {{ ocp_gitops_version }}
               maxVersion: {{ ocp_gitops_version }}
 {% elif ocp_imageset_profile == 'virt-lvms' %}
+        # Channel-only by default (no min/max) → catalog stays consistent with index.
+        # Optional pins: set ocp_virt_operator_* / ocp_lvms_operator_* versions in all.yml.
         # One package entry only (oc-mirror rejects duplicates).
-        # No shortestPath for operators — channel min→max includes intermediate bundles.
         - name: kubevirt-hyperconverged
           channels:
             - name: stable
+{% if (ocp_virt_operator_min_version | default('') | string | length) > 0 %}
               minVersion: {{ ocp_virt_operator_min_version }}
-              maxVersion: {{ ocp_virt_operator_max_version }}
+              maxVersion: {{ ocp_virt_operator_max_version | default(ocp_virt_operator_min_version) }}
+{% endif %}
         - name: lvms-operator
           channels:
             - name: {{ ocp_lvms_channel }}
+{% if (ocp_lvms_operator_min_version | default('') | string | length) > 0 %}
               minVersion: {{ ocp_lvms_operator_min_version }}
-              maxVersion: {{ ocp_lvms_operator_max_version }}
+              maxVersion: {{ ocp_lvms_operator_max_version | default(ocp_lvms_operator_min_version) }}
+{% endif %}
 {% endif %}
 {% if ocp_mirror_update_service | default(true) | bool %}
         # OpenShift Update Service (OSUS) — local Cincinnati graph for air-gap upgrades

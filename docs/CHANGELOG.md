@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Changed (ImageSet single-pin + OCP 5 virt-lvms)
+- Lab ImageSets pin **4.22.22** + Virt **4.22.9** + LVMS **4.22.0** (no z-stream span)
+- Note: **4.22.23** release image exists, but oc-mirror Cincinnati `stable-4.22` returned no nodes → lab pin stayed on **4.22.22**
+- Virt/LVMS operators: **channel-only** by default (optional pins); avoids pruned-catalog CSV gaps (seen with Virt 4.22.11)
+- Added [imageset-config-5.0-virt-lvms.yaml.example](../mirror/imageset-config-5.0-virt-lvms.yaml.example) (**5.0.2**)
+- Removed 4.22→5.0 two-step migration ImageSet examples
+- Removed `imageset-config-4.22-platform-only` and base `imageset-config-4.22` examples (keep virt-lvms 4.22 + 5.0 only)
+- Ansible `all.yml` / role defaults aligned to single-pin
+
+### Changed (SNO topology default)
+- Live lab defaults switched to **sno** (`all.yml`, `terraform.tfvars`)
+- Documented installer limit: sno must stay `platform: none` (baremetal rejected with 1 CP + 0 workers)
+- SNO hostname / Proxmox VM name aligned with compact3: **`ocp-master-0`** (was `ocp-sno-422` / `ocp-sno`)
+
 ### Cluster DNS name
 - Cluster name `ocp422` → **`ocp`** (`api.ocp.lab.local`, `*.apps.ocp.lab.local`); mirror path `ocp4-422` unchanged
 

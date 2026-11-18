@@ -157,4 +157,4 @@
   ansible.builtin.debug:
     msg: >-
       ClusterVersion upstream set. Wait 2–3 min then: oc adm upgrade
-      (expect Recommended 4.22.12). Upgrade is NOT started by this playbook.
+      (expect Recommended 4.22.22). Upgrade is NOT started by this playbook.

@@ -92,7 +92,7 @@ Console: **Bootable volumes** → project **`openshift-virtualization-os-images`
 ```bash
 export KUBECONFIG=~/lab/4.22-ga/auth/kubeconfig
 oc adm upgrade
-oc adm upgrade --to=4.22.12
+oc adm upgrade --to=4.22.22
 ```
 
 Watch progress (second shell) — platform operators vs OLM CSVs:

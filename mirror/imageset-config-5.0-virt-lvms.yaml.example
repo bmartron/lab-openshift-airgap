@@ -1,0 +1,43 @@
+# OpenShift 5.0 — single-pin virt-lvms (same shape as imageset-config-4.22-virt-lvms).
+# Manual ImageSet (not an Ansible ocp_imageset_profile yet).
+# Mirror into the same registry path after a 4.22.22 base, or for a fresh 5.0 lab:
+#   oc-mirror -c imageset-config.yaml \
+#     --workspace file://$HOME/lab/4.22-ga/workspace \
+#     docker://registry.lab.local:5000/ocp4-422 \
+#     --authfile ~/lab/pull-secret-oc-mirror.txt --v2
+#
+# Platform / operators (as of 2026-11-18):
+#   OCP          5.0.2 (single-pin)
+#   Operators    channel-only (Virt stable, LVMS stable-5.0 + defaultChannel, OSUS v1)
+#
+# Upgrade from 4.22: cluster must be ≥ 4.22.17 (ideally 4.22.22) before jumping to 5.0.2.
+# Do not merge stable-4.22 + stable-5.0 in one ImageSet (no stable-4.23).
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+mirror:
+  platform:
+    architectures:
+      - amd64
+    channels:
+      - name: stable-5.0
+        minVersion: 5.0.2
+        maxVersion: 5.0.2
+        shortestPath: true
+    graph: true
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v5.0
+      packages:
+        - name: kubevirt-hyperconverged
+          channels:
+            - name: stable
+        - name: lvms-operator
+          defaultChannel: stable-5.0
+          channels:
+            - name: stable-5.0
+        - name: cincinnati-operator
+          channels:
+            - name: v1
+  additionalImages:
+    - name: registry.redhat.io/rhel9/rhel-guest-image:latest
+    - name: registry.redhat.io/rhel10/rhel-guest-image:latest
+    - name: quay.io/containerdisks/centos-stream:9

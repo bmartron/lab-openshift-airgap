@@ -8,7 +8,7 @@ compute:
 controlPlane:
   name: master
   # sno: 1 — compact3: 3 (Ansible ocp_topology)
-  replicas: 3
+  replicas: 1
 networking:
   clusterNetwork:
   - cidr: 10.128.0.0/14
@@ -28,12 +28,13 @@ imageContentSources:
 - source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
   mirrors:
   - registry.lab.local:5000/ocp4-422/openshift/release
-# compact3 (agent): baremetal + VIPs. SNO: use platform.none only (required).
+# sno (1 CP): platform none only. compact3: baremetal + VIPs (see Ansible template).
 platform:
-  baremetal:
-    apiVIPs:
-    - 172.16.10.50
-    ingressVIPs:
-    - 172.16.10.49
+  none: {}
+# compact3 example:
+# platform:
+#   baremetal:
+#     apiVIPs: ["172.16.10.50"]
+#     ingressVIPs: ["172.16.10.49"]
 pullSecret: '{"auths":{"registry.lab.local:5000":{"auth":"..."}}}'
 sshKey: 'ssh-ed25519 AAAA... replace_with_bastion_pubkey'
